@@ -1,0 +1,162 @@
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    /*font-family: "fira sans", system-ui, Arial, Helvetica, sans-serif;*/
+    font-family: system-ui, Arial, Helvetica, sans-serif;
+    background-color: #f4e8d2;
+    background-color: white;
+    color: #333;
+}
+
+#main-container {
+    padding: 24px 48px;
+    margin: 0 auto;
+    max-width: calc(80ch + 48px);
+    background-color: white;
+
+    > h1:first-child {
+        margin-top: 0
+    }
+}
+
+#left-sidebar {
+    width: 200px;
+    flex-shrink: 0;
+}
+
+#content {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+#header {
+    background-color: #8c3037;
+    display: flex;
+    align-items: center;
+    padding: 20px;
+
+  .logo {
+    height: 120px;
+  }
+
+  .page-heading-group {
+      flex: 0 0 auto;
+      margin-top: -6px;
+
+    .page-heading {
+        color: #333;
+        color: white;
+        font-size: 4rem;
+        font-weight: normal;
+        margin: 0;
+        font-family: Futura;
+    }
+    .page-subheading {
+        font-size: 1.5rem;
+        font-weight: normal;
+        margin: 0;
+        color: white;
+        // color: #007445
+        font-family: Futura;
+    }
+  }
+
+}
+
+nav, #see-also-banner {
+    padding: 12px;
+    border-bottom: 1px solid #CCC;
+}
+
+.hero {
+    border-bottom: 1px solid #CCC;
+    margin: 0 -24px;
+    padding: 0 24px;
+}
+
+
+.full-width {
+    width: 100%;
+}
+
+.hflex {
+    display: flex;
+    flex-direction: row;
+    align-items: stretch;
+    justify-content: flex-start;
+}
+
+p.introduction {
+    color: #494949;
+    max-width: 80ch;
+}
+
+p, li {
+    color: #000;
+    line-height: 1.35;
+}
+
+#content ul {
+    max-width: 800px;
+    padding-left: 48px;
+}
+
+#content li {
+    margin-bottom: 12px;
+    padding-left: 12px;
+}
+
+section {
+    margin-bottom: 24px;
+}
+
+h1 {
+    font-weight: normal;
+    margin-bottom: 0;
+}
+
+h2 {
+    font-weight: normal;
+    margin-bottom: 0;
+}
+
+h3 {
+    font-size: 1.8em;
+    font-weight: normal;
+    margin-bottom: 0;
+}
+h4 {
+    font-size: 1.4em;
+    font-weight: normal;
+    margin-bottom: 0;
+    margin-top: 0;
+}
+p.group-description {
+    color: #494949;
+    margin-top: 0;
+}
+
+a, a:hover, a:visited, a:active {
+    color: #3298dc
+}
+
+a {
+    text-decoration: none;
+    &:hover { text-decoration: underline; }
+}
+
+
+@media screen and (max-width: 800px) {
+    #main-container { padding: 12px; }
+    #left-sidebar { display: none; }
+    #content { margin-left: 0; }
+
+    .logo { height: 70px }
+    .page-heading { font-size: 2rem }
+    .page-subheading { font-size: 1rem }
+
+    h3 { margin-top: 14px }
+}

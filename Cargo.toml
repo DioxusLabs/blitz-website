@@ -1,0 +1,31 @@
+[package]
+name = "blitz-website"
+version = "0.1.0"
+edition = "2021"
+licence = "MIT OR Apache-2.0"
+
+[dependencies]
+# Networking
+axum = "0.8"
+tokio = { version = "1", features = ["full"] }
+tower-http = { version = "0.6", features = ["fs", "trace"] }
+
+# Content
+fxhash = "0.2"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+dioxus = { version = "0.6", default-features = false, features = ["html", "macro", "signals", "hooks"] }
+dioxus-ssr = "0.6.2"
+
+# Logging
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+dioxus-html-macro = "0.3.0"
+dashmap = "6.1.0"
+string_cache = "0.8.8"
+serde_json5 = "0.2.1"
+
+[build-dependencies]
+grass = { version = "0.13", default-features = false }
+
+[features]

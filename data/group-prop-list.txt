@@ -1,0 +1,438 @@
+GENERAL FEATURES
+media queries
+custom properties (variables)
+@font-face
+@supports
+prefers-color-scheme
+-webkit aliases
+
+CORE
+display 0.92071153
+position 0.91309196
+box-sizing 0.85195623
+alias-webkit-box-sizing 0.55928514
+z-index 0.84586622
+zoom 0.2759575
+
+TEXT DIRECTION
+direction 0.42214679
+unicode-bidi 0.13006045
+writing-mode 0.01857197
+all 0.09901406
+
+OVERFLOW AND CLIPPING
+overflow 0.86854822
+overflow-y 0.66249463
+overflow-x 0.62722518
+clip-path 0.32584812
+clip 0.49918069
+mask-image 0.15661625
+webkit-mask-image 0.19439423
+mask 0.14959209
+webkit-clip-path 0.1082283
+webkit-mask 0.10789596
+webkit-mask-size 0.09123412
+mask-size 0.0836767
+mask-position 0.07437063
+webkit-mask-position 0.07071188
+mask-repeat 0.06237656
+webkit-mask-repeat 0.06711486
+mask-composite 0.05903236
+webkit-mask-composite 0.06539497
+
+GENERATED
+content 0.80151663
+
+COMPOSITION & EFFECTS
+opacity 0.86344583
+visibility 0.74700558
+filter 0.42132191
+webkit-filter 0.17322781
+backdrop-filter 0.22180693
+mix-blend-mode 0.07500218
+background-blend-mode 0.0725943
+
+VISIBILTY & CONTAINEMENT
+contain 0.18298761
+isolation 0.1002659
+content-visibility 0.04227816
+
+ASPECT RATIO
+aspect-ratio 0.22628388
+object-fit 0.4391425
+object-position 0.15279275
+
+FLOAT
+float 0.77137663
+clear 0.64203844
+
+SIZE
+width 0.92567368
+height 0.91936627
+max-width 0.81620725
+min-height 0.78411344
+min-width 0.7648829
+max-height 0.71288784
+
+RELATIVE SIZE
+inline-size 0.08957
+block-size 0.08910162
+min-inline-size 0.08650008
+min-block-size 0.08206984
+max-inline-size 0.08142461
+max-block-size 0.08041445
+
+PADDING/MARGIN
+padding 0.91639836
+padding-left 0.80210843
+padding-top 0.79706246
+padding-right 0.78304568
+padding-bottom 0.7782461
+margin 0.91358688
+margin-top 0.88567884
+margin-bottom 0.8303267
+margin-left 0.8300972
+margin-right 0.8243143
+
+RELATIVE PADDING/MARGIN
+margin-inline-start 0.1897093
+margin-inline-end 0.16351099
+padding-inline-start 0.15757995
+padding-inline 0.15067325
+padding-block 0.1335459
+padding-inline-end 0.13124019
+margin-block-start 0.12344842
+margin-block-end 0.11468047
+margin-inline 0.105969
+webkit-margin-start 0.1035573
+webkit-margin-start 0.1035573
+webkit-padding-start 0.1032294
+webkit-padding-start 0.1032294
+margin-block 0.10056265
+webkit-margin-end 0.09825843
+webkit-margin-end 0.09825843
+webkit-padding-end 0.0970469
+webkit-margin-before 0.08357487
+padding-block-end 0.08265714
+padding-block-start 0.08252523
+webkit-margin-after 0.0720602
+webkit-padding-after 0.06441302
+webkit-padding-before 0.064267
+
+BORDER
+border 0.90920255
+border-bottom 0.75331177
+border-top 0.72316296
+border-left 0.63380638
+border-right 0.61913678
+border-width 0.65733536
+border-bottom-width 0.27999372
+border-left-width 0.25129945
+border-top-width 0.24974623
+border-right-width 0.24955782
+border-block-end-width 0.06509279
+webkit-border-end 0.06471178
+webkit-border-start 0.06457061
+border-block-end-color 0.06243153
+webkit-border-after 0.06119132
+webkit-border-after 0.06119132
+webkit-border-before 0.06005011
+
+RELATIVE BORDER
+border-inline-start 0.07574543
+border-inline-end 0.07475255
+border-block-end 0.06991572
+border-block-start 0.06731191
+
+BORDER STYLE
+border-style 0.60648564
+border-bottom-style 0.18171376
+border-top-style 0.12959167
+border-left-style 0.09080228
+border-right-style 0.08159142
+
+BORDER COLOR
+border-color 0.75368228
+border-bottom-color 0.42017106
+border-top-color 0.41524498
+border-left-color 0.34488334
+border-right-color 0.33183024
+
+BORDER RADIUS
+border-radius 0.85179866
+alias-webkit-border-radius 0.39698686
+alias-webkit-border-top-right-radius 0.11285223
+alias-webkit-border-top-left-radius 0.11080954
+alias-webkit-border-bottom-right-radius 0.10503618
+alias-webkit-border-bottom-left-radius 0.10413253
+border-top-right-radius 0.52623921
+border-top-left-radius 0.5214813
+border-bottom-right-radius 0.4983177
+border-bottom-left-radius 0.49778252
+border-end-start-radius 0.09368597
+border-start-end-radius 0.09345299
+border-end-end-radius 0.0952395
+border-start-start-radius 0.09491384
+
+BORDER IMAGE
+border-image 0.05583707
+
+INSET
+top 0.89926495
+left 0.89559083
+right 0.82451497
+bottom 0.80345449
+inset 0.26722665
+inset-inline-start 0.11712433
+inset-inline-end 0.09618934
+inset-block-start 0.0894308
+inset-inline 0.07390323
+inset-block 0.06856679
+inset-block-end 0.06472611
+
+FONT
+font-size 0.89500375
+font-family 0.8777729
+font-weight 0.87740272
+font-style 0.78466821
+font 0.64410713
+font-display 0.48411846
+font-variant 0.28150351
+font-feature-settings 0.19015596
+font-stretch 0.14397099
+font-variation-settings 0.11362022
+webkit-font-feature-settings 0.08865216
+font-variant-ligatures 0.06403768
+
+TEXT
+color 0.89840448
+text-align 0.87687087
+line-height 0.85628794
+text-decoration 0.83463559
+vertical-align 0.81529149
+white-space 0.80145155
+text-transform 0.71575912
+text-overflow 0.63744711
+letter-spacing 0.64255106
+webkit-font-smoothing 0.60921353
+word-wrap 0.54836207
+word-break 0.53291227
+text-shadow 0.43837401
+webkit-line-clamp 0.38257689
+text-indent 0.38053689
+text-rendering 0.34146059
+overflow-wrap 0.32077432
+text-decoration-line 0.16807358
+text-wrap 0.14046802
+word-spacing 0.13516786
+text-decoration-color 0.12478159
+hyphens 0.10166755
+tab-size 0.08409216
+quotes 0.0772915
+webkit-text-fill-color 0.07630337
+text-underline-offset 0.0557181
+text-decoration-thickness 0.05551785
+
+BACKGROUND
+background 0.8667638
+background-color 0.8937872
+background-image 0.76643028
+background-position 0.74231067
+background-size 0.70612233
+alias-webkit-background-size 0.14963449
+background-repeat 0.70406116
+background-clip 0.39347745
+background-position-x 0.13111192
+webkit-background-clip 0.09701469
+background-attachment 0.08254144
+background-position-y 0.07524283
+background-origin 0.06970944
+
+BOX DECORATION
+box-shadow 0.80365943
+alias-webkit-box-shadow 0.42997889
+outline 0.76740128
+outline-offset 0.41471775
+outline-width 0.26285137
+outline-color 0.25558454
+outline-style 0.19382964
+
+LIST
+list-style 0.67157376
+list-style-type 0.46379586
+counter-increment 0.10307884
+list-style-position 0.09787182
+counter-reset 0.0917232
+
+TABLE
+border-collapse 0.48377847
+border-spacing 0.33623093
+table-layout 0.18960086
+caption-side 0.05780349
+
+ALIGNMENT
+align-items 0.76166151
+alias-webkit-align-items 0.25170867
+justify-content 0.75756501
+alias-webkit-justify-content 0.33928749
+align-content 0.3424424
+align-self 0.4836303
+justify-items 0.13858528
+justify-self 0.12604467
+alias-webkit-align-self 0.10582081
+place-content 0.06240831
+place-items 0.05650453
+
+GAP
+gap 0.48794612
+column-gap 0.2830742
+row-gap 0.20368521
+grid-gap 0.1736456
+
+FLEXBOX
+flex-direction 0.7109405
+alias-webkit-flex-direction 0.21808117
+flex-wrap 0.65894943
+flex 0.64815947
+flex-grow 0.56153106
+flex-shrink 0.55153324
+flex-basis 0.40405568
+flex-flow 0.29474599
+alias-webkit-flex-wrap 0.15837093
+alias-webkit-flex 0.15723241
+alias-webkit-flex-grow 0.15040812
+alias-webkit-flex-shrink 0.14652549
+alias-webkit-flex-basis 0.09231067
+order 0.36160447
+alias-webkit-order 0.06799822
+alias-webkit-flex-flow 0.06408091
+
+LEGACY FLEX
+webkit-box-orient 0.46283243
+webkit-box-pack 0.37951837
+webkit-box-align 0.35488086
+webkit-box-flex 0.31099091
+webkit-box-direction 0.24741334
+webkit-box-ordinal-group 0.07391303
+
+GRID
+grid-template-columns 0.3701859
+grid-column 0.22069571
+grid-template-rows 0.20336827
+grid-area 0.1717795
+grid-row 0.14294376
+grid-template-areas 0.11184224
+grid-auto-flow 0.10487924
+grid-column-gap 0.09692748
+order 0.36160447
+alias-webkit-order 0.06799822
+grid-auto-rows 0.06008971
+grid-row-start 0.05857809
+grid-column-start 0.05681302
+grid-auto-columns 0.05426023
+grid-row-gap 0.05214831
+
+SVG
+fill 0.60419625
+stroke 0.39066242
+stroke-width 0.40793887
+stroke-dashoffset 0.2692668
+stroke-dasharray 0.25348916
+fill-opacity 0.10700002
+stroke-linecap 0.09082167
+stroke-miterlimit 0.07475792
+stroke-opacity 0.06114083
+
+FONT-FACE
+src 0.72179942
+unicode-range 0.43294015
+
+UA HINTS
+will-change 0.32462878
+appearance 0.43092339
+webkit-appearance 0.63946632
+alias-webkit-text-size-adjust 0.58311217
+text-size-adjust 0.2060806
+forced-color-adjust 0.17028819
+color-scheme 0.1593462
+scrollbar-color 0.08986505
+image-rendering 0.07286318
+overflow-anchor 0.05877947
+
+MISC
+cursor 0.83996949
+resize 0.33381254
+scrollbar-width 0.33046442
+
+TRANSFORM
+transform 0.82049524
+alias-webkit-transform 0.62493411
+transform-origin 0.50923198
+alias-webkit-transform-origin 0.26735057
+backface-visibility 0.18950322
+alias-webkit-backface-visibility 0.17794201
+transform-style 0.11293268
+perspective 0.09216148
+
+TRANSITION
+transition 0.78729346
+alias-webkit-transition 0.58746856
+transition-duration 0.38956908
+transition-property 0.37434776
+transition-timing-function 0.35458288
+transition-delay 0.2936515
+alias-webkit-transition-property 0.15681429
+alias-webkit-transition-duration 0.10449836
+alias-webkit-transition-timing-function 0.09420097
+alias-webkit-transition-delay 0.07460656
+
+ANIMATION
+animation 0.65394652
+alias-webkit-animation 0.38114118
+animation-timing-function 0.45205535
+alias-webkit-animation-timing-function 0.19600275
+animation-duration 0.42835075
+animation-name 0.42054965
+animation-delay 0.34713532
+animation-iteration-count 0.30425904
+animation-fill-mode 0.29742161
+animation-direction 0.17176019
+alias-webkit-animation-duration 0.15607146
+alias-webkit-animation-name 0.14553912
+animation-play-state 0.10978769
+alias-webkit-animation-delay 0.10482008
+alias-webkit-animation-iteration-count 0.10134854
+alias-webkit-animation-fill-mode 0.09579226
+webkit-animation-direction 0.05993157
+
+SCROLL BEHAVIOUR
+scroll-boundary-behavior 0.15242205
+scroll-behavior 0.14141919
+scroll-snap-type 0.12430065
+scroll-snap-align 0.07612501
+scroll-padding 0.05816664
+scroll-boundary-behavior-y 0.05219484
+
+CURSOR & POINTER EVENTS
+user-select 0.64260477
+webkit-user-select 0.63796575
+pointer-events 0.66359819
+touch-action 0.39578092
+webkit-tap-highlight-color-0 0.58859341
+caret-color 0.11926632
+webkit-user-drag 0.07757608
+
+CONTAINER QUERIES
+container 0.0655397
+
+@PAGE
+size 0.07214526
+page-break-inside 0.05486786
+
+MULTI COLUMN LAYOUT
+column-count 0.058331
+
+UNKNOWN
+variable 0.61108839
+speak 0.11741392
+

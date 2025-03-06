@@ -1,0 +1,326 @@
+[
+  {
+    "id": "core",
+    "name": "Core",
+    "entries": [
+      { 
+        "name": "display",
+        "values": [
+          { "value": "flex", "status": "Yes" },
+          { "value": "grid", "status": "Yes" },
+          { "value": "block", "status": "Partial" },
+          { "value": "inline", "status": "Partial" },
+          { "value": "inline-block", "status": "Partial" },
+          { "value": "table", "status": "Partial", "notes": "Table layout is emulated with CSS Grid." },
+          { "value": "masonry", "status": "No" },
+          { "value": "none", "status": "Yes" },
+          { "value": "contents", "status": "Yes" },
+        ] 
+      },
+      { "name": "position",
+        "notes": "Note that because 'position:static' is not supported, 'position:absolute' nodes are always positioned relative to their immediate parent",
+        "values": [
+          { "value": "static", "status": "No" },
+          { "value": "relative", "status": "Yes" },
+          { "value": "absolute", "status": "Yes" },
+          { "value": "fixed", "status": "No" },
+          { "value": "sticky", "status": "No" },
+        ]
+      },
+      {
+        "name": "overflow",
+        "properties": ["overflow", "overflow-x", "overflow-y"],
+        "values": [
+          { "value": "visible", "status": "Yes" },
+          { "value": "clip", "status": "Yes" },
+          { "value": "hidden", "status": "Yes" },
+          { "value": "scroll", "status": "Yes" },
+          { "value": "auto", "status": "No" },
+        ]
+      },
+      {"name": "box-sizing", "status": "Yes" },
+      {"name": "z-index", "status": "Partial", "notes": "z-index is implemented for sibling nodes" },
+      {"name": "order", "status": "Yes" },
+      {"name": "float", "status": "No" },
+      {"name": "clear", "status": "No" },
+      {"name": "opacity", "status": "Partial", "notes": "Values of 0 and 1 are supported. All other values are treated as 1." },
+      {"name": "visibility", "status": "Yes" },
+      {"name": "contain", "status": "No" },
+      {"name": "isolation", "status": "No" },
+      {"name": "content-visibility", "status": "No" },
+      {"name": "content", "status": "Yes"},
+    ]
+  },
+  {
+    "id": "sizing-positioning",
+    "name": "Sizing & Positioning",
+    "notes": "Flow relative versions of properties (e.g. max-inline-size) are also supported",
+    "entries": [
+      {"name": "width / height", "status": "Yes", "properties": ["width", "height", "inline-size", "block-size"] },
+      {"name": "min-width / min-height", "status": "Yes", "properties": ["min-width", "min-height", "min-inline-size", "min-block-size"] },
+      {"name": "max-width / max-height", "status": "Yes", "properties": ["max-width", "max-height", "max-inline-size", "max-block-size"] },
+      {"name": "inset", "status": "Yes", "properties": ["top", "left", "bottom", "right"] },
+      {"name": "aspect-ratio", "status": "Yes", "properties": ["aspect-ratio"] },
+      {"name": "object-fit", "status": "No" },
+      {"name": "object-position", "status": "No" },
+    ]
+  },
+  {
+    "id": "padding-margin-border",
+    "name": "Padding, Margin & Borders",
+    "notes": "Flow relative versions of properties (e.g. padding-inline-start) are also supported",
+    "entries": [
+      {"name": "padding", "status": "Yes", "properties": ["padding", "padding-top", "padding-left", "padding-bottom", "padding-right"] },
+      {"name": "margin", "status": "Yes", "properties": ["margin", "margin-top", "margin-left", "margin-bottom", "margin-right"] },
+      {"name": "gap", "status": "Yes", "properties": ["gap", "row-gap", "column-gap", "grid-gap", "grid-column-gap", "grid-row-gap"] },
+      {"name": "border-width", "status": "Yes" },
+      {"name": "border-style", "status": "No" },
+      {"name": "border-color", "status": "Yes" },
+      {"name": "border-radius", "status": "Yes" },
+      {"name": "border-image", "status": "No" }
+    ]
+  },
+  {
+    "id": "text-direction",
+    "name": "Text Direction",
+    "entries": [
+      {"name": "direction", "status": "No" },
+      {"name": "unicode-bidi", "status": "No" },
+      {"name": "writing-mode", "status": "No" },
+      {"name": "all", "status": "No" },
+    ]
+  },
+  {
+    "id": "font",
+    "name": "Font",
+    "entries": [
+      {"name": "@font-face", "status": "Yes", "properties": ["src", "unicode-range"]},
+      {"name": "font-size", "status": "Yes"},
+      {"name": "font-family", "status": "Yes"},
+      {"name": "font-weight", "status": "Yes"},
+      {"name": "font-style", "status": "Yes"},
+      {"name": "font-display", "status": "No"},
+      {"name": "font-variant", "status": "No"},
+      {"name": "font-feature-settings", "status": "No"},
+      {"name": "font-stretch", "status": "Yes"},
+      {"name": "font-variation-settings", "status": "No"},
+      {"name": "font-variant-ligatures", "status": "No"},
+      {"name": "webkit-font-smoothing", "status": "No" },
+    ]
+  },
+  {
+    "id": "text",
+    "name": "Text",
+    "entries": [
+      { "name": "color", "status": "Yes" },
+      { "name": "text-align", "status": "Yes" },
+      { "name": "line-height", "status": "Yes" },
+      { "name": "text-decoration", "status": "Yes" },
+      { "name": "vertical-align", "status": "No" },
+      { "name": "white-space", "status": "Partial" },
+      { "name": "text-transform", "status": "No" },
+      { "name": "text-overflow", "status": "No" },
+      { "name": "letter-spacing", "status": "Yes" },
+      { "name": "word-wrap", "status": "Partial" },
+      { "name": "word-break", "status": "No" },
+      { "name": "text-shadow", "status": "No" },
+      { "name": "webkit-line-clamp", "status": "No" },
+      { "name": "text-indent", "status": "No" },
+      { "name": "text-rendering", "status": "No" },
+      { "name": "overflow-wrap", "status": "No" },
+      { "name": "text-decoration-line", "status": "No" },
+      { "name": "text-wrap", "status": "Partial" },
+      { "name": "word-spacing", "status": "Yes" },
+      { "name": "text-decoration-color", "status": "No" },
+      { "name": "hyphens", "status": "No" },
+      { "name": "tab-size", "status": "No" },
+      { "name": "quotes", "status": "No" },
+      { "name": "webkit-text-fill-color", "status": "No" },
+      { "name": "text-underline-offset", "status": "No" },
+      { "name": "text-decoration-thickness", "status": "No" },
+    ]
+  },
+  {
+    "id": "background",
+    "name": "Backgrounds",
+    "entries": [
+      { "name" : "background-color", "status": "Yes" },
+      { "name" : "background-image", "status": "Yes" },
+      { "name" : "background-position", "status": "Partial", "properties": ["background-position", "background-position-x", "background-position-y"] },
+      { "name" : "background-size", "status": "Partial" },
+      { "name" : "background-repeat", "status": "No" },
+      { "name" : "background-clip", "status": "No" },
+      { "name" : "background-attachment", "status": "Yes" },
+      { "name" : "background-origin", "status": "Partial" },
+    ]
+  },
+  {
+    "id": "flexbox",
+    "name": "Flexbox",
+    "entries": [
+      { "name": "flex-direction", "status": "Yes" },
+      { "name": "flex-wrap", "status": "Yes" },
+      { "name": "flex-basis", "status": "Yes" },
+      { "name": "flex-grow", "status": "Yes" },
+      { "name": "flex-shrink", "status": "Yes" },
+      {
+        "name": "webkit-box-*",
+        "status": "No", 
+        "notes": "These properties are for the legacy flexbox model that was never widely adopted. Blitz does not ever intend to support these."
+      },
+    ]
+  },
+  {
+    "id": "grid",
+    "name": "Grid",
+    "entries": [
+      { "name": "grid-template-{rows,columns}", "status": "Yes", "properties": ["grid-tempate-rows", "grid-template-columns"] },
+      { "name": "grid-auto-{rows,columns}", "status": "Yes", "properties": ["grid-auto-rows", "grid-auto-columns"] },
+      { "name": "grid-{row,column}", "status": "Yes", "properties": ["grid-row", "grid-column"] },
+      { "name": "grid-auto-flow", "status": "Yes" },
+      { "name": "grid-template-areas", "status": "No" },
+      { "name": "grid-area", "status": "No" },
+    ]
+  },
+  {
+    "id": "box-alignment",
+    "name": "Box Alignment",
+    "entries": [
+      { "name": "{align,justify}-content", "status": "Yes", "properties": ["align-content", "justify-content"] },
+      { "name": "{align,justify}-items", "status": "Yes", "properties": ["align-items", "justify-items"] },
+      { "name": "{align,justify}-self", "status": "Yes", "properties": ["align-self", "justify-self"] },
+    ]
+  },
+  {
+    "id": "transforms",
+    "name": "Transforms",
+    "entries": [
+      { "name": "2D Transforms", "status": "Yes", "properties": ["transform", "transform-origin"] },
+      { "name": "3D Transforms", "status": "No", "properties": ["transform", "transform-origin", "transform-style", "backface-visibility", "perspective"] },
+    ]
+  },
+  {
+    "id": "transition-animations",
+    "name": "Transitions & Animations",
+    "entries": [
+      { "name": "Transitions", "status": "No", "properties": ["transition", "transition-duration", "transition-property", "transition-timing-function", "transition-delay"] },
+      { "name": "Animation", "status": "No", "properties": ["animation", "animation-timing-function", "animation-duration", "animation-name", "animation-delay", "animation-iteration-count", "animation-fill-mode", "animation-direction", "animation-play-state", "webkit-animation-direction"] },
+    ]
+  },
+  {
+    "id": "clipping-composition-effects",
+    "name": "Clipping, Composition & Effects",
+    "entries": [
+      { "name": "box-shadow", "status": "Yes" },
+      { "name": "outline", "status": "Yes", "properties": ["outline-width", "outline-style", "outline-color", "outline-offset"] },
+      { "name": "clip", "status": "No", "properties": ["clip-path", "clip"] },
+      { "name": "mask", "status": "No", "properties": ["mask", "mask-image", "mask-size", "mask-position", "mask-repeat", "mask-composite"] },
+      { "name": "filter", "status": "No"},
+      { "name": "backdrop-filter", "status": "No" },
+      { "name": "mix-blend-mode", "status": "No" },
+      { "name": "background-blend-mode", "status": "No" },
+      { "name": "zoom", "status": "No" },
+    ]
+  },
+  {
+    "id": "list",
+    "name": "Lists",
+    "entries": [
+      { "name": "list-style-type", "status": "Yes" },
+      { "name": "list-style-position", "status": "Yes" },
+      { "name": "counter-increment", "status": "No" },
+      { "name": "counter-reset", "status": "No" }
+    ]
+  },
+  {
+    "id": "table",
+    "name": "Tables",
+    "entries": [
+      { "name": "border-collapse", "status": "No" },
+      { "name": "border-spacing", "status": "No" },
+      { "name": "table-layout", "status": "Yes" },
+      { "name": "caption-side", "status": "No" },
+    ]
+  },
+  {
+    "id": "svg",
+    "name": "SVG",
+    "entries": [
+      { "name": "fill" },
+      { "name": "stroke" },
+      { "name": "stroke-width" },
+      { "name": "stroke-dashoffset" },
+      { "name": "stroke-dasharray" },
+      { "name": "fill-opacity" },
+      { "name": "stroke-linecap" },
+      { "name": "stroke-miterlimit" },
+      { "name": "stroke-opacity" },
+    ]
+  },
+  {
+    "id": "ua-hints",
+    "name": "User Agent Hints",
+    "entries": [
+      { "name": "will-change", "status": "No" },
+      { "name": "appearance", "status": "No" },
+      { "name": "webkit-appearance", "status": "No" },
+      { "name": "text-size-adjust", "status": "No" },
+      { "name": "forced-color-adjust", "status": "No" },
+      { "name": "color-scheme", "status": "No" },
+      { "name": "scrollbar-color", "status": "No" },
+      { "name": "image-rendering", "status": "No" },
+      { "name": "overflow-anchor", "status": "No" },
+    ]
+  },
+  {
+    "id": "misc",
+    "name": "Miscellaneous / Other",
+    "entries": [
+      { "name": "resize", "status": "No" },
+      { "name": "scrollbar-width", "status": "No" },
+      { "name": "container", "status": "No" },
+      { "name": "speak", "status": "No" },
+    ]
+  },
+  {
+    "id": "scroll-behaviour",
+    "name": "Scroll Behaviour",
+    "entries": [
+      { "name": "scroll-boundary-behavior", "status": "No" },
+      { "name": "scroll-behavior", "status": "No" },
+      { "name": "scroll-snap-type", "status": "No" },
+      { "name": "scroll-snap-align", "status": "No" },
+      { "name": "scroll-padding", "status": "No" },
+      { "name": "scroll-boundary-behavior-y", "status": "No" },
+    ]
+  },
+  {
+    "id": "cursor-pointer-events",
+    "name": "Cursor & Pointer",
+    "entries": [
+      { "name": "cursor", "status": "Yes" },
+      { "name": "user-select", "status": "No" },
+      { "name": "webkit-user-select", "status": "No" },
+      { "name": "pointer-events", "status": "No" },
+      { "name": "touch-action", "status": "No" },
+      { "name": "webkit-tap-highlight-color", "status": "No" },
+      { "name": "caret-color", "status": "No" },
+      { "name": "webkit-user-drag", "status": "No" },
+    ]
+  },
+  {
+    "id": "multi-column",
+    "name": "Multi-column Layout",
+    "entries": [
+      { "name": "column-count", "status": "No" },
+    ]
+  },
+  {
+    "id": "paged-layout",
+    "name": "@page",
+    "entries": [
+      { "name": "size", "status": "No" },
+      { "name": "page-break-inside", "status": "No" },
+    ]
+  }
+]

@@ -1,0 +1,461 @@
+alias-webkit-column-gap 0.04977148
+container-type 0.04793137
+alias-webkit-transform-style 0.04710704
+grid-column-end 0.04562451
+alias-webkit-perspective 0.04499497
+list-style-image 0.04463719
+webkit-print-color-adjust 0.04452037
+text-decoration-skip 0.044425
+stop-opacity 0.04406193
+line-break 0.04384024
+scale 0.0433553
+r 0.04261578
+intrinsic-size 0.04222921
+grid-row-end 0.04143289
+alias-webkit-opacity 0.04028686
+cx 0.04004428
+scrollbar-gutter 0.03993698
+alias-webkit-align-content 0.03956021
+cy 0.0395139
+font-variant-numeric 0.03902212
+page-break-after 0.03750792
+stroke-linejoin 0.03691056
+empty-cells 0.03585342
+fill-rule 0.0354968
+alias-webkit-animation-play-state 0.03516632
+perspective-origin 0.03370679
+rotate 0.03105416
+text-decoration-style 0.03048391
+columns 0.03017436
+text-decoration-skip-ink 0.0296211
+break-inside 0.02953032
+y 0.02949312
+scroll-snap-stop 0.02919619
+orphans 0.02849707
+x 0.02834341
+widows 0.02805756
+column-width 0.02737419
+scroll-snap-margin-top 0.02653763
+border-inline-end-width 0.02607854
+text-align-last 0.02504558
+webkit-box-decoration-break-0 0.02405949
+box-decoration-break 0.02364558
+page-orientation 0.02253885
+text-spacing-trim 0.02212736
+scroll-boundary-behavior-x 0.0221081
+border-inline-start-width 0.02201724
+column-rule 0.02104846
+webkit-text-stroke 0.02086321
+scroll-padding-top 0.02079204
+alias-webkit-column-count 0.0204942
+stop-color 0.01960935
+container-name 0.0188715
+mask-mode 0.01827003
+flood-opacity 0.01810693
+page-break-before 0.01803546
+column-fill 0.01790877
+scroll-snap-margin 0.01781239
+grid-template 0.01749105
+border-block-start-width 0.0174455
+place-self 0.01699665
+mask-type 0.01569028
+shape-outside 0.01558476
+webkit-background-origin 0.01518657
+translate 0.01513762
+webkit-text-stroke-width 0.0147976
+font-size-adjust 0.01437757
+text-underline-position 0.01436219
+size-adjust 0.01427733
+font-kerning 0.01427106
+text-anchor 0.0139769
+border-inline-start-color 0.01384633
+ascent-override 0.01378452
+border-block-start-style 0.01340764
+transform-box 0.01314587
+accent-color 0.0129565
+webkit-text-stroke-color 0.01289542
+border-image-slice 0.01289492
+alias-webkit-columns 0.01264017
+border-image-source 0.01262499
+column-rule-color 0.012474
+scroll-padding-left 0.01240304
+border-block-start-color 0.01205124
+column-rule-style 0.01202375
+clip-rule 0.01198867
+font-synthesis 0.01190895
+syntax 0.0117156
+overscroll-behavior-inline 0.01169826
+overscroll-behavior-block 0.01158596
+webkit-border-image 0.01142373
+descent-override 0.0113657
+webkit-user-modify 0.01132946
+overflow-clip-margin 0.01061013
+shape-rendering 0.01054664
+border-block-end-style 0.01024442
+webkit-mask-box-image 0.01010151
+border-block 0.01009314
+
+border-inline-end-color 0.00969754
+border-image-width 0.00920067
+line-gap-override 0.00909008
+webkit-mask-position-y 0.00908153
+dominant-baseline 0.0085894
+scroll-padding-block 0.00835039
+scroll-padding-inline 0.00829296
+break-after 0.00818815
+webkit-line-break 0.00817075
+alias-webkit-column-width 0.00807895
+webkit-writing-mode 0.00781425
+scroll-padding-block-end 0.00778476
+column-span 0.00762291
+border-image-repeat 0.007533
+alias-webkit-perspective-origin 0.00751655
+background-repeat-x (obsolete) 0.007471
+font-variant-caps 0.00744928
+vector-effect 0.00738472
+webkit-text-security 0.00714908
+break-before 0.007011
+font-optical-sizing 0.00699765
+webkit-app-region 0.00647487
+border-inline-start-style 0.00606996
+scroll-snap-margin-bottom 0.00606833
+webkit-column-break-inside 0.00599032
+border-inline-end-style 0.00592533
+alignment-baseline 0.00587729
+alias-webkit-column-rule 0.00584517
+animation-timeline 0.00557338
+text-orientation 0.00547847
+font-variant-east-asian 0.0054649
+webkit-box-lines (obsolete) 0.005057
+paint-order 0.00499203
+grid 0.00494127
+view-transition-name 0.00488779
+border-image-outset 0.00479991
+baseline-shift 0.00475033
+scroll-padding-bottom 0.00443589
+rx 0.00443198
+flood-color 0.00426761
+column-rule-width 0.00415848
+webkit-locale 0.00407878
+counter-set 0.00407183
+shape-margin 0.004066
+shape-image-threshold 0.00388675
+navigation-trigger 0.00385603
+webkit-highlight (obsolete) 0.00384
+border-inline-width 0.00354245
+d 0.00350816
+text-emphasis-color 0.00347882
+border-block-width 0.00344469
+image-orientation-0 0.00340773
+webkit-mask-origin 0.00339881
+text-emphasis 0.0033957
+webkit-rtl-ordering 0.00335047
+border-inline 0.00333634
+animation-composition 0.00332576
+font-variant-alternates 0.00327589
+page 0.00324899
+webkit-mask-clip 0.0030687
+offset 0.00300084
+border-block-style 0.00296713
+text-combine-upright 0.00296382
+system 0.00295124
+webkit-hyphenate-character 0.00295057
+symbols 0.00294872
+suffix 0.00294843
+hyphenate-character 0.00292005
+webkit-margin-top-collapse 0.002904
+font-variant-position 0.00286036
+webkit-text-emphasis-color 0.00282821
+mask-origin 0.00281666
+webkit-text-emphasis-position 0.0027885
+ry 0.00273815
+webkit-text-emphasis-style 0.00273779
+white-space-collapse 0.00269037
+background-repeat-y (obsolete) 0.002637
+color-interpolation-filters 0.00259435
+app-region 0.00255752
+webkit-text-orientation 0.00254614
+mask-clip 0.00254285
+webkit-text-decorations-in-effect 0.00250071
+lighting-color 0.00246949
+buffered-rendering 0.00244962
+webkit-text-combine 0.00242388
+scroll-padding-right 0.00240194
+text-emphasis-position 0.00239413
+ruby-position 0.0023881
+webkit-mask-position-x 0.0023118
+form-sizing 0.00227622
+webkit-border-horizontal-spacing 0.00223896
+scroll-snap-margin-left 0.00223863
+marker-end 0.0021213
+offset-distance 0.00210574
+webkit-border-vertical-spacing 0.00209287
+color-interpolation 0.0019714
+color-rendering 0.0019462
+marker-start 0.0019411
+offset-rotate 0.00187599
+offset-path 0.00187546
+scroll-snap-margin-inline 0.00183332
+webkit-mask-box-image-slice 0.00182399
+marker-mid 0.00181749
+ruby-align 0.00179996
+webkit-mask-box-image-source 0.00178197
+webkit-mask-box-image-width 0.00177483
+webkit-mask-box-image-repeat 0.00173715
+webkit-mask-box-image-outset 0.00173349
+intrinsic-height 0.00173069
+text-emphasis-style 0.00167934
+scroll-padding-block-start 0.00160392
+animation-range 0.00155145
+view-timeline-name 0.00150725
+overscroll-behavior-inline 0.00146078
+view-timeline-axis 0.00144671
+transition-behavior 0.00134872
+scroll-snap-margin-right 0.00131486
+webkit-ruby-position 0.00125054
+webkit-box-reflect 0.00122894
+webkit-transform-origin-x 0.00121201
+scroll-padding-inline-start 0.00116717
+webkit-transform-origin-y 0.00114287
+webkit-border-before-color 0.00113498
+webkit-border-before-width 0.00112976
+scroll-snap-margin-block-start 0.00103381
+webkit-border-before-style 0.00095451
+scroll-snap-margin-block 0.00094503
+webkit-perspective-origin-x 0.00094367
+webkit-perspective-origin-y 0.00094199
+webkit-margin-after-collapse 0.000937
+webkit-margin-before-collapse 0.000937
+overscroll-behavior-block 0.00093201
+scroll-snap-margin-inline-start 0.00089422
+intrinsic-block-size 0.00087825
+initial-letter 0.00083762
+intrinsic-inline-size 0.00083636
+scroll-snap-margin-block-end 0.00076827
+scroll-padding-inline-end 0.0007577
+scroll-snap-margin-inline-end 0.00071648
+hyphenate-limit-chars 0.00065872
+webkit-text-emphasis 0.0006245
+webkit-transform-origin-z 0.00061825
+border-inline-style 0.00057172
+font-synthesis-weight 0.00055309
+alias-webkit-column-span 0.00055046
+anchor-name 0.0005301
+webkit-margin-collapse 0.000529
+border-inline-color 0.00050881
+alias-webkit-column-rule-color 0.00048479
+alias-webkit-column-rule-style 0.00048387
+text-wrap-mode 0.00047585
+interpolate-size 0.00041695
+marker 0.00041272
+font-palette 0.00040848
+position-anchor 0.00040848
+webkit-box-flex-group (obsolete) 0.0004
+font-variant-emoji 0.00039719
+border-block-color 0.00039286
+webkit-column-break-after 0.00037394
+intrinsic-width 0.00037047
+animation-range-start 0.00036694
+animation-range-end 0.00035964
+overlay 0.00034085
+webkit-column-break-before 0.0003362
+scroll-timeline 0.00032377
+view-transition-class 0.00031601
+font-synthesis-style 0.00030079
+position-visibility 0.00029604
+object-view-box 0.00028926
+position-try 0.00026094
+offset-rotation 0.000259
+baseline-source 0.00025568
+timeline-scope 0.00025539
+position-area 0.00025376
+math-style 0.00025315
+math-depth 0.00025068
+math-shift 0.00023817
+anchor-scope 0.00023327
+view-timeline 0.00021936
+alias-webkit-column-rule-width 0.00020447
+position-try-order 0.00020275
+text-wrap-style 0.0002014
+webkit-border-end-color 0.00019566
+webkit-border-end-width 0.00018932
+webkit-border-start-width 0.00018919
+offset-anchor 0.00018642
+webkit-border-start-color 0.00018596
+webkit-border-after-width 0.00018156
+webkit-border-after-color 0.00018074
+scroll-timeline-axis 0.00017173
+scroll-timeline-name 0.00017117
+position-try-fallbacks 0.00016281
+offset-position 0.00015668
+view-timeline-inset 0.00015591
+inset-area (obsolete) 0.00015271
+font-synthesis-small-caps 0.00014998
+webkit-margin-bottom-collapse 0.0001
+alias-webkit-shape-outside 9.728e-05
+webkit-min-logical-width 9.677e-05
+webkit-logical-width 5.531e-05
+position-try-options (obsolete) 4.8e-05
+webkit-logical-height 4.741e-05
+range 4.488e-05
+additive-symbols 4.406e-05
+line-clamp 3.439e-05
+prefix 2.418e-05
+webkit-max-logical-height 2.224e-05
+webkit-border-end-style 2.114e-05
+webkit-max-logical-width 1.781e-05
+webkit-min-logical-height 1.667e-05
+webkit-font-size-delta (obsolete) 1.6e-05
+webkit-border-start-style 1.247e-05
+motion 8e-06
+speak-as 7.91e-06
+alias-webkit-shape-margin 6.28e-06
+webkit-border-after-style 4.5e-06
+alias-webkit-shape-image-threshold 4.1e-06
+orientation 4e-06
+alias-epub-word-break 3.07e-06
+base-palette 2.33e-06
+alias-epub-text-transform 2.06e-06
+pad 1.4e-06
+alias-epub-writing-mode 1.09e-06
+webkit-mask-repeat-x (obsolete) 1e-06
+mask-source-type 1e-06
+motion-path 1e-06
+motion-offset 1e-06
+math-superscript-shift-style (obsolete) 1e-06
+override-colors 4.1e-07
+text-autospace 2.4e-07
+alias-epub-text-emphasis 2.3e-07
+scroll-start-target 2.3e-07
+dynamic-range-limit 2.3e-07
+reading-order-items 2.3e-07
+scroll-markers 2.3e-07
+view-transition-group 2.3e-07
+text-box 1.8e-07
+fallback 1.2e-07
+alias-epub-text-combine 9e-08
+text-box-trim 8e-08
+text-box-edge 8e-08
+alias-epub-text-orientation 3e-08
+alias-epub-text-emphasis-color 2e-08
+alias-epub-text-emphasis-style 2e-08
+scroll-start-target-block (obsolete) 2e-08
+scroll-start-target-inline (obsolete) 2e-08
+negative 1e-08
+webkit-filter (obsolete) 1e-08
+webkit-mask-repeat-y (obsolete) 0
+text-justify 0
+alias-epub-caption-side 0
+snap-height 0
+toggle-group (obsolete) 0
+toggle-root (obsolete) 0
+toggle-trigger (obsolete) 0
+toggle (obsolete) 0
+position-fallback 0
+anchor-scroll (obsolete) 0
+popover-show-delay 0
+popover-hide-delay 0
+toggle-visibility (obsolete) 0
+anchor-default (obsolete) 0
+scroll-timeline-attachment 0
+view-timeline-attachment 0
+scroll-start-target-x (obsolete) 0
+scroll-start-target-y (obsolete) 0
+position-fallback-bounds 0
+types 0
+caret-animation 0
+view-transition-capture-mode 0
+interactivity 0
+text-line-through 0
+text-line-through-color 0
+text-line-through-mode 0
+text-line-through-style 0
+text-line-through-width 0
+text-overline 0
+text-overline-color 0
+text-overline-mode 0
+text-overline-style 0
+text-overline-width 0
+text-underline 0
+text-underline-color (obsolete) 0
+text-underline-mode (obsolete) 0
+text-underline-style 0
+text-underline-width 0
+webkit-aspect-ratio (obsolete) 0
+webkit-background-composite (obsolete) 0
+webkit-border-fit 0
+webkit-color-correction 0
+webkit-column-axis (obsolete) 0
+webkit-column-progression (obsolete) 0
+webkit-box-decoration-break 0
+webkit-hyphenate-limit-after 0
+webkit-hyphenate-limit-before (obsolete) 0
+webkit-hyphenate-limit-lines (obsolete) 0
+webkit-hyphens (obsolete) 0
+webkit-line-box-contain (obsolete) 0
+webkit-line-align (obsolete) 0
+webkit-line-grid (obsolete) 0
+webkit-line-snap (obsolete) 0
+webkit-marquee (obsolete) 0
+webkit-marquee-direction (obsolete) 0
+webkit-marquee-increment 0
+webkit-marquee-repetition 0
+webkit-marquee-speed 0
+webkit-marquee-style (obsolete) 0
+webkit-nbsp-mode 0
+webkit-flow-into (obsolete) 0
+webkit-flow-from 0
+webkit-region-fragment 0
+webkit-region-break-after 0
+webkit-region-break-before 0
+webkit-region-break-inside 0
+shape-inside 0
+shape-padding 0
+webkit-wrap-flow 0
+webkit-wrap-through 0
+webkit-wrap 0
+webkit-tap-highlight-color (obsolete) 0
+webkit-app-region (obsolete) 0
+enable-background (obsolete) 0
+color-profile (obsolete) 0
+glyph-orientation-horizontal (obsolete) 0
+glyph-orientation-vertical 0
+kerning 0
+webkit-svg-shadow 0
+webkit-cursor-visibility (obsolete) 0
+image-orientation 0
+image-resolution 0
+webkit-blend-mode 0
+webkit-background-blend-mode 0
+max-zoom 0
+min-zoom 0
+user-zoom 0
+webkit-dashboard-region 0
+webkit-overflow-scrolling 0
+internal-callback 0
+touch-action-delay 0
+scroll-blocks-on (obsolete) 0
+motion-rotation 0
+scroll-snap-points-x 0
+scroll-snap-points-y 0
+scroll-snap-coordinate (obsolete) 0
+scroll-snap-destination 0
+apply-at-rule 0
+scroll-customization 0
+viewport-fit 0
+overflow-inline 0
+overflow-block 0
+content-size 0
+render-subtree (obsolete) 0
+origin-trial-test-property 0
+subtree-visibility 0
+source 0
+start 0
+end 0
+time-range 0
+letter-spacing-override 0
+object-overflow 0
+animation-delay-start 0
+animation-delay-end 0
+top-layer 0
+masonry-track-end 0

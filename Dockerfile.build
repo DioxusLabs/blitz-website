@@ -1,0 +1,24 @@
+# Build image
+FROM rust:1.65 as builder
+
+# Run dummy build to build and cache dependencies that only depends on Cargo.toml and Cargo.lock
+WORKDIR /usr/src
+RUN USER=root cargo new blitz-website
+COPY Cargo.toml Cargo.lock /usr/src/blitz-website/
+WORKDIR /usr/src/blitz-website
+RUN cargo build --release
+
+# Run actual build
+COPY ./src ./src
+COPY ./data ./data
+RUN cargo build --release
+
+# Run image
+FROM debian:buster-slim
+# RUN apt-get update && apt-get install -y extra-runtime-dependencies && rm -rf /var/lib/apt/lists/*
+COPY --from=builder  /usr/src/blitz-website/target/release/blitz-website /usr/local/bin/blitz-website
+
+WORKDIR /usr/blitz-website
+COPY ./static ./static
+COPY ./data ./data
+CMD ["blitz-website"]

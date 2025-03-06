@@ -1,0 +1,247 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  /*font-family: "fira sans", system-ui, Arial, Helvetica, sans-serif;*/
+  font-family: system-ui, Arial, Helvetica, sans-serif;
+  background-color: #f4e8d2;
+  background-color: white;
+  color: #333;
+}
+
+#main-container {
+  padding: 24px 48px;
+  margin: 0 auto;
+  max-width: calc(80ch + 48px);
+  background-color: white;
+}
+#main-container > h1:first-child {
+  margin-top: 0;
+}
+
+#left-sidebar {
+  width: 200px;
+  flex-shrink: 0;
+}
+
+#content {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+#header {
+  background-color: #8c3037;
+  display: flex;
+  align-items: center;
+  padding: 20px;
+}
+#header .logo {
+  height: 120px;
+}
+#header .page-heading-group {
+  flex: 0 0 auto;
+  margin-top: -6px;
+}
+#header .page-heading-group .page-heading {
+  color: #333;
+  color: white;
+  font-size: 4rem;
+  font-weight: normal;
+  margin: 0;
+  font-family: Futura;
+}
+#header .page-heading-group .page-subheading {
+  font-size: 1.5rem;
+  font-weight: normal;
+  margin: 0;
+  color: white;
+  font-family: Futura;
+}
+
+nav, #see-also-banner {
+  padding: 12px;
+  border-bottom: 1px solid #CCC;
+}
+
+.hero {
+  border-bottom: 1px solid #CCC;
+  margin: 0 -24px;
+  padding: 0 24px;
+}
+
+.full-width {
+  width: 100%;
+}
+
+.hflex {
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  justify-content: flex-start;
+}
+
+p.introduction {
+  color: #494949;
+  max-width: 80ch;
+}
+
+p, li {
+  color: #000;
+  line-height: 1.35;
+}
+
+#content ul {
+  max-width: 800px;
+  padding-left: 48px;
+}
+
+#content li {
+  margin-bottom: 12px;
+  padding-left: 12px;
+}
+
+section {
+  margin-bottom: 24px;
+}
+
+h1 {
+  font-weight: normal;
+  margin-bottom: 0;
+}
+
+h2 {
+  font-weight: normal;
+  margin-bottom: 0;
+}
+
+h3 {
+  font-size: 1.8em;
+  font-weight: normal;
+  margin-bottom: 0;
+}
+
+h4 {
+  font-size: 1.4em;
+  font-weight: normal;
+  margin-bottom: 0;
+  margin-top: 0;
+}
+
+p.group-description {
+  color: #494949;
+  margin-top: 0;
+}
+
+a, a:hover, a:visited, a:active {
+  color: #3298dc;
+}
+
+a {
+  text-decoration: none;
+}
+a:hover {
+  text-decoration: underline;
+}
+
+@media screen and (max-width: 800px) {
+  #main-container {
+    padding: 12px;
+  }
+  #left-sidebar {
+    display: none;
+  }
+  #content {
+    margin-left: 0;
+  }
+  .logo {
+    height: 70px;
+  }
+  .page-heading {
+    font-size: 2rem;
+  }
+  .page-subheading {
+    font-size: 1rem;
+  }
+  h3 {
+    margin-top: 14px;
+  }
+}
+.toc {
+  position: sticky;
+  overflow-y: auto;
+  top: 0px;
+  max-height: calc(100vh - 24px);
+}
+.toc ul {
+  list-style: none;
+  padding: 0;
+}
+.toc li {
+  padding-left: 0;
+  margin: 3px 0px;
+  font-size: 1em;
+}
+.toc li > a {
+  color: #999;
+  text-decoration: none;
+}
+.toc li > ul {
+  /*display: none;*/
+}
+.toc > ul > li.active:not(.active ~ .active) > a {
+  color: #333;
+  text-decoration: none;
+}
+.toc > ul > li.active:not(.active ~ .active) > ul {
+  display: block;
+}
+.toc > ul > li.active:not(.active ~ .active) > ul > li.active:not(.active ~ .active) > a {
+  color: #333;
+  text-decoration: none;
+}
+
+.subtoc {
+  margin-left: 12px;
+}
+
+.subtoc li {
+  font-size: 0.85em;
+}
+
+.fixed-layout {
+  table-layout: fixed;
+}
+
+.use-case-column {
+  width: 250px;
+}
+
+@media screen and (max-width: 800px) {
+  .use-case-column {
+    width: 100px;
+  }
+}
+table {
+  border-collapse: collapse;
+  /* border: 1px solid #f9f9f9; */
+}
+table tbody:nth-of-type(odd) {
+  background-color: #f6f8fa;
+}
+table tbody:nth-of-type(even) {
+  background-color: #FFF;
+}
+table th {
+  padding: 6px 18px 6px 6px;
+  border: 1px solid #CCC;
+  text-align: left;
+  font-size: 0.8em;
+  white-space: nowrap;
+  color: #000;
+}
+table td {
+  padding: 6px 6px;
+  border: 1px solid #CCC;
+  font-size: 14px;
+}
