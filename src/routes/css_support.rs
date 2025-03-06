@@ -119,11 +119,13 @@ pub fn CssSupportPage() -> Element {
 pub fn SupportTable(entries: Vec<PropEntry>) -> Element {
     rsx! {
 
-        table { class: "full-width", style: "background: transparent",
+        table {
+            class: "full-width fixed-layout",
+            style: "background: transparent",
             thead {
                 tr {
+                    th { style: "color: #666;text-align: right;width: 60px", "% use" }
                     th { class: "use-case-column", "Property" }
-                    th { "Percentage" }
                     th { "Status" }
                 }
             }
@@ -152,12 +154,16 @@ fn SupportTableRow(entry: PropEntry) -> Element {
     //     })
     // });
 
+
+
     rsx! {
         tr {
+            td { style: "vertical-align: top;color: #666;text-align: right",
+                {format!("{:.0}%", entry.percentage * 100.0)}
+            }
             td { style: "vertical-align: top;font-weight: bold;text-wrap: nowrap",
                 {entry.name.clone()}
             }
-            td { style: "vertical-align: top;", {format!("{:.1}%", entry.percentage * 100.0)} }
             td {
                 if let Some(status) = status {
                     {status.icon()}

@@ -233,7 +233,7 @@ table tbody:nth-of-type(even) {
   background-color: #FFF;
 }
 table th {
-  padding: 6px 18px 6px 6px;
+  padding: 6px 6px 6px 6px;
   border: 1px solid #CCC;
   text-align: left;
   font-size: 0.8em;
