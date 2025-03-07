@@ -34,6 +34,7 @@ body {
 
 #header {
     background-color: #8c3037;
+    background-color: #f4e8d2;
     display: flex;
     align-items: center;
     padding: 20px;
@@ -48,7 +49,7 @@ body {
 
     .page-heading {
         color: #333;
-        color: white;
+        color: black;
         font-size: 4rem;
         font-weight: normal;
         margin: 0;
@@ -58,7 +59,7 @@ body {
         font-size: 1.5rem;
         font-weight: normal;
         margin: 0;
-        color: white;
+        color: black;
         // color: #007445
         font-family: Futura;
     }
