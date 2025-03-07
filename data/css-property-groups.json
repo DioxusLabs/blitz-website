@@ -7,7 +7,7 @@
         "name": "display",
         "values": [
           { "value": "display:flex", "status": "Yes" },
-          { "value": "display:grid", "status": "Yes" },
+          { "value": "display:grid", "status": "Yes", "notes": "Subgrid is not supported" },
           { "value": "display:block", "status": "Partial" },
           { "value": "display:inline", "status": "Partial" },
           { "value": "display:inline-block", "status": "Partial" },
