@@ -245,3 +245,19 @@ table td {
   border: 1px solid #CCC;
   font-size: 14px;
 }
+
+.css-prop--supported {
+  background: rgba(0, 116, 69, 0.3);
+}
+
+.css-prop--not-supported {
+  background: rgba(140, 48, 55, 0.3);
+}
+
+.css-prop--partial-support {
+  background: rgba(242, 165, 59, 0.3);
+}
+
+.css-prop--split-by-value {
+  background: rgba(244, 232, 210, 0.3);
+}

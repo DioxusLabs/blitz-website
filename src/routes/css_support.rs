@@ -1,7 +1,6 @@
 use std::collections::HashMap;
 
 use dioxus::prelude::*;
-use dioxus_html_macro::html;
 use serde::{Deserialize, Serialize};
 use string_cache::DefaultAtom;
 
@@ -44,6 +43,16 @@ impl PropStatus {
             Self::Yes => "✅ Supported",
             Self::No => "❌ Not supported",
             Self::Partial => "⚠️ Partial support",
+        }
+    }
+}
+
+impl PropStatus {
+    pub fn class(&self) -> &'static str {
+        match self {
+            Self::Yes => "css-prop--supported",
+            Self::No => "css-prop--not-supported",
+            Self::Partial => "css-prop--partial-support",
         }
     }
 }
@@ -125,8 +134,8 @@ pub fn SupportTable(entries: Vec<PropEntry>) -> Element {
             thead {
                 tr {
                     th { style: "color: #666;text-align: right;width: 60px", "% use" }
-                    th { class: "use-case-column", "Property" }
-                    th { "Status" }
+                    th { style: "color: #666", class: "use-case-column", "Property" }
+                    th { style: "color: #666", "Status" }
                 }
             }
             tbody { style: "background: transparent",
@@ -140,24 +149,8 @@ pub fn SupportTable(entries: Vec<PropEntry>) -> Element {
 
 #[component]
 fn SupportTableRow(entry: PropEntry) -> Element {
-    let status = entry.status;
-    // let status = entry.status.or_else(|| {
-    //     entry.values.as_ref().map(|values| {
-    //         if values.iter().all(|v| v.status == PropStatus::Yes) {
-    //             return PropStatus::Yes;
-    //         }
-    //         if values.iter().all(|v| v.status == PropStatus::No) {
-    //             return PropStatus::No;
-    //         }
-
-    //         PropStatus::Partial
-    //     })
-    // });
-
-
-
     rsx! {
-        tr {
+        tr { class: if entry.values.is_none() { entry.status.map(|status| status.class()).unwrap_or("") } else { "css-prop--split-by-value" },
             td { style: "vertical-align: top;color: #666;text-align: right",
                 {format!("{:.0}%", entry.percentage * 100.0)}
             }
@@ -165,14 +158,8 @@ fn SupportTableRow(entry: PropEntry) -> Element {
                 {entry.name.clone()}
             }
             td {
-                if let Some(status) = status {
+                if let Some(status) = entry.status {
                     {status.icon()}
-                }
-                if let Some(notes) = entry.notes {
-                    p {
-                        style: "margin: 2px 0;color: #333;font-size: 0.8em",
-                        dangerous_inner_html: notes,
-                    }
                 }
                 if let Some(values) = &entry.values {
                     table { style: "border: 0;width: 100%;background: transparent",
@@ -186,19 +173,13 @@ fn SupportTableRow(entry: PropEntry) -> Element {
                         }
                     }
                 }
-                        // if let Some(see_also) = entry.see_also {
-            //     details { style: "margin-top: 6px",
-            //         summary { style: "cursor: pointer",
-            //             b {
-            //                 i { "See also" }
-            //             }
-            //             span { style: "color: #999", "(click to open)" }
-            //         }
-            //         for krate in see_also {
-            //             CrateListItem { krate }
-            //         }
-            //     }
-            // }
+                if let Some(notes) = entry.notes {
+                    p {
+                        style: "margin: 0;color: #333;font-size: 0.8em",
+                        style: if entry.values.is_some() { "margin: 0;color: #333;font-size: 0.8em;margin-top: 6px;" },
+                        dangerous_inner_html: notes,
+                    }
+                }
             }
         }
     }
@@ -207,7 +188,7 @@ fn SupportTableRow(entry: PropEntry) -> Element {
 #[component]
 fn PropValueItem(prop: DefaultAtom, value: PropValue) -> Element {
     rsx!(
-        tr {
+        tr { class: value.status.class(),
             td { style: "vertical-align:top;border: 0;width: 40%", "{prop}:{value.value}" }
             td { style: "border: 0;",
                 {value.status.icon()}
@@ -221,8 +202,3 @@ fn PropValueItem(prop: DefaultAtom, value: PropValue) -> Element {
         }
     )
 }
-
-// #[component]
-// fn DocLink(href: String) -> Element {
-//     html!(<a href={href} style="margin-left: 3px;opacity: 0.7;color: #333" target="_blank">"[docs]"</a>)
-// }
