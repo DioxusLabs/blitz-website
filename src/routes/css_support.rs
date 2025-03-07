@@ -24,6 +24,8 @@ pub struct PropGroup {
 pub struct PropEntry {
     pub name: DefaultAtom,
     pub status: Option<PropStatus>,
+    #[serde(default)]
+    pub issues: Vec<DefaultAtom>,
     pub notes: Option<String>,
     #[serde(default)]
     pub percentage: f64,
@@ -62,6 +64,8 @@ impl PropStatus {
 pub struct PropValue {
     pub value: DefaultAtom,
     pub status: PropStatus,
+    #[serde(default)]
+    pub issues: Vec<DefaultAtom>,
     pub notes: Option<String>,
 }
 
@@ -164,6 +168,12 @@ fn SupportTableRow(entry: PropEntry) -> Element {
                 if let Some(status) = entry.status {
                     {status.icon()}
                 }
+                for issue in entry.issues {
+                    span {
+                        " "
+                        IssueLink { issue }
+                    }
+                }
                 if let Some(values) = &entry.values {
                     table { style: "border: 0;width: 100%;background: transparent",
                         tbody { style: "background: transparent",
@@ -195,6 +205,12 @@ fn PropValueItem(prop: DefaultAtom, value: PropValue) -> Element {
             td { style: "vertical-align:top;border: 0;width: 40%", {value.value} }
             td { style: "border: 0;",
                 {value.status.icon()}
+                for issue in value.issues {
+                    span {
+                        " "
+                        IssueLink { issue }
+                    }
+                }
                 if let Some(notes) = value.notes {
                     p {
                         style: "margin: 2px 0;color: #333;font-size: 0.8em",
@@ -202,6 +218,19 @@ fn PropValueItem(prop: DefaultAtom, value: PropValue) -> Element {
                     }
                 }
             }
+        }
+    )
+}
+
+#[component]
+fn IssueLink(issue: DefaultAtom) -> Element {
+    let (repo, num) = issue.rsplit_once('#').unwrap();
+    let (org, repo) = repo.rsplit_once('/').unwrap();
+    rsx!(
+        a {
+            href: "https://github.com/{org}/{repo}/issues/{num}",
+            target: "_blank",
+            "{repo}#{num}"
         }
     )
 }
