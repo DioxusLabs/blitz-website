@@ -39,26 +39,15 @@ pub fn Page(
                         rel: "stylesheet",
                         href: "/static/index.css?{index_css_hash}",
                     }
-                    link { href: "/static/fira-sans.css", rel: "stylesheet" }
-                    link {
-                        href: "/static/github-fork-ribbon.css",
-                        rel: "stylesheet",
-                    }
-                    style { r#type: "text/css",
-                        ".github-fork-ribbon:before {{ background-color: #333; }}"
-                    }
+                    // link {
+                    //     rel: "stylesheet",
+                    //     href: "https://indestructibletype.com/fonts/Jost.css",
+                    // }
                     {head}
                 }
             }
             body {
                 Fragment {
-                    a {
-                        "data-ribbon": "Fork me on GitHub",
-                        href: "https://github.com/dioxuslabs/blitz",
-                        title: "Fork me on GitHub",
-                        class: "github-fork-ribbon",
-                        "Fork me on GitHub"
-                    }
                     div { id: "header",
                         // a { href: "/",
                         //     img {

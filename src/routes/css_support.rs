@@ -116,7 +116,9 @@ pub fn CssSupportPage() -> Element {
                 "#,
             }
             for group in CSS_PROPERTIES() {
-                Section { section_key: group.id.clone(), heading: group.name,
+                Section {
+                    section_key: group.id.clone(),
+                    heading: group.name,
                     description: group.notes,
                     SupportTable { entries: group.entries }
                 }
