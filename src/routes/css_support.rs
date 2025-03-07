@@ -176,7 +176,7 @@ fn SupportTableRow(entry: PropEntry) -> Element {
                 }
                 if let Some(notes) = entry.notes {
                     p {
-                        style: "margin: 0;color: #333;font-size: 0.8em",
+                        style: "margin: 0;color: #333;font-size: 0.8em;margin-top: 3px;",
                         style: if entry.values.is_some() { "margin: 0;color: #333;font-size: 0.8em;margin-top: 6px;" },
                         dangerous_inner_html: notes,
                     }
