@@ -67,6 +67,7 @@ pub struct PropValue {
 
 static CSS_PROPERTIES: GlobalSignal<Vec<PropGroup>> = Signal::global(|| {
     // Load a hashmap of popularity data
+    // Source: https://chromestatus.com/data/csspopularity
     let raw_css_popularity: &str = include_str!("../../data/css-popularity.json");
     let css_popularity: Vec<PropPopularity> = serde_json5::from_str(&raw_css_popularity).unwrap();
     let css_popularity: HashMap<DefaultAtom, f64> = css_popularity
