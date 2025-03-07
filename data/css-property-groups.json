@@ -6,11 +6,11 @@
       { 
         "name": "display",
         "values": [
+          { "value": "display:inline", "status": "Yes" },
+          { "value": "display:block", "status": "Yes" },
+          { "value": "display:inline-block", "status": "Yes" },
           { "value": "display:flex", "status": "Yes" },
           { "value": "display:grid", "status": "Yes", "notes": "Subgrid is not supported" },
-          { "value": "display:block", "status": "Partial" },
-          { "value": "display:inline", "status": "Partial" },
-          { "value": "display:inline-block", "status": "Partial" },
           { "value": "display:table", "status": "Partial", "notes": "Table layout is emulated with CSS Grid." },
           { "value": "display:masonry", "status": "No" },
           { "value": "display:none", "status": "Yes" },
