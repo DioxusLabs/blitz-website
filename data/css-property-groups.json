@@ -38,8 +38,8 @@
           { "value": "overflow:auto", "status": "No" },
         ]
       },
-      {"name": "box-sizing", "status": "Yes" },
-      {"name": "z-index", "status": "Partial", "notes": "z-index is implemented for sibling nodes" },
+      { "name": "box-sizing", "status": "Yes" },
+      { "name": "z-index", "status": "Partial", "notes": "z-index is implemented for sibling nodes" },
       {
         "name": "cursor",
         "values": [
@@ -49,6 +49,7 @@
       },
       {
         "name": "content (::before/::after)",
+        "properties": ["content"],
         "values": [
           { "value": "string", "status": "Yes" },
           { "value": "image", "status": "No" },
@@ -56,20 +57,22 @@
           { "value": "counter", "status": "No" },
         ]
       },
-      {"name": "float", "status": "No" },
-      {"name": "clear", "status": "No" },
-      {"name": "order", "status": "Yes" },
+      { "name": "float", "status": "No" },
+      { "name": "clear", "status": "No" },
+      { "name": "order", "status": "Yes" },
+      { "name": "zoom", "status": "No" },
+
     ]
   },
   {
     "id": "visibility-isolation",
     "name": "Visibility & Isolation",
     "entries": [
-      {"name": "opacity", "status": "Partial", "notes": "Values of 0 and 1 are supported. All other values are treated as 1." },
-      {"name": "visibility", "status": "Yes" },
-      {"name": "contain", "status": "No" },
-      {"name": "isolation", "status": "No" },
-      {"name": "content-visibility", "status": "No" },
+      { "name": "opacity", "status": "Partial", "notes": "Values of 0 and 1 are supported. All other values are treated as 1." },
+      { "name": "visibility", "status": "Yes" },
+      { "name": "contain", "status": "No" },
+      { "name": "isolation", "status": "No" },
+      { "name": "content-visibility", "status": "No" },
     ]
   },
   {
@@ -77,13 +80,13 @@
     "name": "Sizing & Positioning",
     "notes": "Flow relative versions of properties (e.g. max-inline-size) are also supported",
     "entries": [
-      {"name": "width / height", "status": "Yes", "properties": ["width", "height", "inline-size", "block-size"] },
-      {"name": "min-width / min-height", "status": "Yes", "properties": ["min-width", "min-height", "min-inline-size", "min-block-size"] },
-      {"name": "max-width / max-height", "status": "Yes", "properties": ["max-width", "max-height", "max-inline-size", "max-block-size"] },
-      {"name": "inset", "status": "Yes", "properties": ["top", "left", "bottom", "right"] },
-      {"name": "aspect-ratio", "status": "Yes", "properties": ["aspect-ratio"] },
-      {"name": "object-fit", "status": "No" },
-      {"name": "object-position", "status": "No" },
+      { "name": "width / height", "status": "Yes", "properties": ["width", "height", "inline-size", "block-size"] },
+      { "name": "min-width / min-height", "status": "Yes", "properties": ["min-width", "min-height", "min-inline-size", "min-block-size"] },
+      { "name": "max-width / max-height", "status": "Yes", "properties": ["max-width", "max-height", "max-inline-size", "max-block-size"] },
+      { "name": "inset", "status": "Yes", "properties": ["top", "left", "bottom", "right"] },
+      { "name": "aspect-ratio", "status": "Yes", "properties": ["aspect-ratio"] },
+      { "name": "object-fit", "status": "No" },
+      { "name": "object-position", "status": "No" },
     ]
   },
   {
@@ -91,42 +94,41 @@
     "name": "Padding, Margin & Borders",
     "notes": "Flow relative versions of properties (e.g. padding-inline-start) are also supported",
     "entries": [
-      {"name": "padding", "status": "Yes", "properties": ["padding", "padding-top", "padding-left", "padding-bottom", "padding-right"] },
-      {"name": "margin", "status": "Yes", "properties": ["margin", "margin-top", "margin-left", "margin-bottom", "margin-right"] },
-      {"name": "gap", "status": "Yes", "properties": ["gap", "row-gap", "column-gap", "grid-gap", "grid-column-gap", "grid-row-gap"] },
-      {"name": "border-width", "status": "Yes" },
-      {"name": "border-style", "status": "No" },
-      {"name": "border-color", "status": "Yes" },
-      {"name": "border-radius", "status": "Yes" },
-      {"name": "border-image", "status": "No" }
+      { "name": "padding", "status": "Yes", "properties": ["padding", "padding-top", "padding-left", "padding-bottom", "padding-right"] },
+      { "name": "margin", "status": "Yes", "properties": ["margin", "margin-top", "margin-left", "margin-bottom", "margin-right"] },
+      { "name": "gap", "status": "Yes", "properties": ["gap", "row-gap", "column-gap", "grid-gap", "grid-column-gap", "grid-row-gap"] },
+      { "name": "border-width", "status": "Yes" },
+      { "name": "border-style", "status": "No" },
+      { "name": "border-color", "status": "Yes" },
+      { "name": "border-radius", "status": "Yes" },
+      { "name": "border-image", "status": "No" }
     ]
   },
   {
     "id": "text-direction",
     "name": "Text Direction",
     "entries": [
-      {"name": "direction", "status": "No" },
-      {"name": "unicode-bidi", "status": "No" },
-      {"name": "all", "status": "No" },
-      {"name": "writing-mode", "status": "No" },
+      { "name": "direction", "status": "No" },
+      { "name": "unicode-bidi", "status": "No" },
+      { "name": "all", "status": "No" },
+      { "name": "writing-mode", "status": "No" },
     ]
   },
   {
     "id": "font",
     "name": "Font",
     "entries": [
-      {"name": "@font-face", "status": "Yes", "properties": ["src", "unicode-range"]},
-      {"name": "font-size", "status": "Yes"},
-      {"name": "font-family", "status": "Yes"},
-      {"name": "font-weight", "status": "Yes"},
-      {"name": "font-style", "status": "Yes"},
-      {"name": "font-display", "status": "No"},
-      {"name": "font-variant", "status": "No"},
-      {"name": "font-feature-settings", "status": "No"},
-      {"name": "font-stretch", "status": "Yes"},
-      {"name": "font-variation-settings", "status": "No"},
-      {"name": "font-variant-ligatures", "status": "No"},
-      {"name": "webkit-font-smoothing", "status": "No" },
+      { "name": "@font-face", "status": "Yes", "properties": ["src", "unicode-range"] },
+      { "name": "font-size", "status": "Yes" },
+      { "name": "font-family", "status": "Yes" },
+      { "name": "font-weight", "status": "Yes" },
+      { "name": "font-style", "status": "Yes" },
+      { "name": "font-display", "status": "No" },
+      { "name": "font-variant", "status": "No" },
+      { "name": "font-feature-settings", "status": "No" },
+      { "name": "font-stretch", "status": "Yes" },
+      { "name": "font-variation-settings", "status": "No" },
+      { "name": "font-variant-ligatures", "status": "No" },
     ]
   },
   {
@@ -240,7 +242,6 @@
       { "name": "backdrop-filter", "status": "No" },
       { "name": "mix-blend-mode", "status": "No" },
       { "name": "background-blend-mode", "status": "No" },
-      { "name": "zoom", "status": "No" },
     ]
   },
   {
@@ -279,12 +280,26 @@
     ]
   },
   {
+    "id": "cursor-pointer-events",
+    "name": "Interaction & Pointer events",
+    "entries": [
+      { "name": "user-select", "status": "No" },
+      { "name": "webkit-user-select", "status": "No" },
+      { "name": "pointer-events", "status": "No" },
+      { "name": "webkit-tap-highlight-color", "status": "No", "properties": ["webkit-tap-highlight-color-0"] },
+      { "name": "touch-action", "status": "No" },
+      { "name": "caret-color", "status": "No" },
+      { "name": "webkit-user-drag", "status": "No" },
+    ]
+  },
+  {
     "id": "ua-hints",
     "name": "User Agent Hints",
     "entries": [
+      { "name": "webkit-appearance", "status": "No" },
+      { "name": "webkit-font-smoothing", "status": "No" },
       { "name": "will-change", "status": "No" },
       { "name": "appearance", "status": "No" },
-      { "name": "webkit-appearance", "status": "No" },
       { "name": "text-size-adjust", "status": "No" },
       { "name": "forced-color-adjust", "status": "No" },
       { "name": "color-scheme", "status": "No" },
@@ -313,19 +328,6 @@
       { "name": "scroll-snap-align", "status": "No" },
       { "name": "scroll-padding", "status": "No" },
       { "name": "scroll-boundary-behavior-y", "status": "No" },
-    ]
-  },
-  {
-    "id": "cursor-pointer-events",
-    "name": "Cursor & Pointer",
-    "entries": [
-      { "name": "user-select", "status": "No" },
-      { "name": "webkit-user-select", "status": "No" },
-      { "name": "pointer-events", "status": "No" },
-      { "name": "touch-action", "status": "No" },
-      { "name": "webkit-tap-highlight-color", "status": "No" },
-      { "name": "caret-color", "status": "No" },
-      { "name": "webkit-user-drag", "status": "No" },
     ]
   },
   {
