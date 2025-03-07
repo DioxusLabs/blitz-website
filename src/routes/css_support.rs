@@ -189,7 +189,7 @@ fn SupportTableRow(entry: PropEntry) -> Element {
 fn PropValueItem(prop: DefaultAtom, value: PropValue) -> Element {
     rsx!(
         tr { class: value.status.class(),
-            td { style: "vertical-align:top;border: 0;width: 40%", "{prop}:{value.value}" }
+            td { style: "vertical-align:top;border: 0;width: 40%", {value.value} }
             td { style: "border: 0;",
                 {value.status.icon()}
                 if let Some(notes) = value.notes {

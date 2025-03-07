@@ -6,49 +6,70 @@
       { 
         "name": "display",
         "values": [
-          { "value": "flex", "status": "Yes" },
-          { "value": "grid", "status": "Yes" },
-          { "value": "block", "status": "Partial" },
-          { "value": "inline", "status": "Partial" },
-          { "value": "inline-block", "status": "Partial" },
-          { "value": "table", "status": "Partial", "notes": "Table layout is emulated with CSS Grid." },
-          { "value": "masonry", "status": "No" },
-          { "value": "none", "status": "Yes" },
-          { "value": "contents", "status": "Yes" },
+          { "value": "display:flex", "status": "Yes" },
+          { "value": "display:grid", "status": "Yes" },
+          { "value": "display:block", "status": "Partial" },
+          { "value": "display:inline", "status": "Partial" },
+          { "value": "display:inline-block", "status": "Partial" },
+          { "value": "display:table", "status": "Partial", "notes": "Table layout is emulated with CSS Grid." },
+          { "value": "display:masonry", "status": "No" },
+          { "value": "display:none", "status": "Yes" },
+          { "value": "display:contents", "status": "Yes" },
         ] 
       },
       { "name": "position",
         "notes": "Note that because 'position:static' is not supported, 'position:absolute' nodes are always positioned relative to their immediate parent",
         "values": [
-          { "value": "static", "status": "No" },
-          { "value": "relative", "status": "Yes" },
-          { "value": "absolute", "status": "Yes" },
-          { "value": "fixed", "status": "No" },
-          { "value": "sticky", "status": "No" },
+          { "value": "position:static", "status": "No" },
+          { "value": "position:relative", "status": "Yes" },
+          { "value": "position:absolute", "status": "Yes" },
+          { "value": "position:fixed", "status": "No" },
+          { "value": "position:sticky", "status": "No" },
         ]
       },
       {
         "name": "overflow",
         "properties": ["overflow", "overflow-x", "overflow-y"],
         "values": [
-          { "value": "visible", "status": "Yes" },
-          { "value": "clip", "status": "Yes" },
-          { "value": "hidden", "status": "Yes" },
-          { "value": "scroll", "status": "Yes" },
-          { "value": "auto", "status": "No" },
+          { "value": "overflow:visible", "status": "Yes" },
+          { "value": "overflow:clip", "status": "Yes" },
+          { "value": "overflow:hidden", "status": "Yes" },
+          { "value": "overflow:scroll", "status": "Yes" },
+          { "value": "overflow:auto", "status": "No" },
         ]
       },
       {"name": "box-sizing", "status": "Yes" },
       {"name": "z-index", "status": "Partial", "notes": "z-index is implemented for sibling nodes" },
-      {"name": "order", "status": "Yes" },
+      {
+        "name": "cursor",
+        "values": [
+          { "value": "keyword", "status": "Yes" },
+          { "value": "custom image", "status": "No" },
+        ]
+      },
+      {
+        "name": "content (::before/::after)",
+        "values": [
+          { "value": "string", "status": "Yes" },
+          { "value": "image", "status": "No" },
+          { "value": "gradient", "status": "No" },
+          { "value": "counter", "status": "No" },
+        ]
+      },
       {"name": "float", "status": "No" },
       {"name": "clear", "status": "No" },
+      {"name": "order", "status": "Yes" },
+    ]
+  },
+  {
+    "id": "visibility-isolation",
+    "name": "Visibility & Isolation",
+    "entries": [
       {"name": "opacity", "status": "Partial", "notes": "Values of 0 and 1 are supported. All other values are treated as 1." },
       {"name": "visibility", "status": "Yes" },
       {"name": "contain", "status": "No" },
       {"name": "isolation", "status": "No" },
       {"name": "content-visibility", "status": "No" },
-      {"name": "content", "status": "Yes"},
     ]
   },
   {
@@ -86,8 +107,8 @@
     "entries": [
       {"name": "direction", "status": "No" },
       {"name": "unicode-bidi", "status": "No" },
-      {"name": "writing-mode", "status": "No" },
       {"name": "all", "status": "No" },
+      {"name": "writing-mode", "status": "No" },
     ]
   },
   {
@@ -246,15 +267,15 @@
     "id": "svg",
     "name": "SVG",
     "entries": [
-      { "name": "fill" },
-      { "name": "stroke" },
-      { "name": "stroke-width" },
-      { "name": "stroke-dashoffset" },
-      { "name": "stroke-dasharray" },
-      { "name": "fill-opacity" },
-      { "name": "stroke-linecap" },
-      { "name": "stroke-miterlimit" },
-      { "name": "stroke-opacity" },
+      { "name": "fill", "status": "No" },
+      { "name": "stroke", "status": "No" },
+      { "name": "stroke-width", "status": "No" },
+      { "name": "stroke-dashoffset", "status": "No" },
+      { "name": "stroke-dasharray", "status": "No" },
+      { "name": "fill-opacity", "status": "No" },
+      { "name": "stroke-linecap", "status": "No" },
+      { "name": "stroke-miterlimit", "status": "No" },
+      { "name": "stroke-opacity", "status": "No" },
     ]
   },
   {
@@ -298,7 +319,6 @@
     "id": "cursor-pointer-events",
     "name": "Cursor & Pointer",
     "entries": [
-      { "name": "cursor", "status": "Yes" },
       { "name": "user-select", "status": "No" },
       { "name": "webkit-user-select", "status": "No" },
       { "name": "pointer-events", "status": "No" },
