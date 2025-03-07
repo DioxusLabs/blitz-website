@@ -66,11 +66,13 @@
   },
   {
     "id": "visibility-isolation",
-    "name": "Visibility & Isolation",
+    "name": "Visibility, Clipping & Isolation",
     "entries": [
       { "name": "opacity", "status": "Partial", "notes": "Values of 0 and 1 are supported. All other values are treated as 1." },
       { "name": "visibility", "status": "Yes" },
+      { "name": "clip-path", "status": "No", "properties": ["clip-path", "clip"] },
       { "name": "contain", "status": "No" },
+      { "name": "mask", "status": "No", "properties": ["mask", "mask-image", "mask-size", "mask-position", "mask-repeat", "mask-composite"] },
       { "name": "isolation", "status": "No" },
       { "name": "content-visibility", "status": "No" },
     ]
@@ -183,9 +185,9 @@
     "entries": [
       { "name": "flex-direction", "status": "Yes" },
       { "name": "flex-wrap", "status": "Yes" },
-      { "name": "flex-basis", "status": "Yes" },
       { "name": "flex-grow", "status": "Yes" },
       { "name": "flex-shrink", "status": "Yes" },
+      { "name": "flex-basis", "status": "Yes" },
       {
         "name": "webkit-box-*",
         "status": "No", 
@@ -197,12 +199,22 @@
     "id": "grid",
     "name": "Grid",
     "entries": [
-      { "name": "grid-template-{rows,columns}", "status": "Yes", "properties": ["grid-tempate-rows", "grid-template-columns"] },
-      { "name": "grid-auto-{rows,columns}", "status": "Yes", "properties": ["grid-auto-rows", "grid-auto-columns"] },
+      {
+        "name": "grid-template-{rows,columns}",
+        "properties": ["grid-tempate-rows", "grid-template-columns"],
+        "values": [
+          { "value": "px / percentage / fr", "status": "Yes" },
+          { "value": "min-content / max-content / auto", "status": "Yes" },
+          { "value": "fit-content()", "status": "Yes" },
+          { "value": "named lines", "status": "No" },
+          { "value": "subgrid", "status": "No" },
+        ]
+      },
       { "name": "grid-{row,column}", "status": "Yes", "properties": ["grid-row", "grid-column"] },
-      { "name": "grid-auto-flow", "status": "Yes" },
-      { "name": "grid-template-areas", "status": "No" },
       { "name": "grid-area", "status": "No" },
+      { "name": "grid-template-areas", "status": "No" },
+      { "name": "grid-auto-flow", "status": "Yes" },
+      { "name": "grid-auto-{rows,columns}", "status": "Yes", "properties": ["grid-auto-rows", "grid-auto-columns"] },
     ]
   },
   {
@@ -218,7 +230,12 @@
     "id": "transforms",
     "name": "Transforms",
     "entries": [
-      { "name": "2D Transforms", "status": "Yes", "properties": ["transform", "transform-origin"] },
+      {
+        "name": "2D Transforms",
+        "status": "Partial",
+        "properties": ["transform", "transform-origin"],
+        "notes": "2D transforms are currently applied visually, but hit detection doesn't yet work properly for transformed nodes",  
+      },
       { "name": "3D Transforms", "status": "No", "properties": ["transform", "transform-origin", "transform-style", "backface-visibility", "perspective"] },
     ]
   },
@@ -227,17 +244,15 @@
     "name": "Transitions & Animations",
     "entries": [
       { "name": "Transitions", "status": "No", "properties": ["transition", "transition-duration", "transition-property", "transition-timing-function", "transition-delay"] },
-      { "name": "Animation", "status": "No", "properties": ["animation", "animation-timing-function", "animation-duration", "animation-name", "animation-delay", "animation-iteration-count", "animation-fill-mode", "animation-direction", "animation-play-state", "webkit-animation-direction"] },
+      { "name": "Animations", "status": "No", "properties": ["animation", "animation-timing-function", "animation-duration", "animation-name", "animation-delay", "animation-iteration-count", "animation-fill-mode", "animation-direction", "animation-play-state", "webkit-animation-direction"] },
     ]
   },
   {
-    "id": "clipping-composition-effects",
-    "name": "Clipping, Composition & Effects",
+    "id": "composition-effects",
+    "name": "Composition & Effects",
     "entries": [
       { "name": "box-shadow", "status": "Yes" },
       { "name": "outline", "status": "Yes", "properties": ["outline-width", "outline-style", "outline-color", "outline-offset"] },
-      { "name": "clip", "status": "No", "properties": ["clip-path", "clip"] },
-      { "name": "mask", "status": "No", "properties": ["mask", "mask-image", "mask-size", "mask-position", "mask-repeat", "mask-composite"] },
       { "name": "filter", "status": "No"},
       { "name": "backdrop-filter", "status": "No" },
       { "name": "mix-blend-mode", "status": "No" },
@@ -283,9 +298,9 @@
     "id": "cursor-pointer-events",
     "name": "Interaction & Pointer events",
     "entries": [
+      { "name": "pointer-events", "status": "No" },
       { "name": "user-select", "status": "No" },
       { "name": "webkit-user-select", "status": "No" },
-      { "name": "pointer-events", "status": "No" },
       { "name": "webkit-tap-highlight-color", "status": "No", "properties": ["webkit-tap-highlight-color-0"] },
       { "name": "touch-action", "status": "No" },
       { "name": "caret-color", "status": "No" },
@@ -298,8 +313,8 @@
     "entries": [
       { "name": "webkit-appearance", "status": "No" },
       { "name": "webkit-font-smoothing", "status": "No" },
-      { "name": "will-change", "status": "No" },
       { "name": "appearance", "status": "No" },
+      { "name": "will-change", "status": "No" },
       { "name": "text-size-adjust", "status": "No" },
       { "name": "forced-color-adjust", "status": "No" },
       { "name": "color-scheme", "status": "No" },
@@ -314,8 +329,8 @@
     "entries": [
       { "name": "resize", "status": "No" },
       { "name": "scrollbar-width", "status": "No" },
-      { "name": "container", "status": "No" },
       { "name": "speak", "status": "No" },
+      { "name": "container", "status": "No" },
     ]
   },
   {
