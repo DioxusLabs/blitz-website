@@ -16,6 +16,7 @@ pub struct PropPopularity {
 pub struct PropGroup {
     pub id: DefaultAtom,
     pub name: DefaultAtom,
+    pub notes: Option<DefaultAtom>,
     pub entries: Vec<PropEntry>,
 }
 
@@ -114,9 +115,8 @@ pub fn CssSupportPage() -> Element {
                 "#,
             }
             for group in CSS_PROPERTIES() {
-
                 Section { section_key: group.id.clone(), heading: group.name,
-                    // description: group.notes,
+                    description: group.notes,
                     SupportTable { entries: group.entries }
                 }
             }

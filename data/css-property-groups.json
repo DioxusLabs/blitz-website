@@ -282,6 +282,7 @@
   {
     "id": "svg",
     "name": "SVG",
+    "notes": "Rendering SVGs (including inline SVGs) is supported, but styling SVGs is not yet supported.",
     "entries": [
       { "name": "fill", "status": "No" },
       { "name": "stroke", "status": "No" },

@@ -13,7 +13,7 @@ pub enum SectionLevel {
 #[component]
 pub fn Section(
     heading: String,
-    description: Option<String>,
+    description: Option<DefaultAtom>,
     level: Option<SectionLevel>,
     section_key: DefaultAtom,
     subsection_key: Option<DefaultAtom>,
