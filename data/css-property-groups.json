@@ -48,7 +48,7 @@
         ]
       },
       {
-        "name": "content (::before/::after)",
+        "name": "content (::before / ::after)",
         "properties": ["content"],
         "values": [
           { "value": "string", "status": "Yes" },
