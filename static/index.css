@@ -40,6 +40,7 @@ body {
   background-color: #f4e8d2;
   display: flex;
   align-items: center;
+  justify-content: space-between;
   padding: 20px;
 }
 #header .logo {
@@ -65,9 +66,22 @@ body {
   font-family: Futura;
 }
 
-nav, #see-also-banner {
-  padding: 12px;
-  border-bottom: 1px solid #CCC;
+nav {
+  display: flex;
+}
+nav > a {
+  padding: 24px;
+  cursor: pointer;
+  font-family: "Jost";
+  font-weight: 500;
+  font-size: 1.4em;
+}
+nav > a, nav > a:hover, nav > a:visited, nav > a:active {
+  color: black;
+}
+nav > a:hover {
+  background-color: #cab89b;
+  text-decoration: none;
 }
 
 .hero {
@@ -171,6 +185,9 @@ a:hover {
   }
   .page-subheading {
     font-size: 1rem;
+  }
+  nav {
+    display: none;
   }
   h3 {
     margin-top: 14px;

@@ -58,21 +58,20 @@ pub fn Page(
                                 class: "logo",
                             }
                         }
-                                        // Logo with HTML text
-                    //
-                    // a { href: "/",
-                    //     img { src: "/static/blitz-logo.svg", class: "logo" }
-                    // }
-                    // div { class: "page-heading-group",
-                    //     h1 { class: "page-heading", "Blitz" }
-                    //     h2 { class: "page-subheading", "A radically modular web engine" }
-                    // }
+                        // Logo with HTML text
+                        //
+                        // a { href: "/",
+                        //     img { src: "/static/blitz-logo.svg", class: "logo" }
+                        // }
+                        // div { class: "page-heading-group",
+                        //     h1 { class: "page-heading", "Blitz" }
+                        //     h2 { class: "page-subheading", "A radically modular web engine" }
+                        // }
+                        nav {
+                            a { href: "/", "About" }
+                            a { href: "/support-matrix", "CSS Support" }
+                        }
                     }
-                    // nav {
-                    //     a { href: "/crates", "Crate Directory" }
-                    //     " | "
-                    //     a { href: "/learning-resources", "Learning Resources" }
-                    // }
                     div {
                         id: "main-container",
                         class: if noframe { "main-container--noframe" },

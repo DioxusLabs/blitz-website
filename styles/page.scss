@@ -42,6 +42,7 @@ body {
     background-color: #f4e8d2;
     display: flex;
     align-items: center;
+    justify-content: space-between;
     padding: 20px;
 
   .logo {
@@ -73,9 +74,22 @@ body {
 
 }
 
-nav, #see-also-banner {
-    padding: 12px;
-    border-bottom: 1px solid #CCC;
+nav {
+    display: flex;
+
+    > a {
+        padding: 24px;
+        cursor: pointer;
+        font-family: "Jost";
+        font-weight: 500;
+        font-size: 1.4em;
+        &, &:hover, &:visited, &:active { color: black; }
+
+        &:hover {
+            background-color: #cab89b;
+            text-decoration: none;
+        }
+    }
 }
 
 .hero {
@@ -165,6 +179,7 @@ a {
     .logo-link { margin: 0 auto }
     .page-heading { font-size: 2rem }
     .page-subheading { font-size: 1rem }
+    nav { display: none; }
 
     h3 { margin-top: 14px }
 }
