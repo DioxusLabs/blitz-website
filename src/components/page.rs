@@ -39,6 +39,7 @@ pub fn Page(
                         rel: "stylesheet",
                         href: "/static/index.css?{index_css_hash}",
                     }
+                    link { rel: "icon", href: "/static/blitz-logo.svg" }
                     // link {
                     //     rel: "stylesheet",
                     //     href: "https://indestructibletype.com/fonts/Jost.css",
@@ -49,12 +50,9 @@ pub fn Page(
             body {
                 Fragment {
                     div { id: "header",
-                        // a { href: "/",
-                        //     img {
-                        //         src: "/static/rust-logo-black.svg",
-                        //         class: "logo",
-                        //     }
-                        // }
+                        a { href: "/",
+                            img { src: "/static/blitz-logo.svg", class: "logo" }
+                        }
                         div { class: "page-heading-group",
                             h1 { class: "page-heading", "Blitz" }
                             h2 { class: "page-subheading", "A radically modular web engine" }

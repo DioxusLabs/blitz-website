@@ -161,9 +161,7 @@ fn SupportTableRow(entry: PropEntry) -> Element {
             td { style: "vertical-align: top;color: #666;text-align: right",
                 {format!("{:.0}%", entry.percentage * 100.0)}
             }
-            td { style: "vertical-align: top;font-weight: bold;",
-                {entry.name.clone()}
-            }
+            td { style: "vertical-align: top;font-weight: bold;", {entry.name.clone()} }
             td {
                 if let Some(status) = entry.status {
                     {status.icon()}
