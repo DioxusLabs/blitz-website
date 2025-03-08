@@ -10,7 +10,6 @@ use dioxus::prelude::*;
 use dioxus_html_macro::html;
 use routes::{CssSupportPage, GettingStartedPage, HomePage};
 use std::{
-    any::{Any, TypeId},
     net::{IpAddr, SocketAddr},
     sync::LazyLock,
     time::{Duration, Instant},
