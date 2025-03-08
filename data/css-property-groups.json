@@ -131,10 +131,10 @@
       { "name": "font-weight", "status": "Yes" },
       { "name": "font-style", "status": "Yes" },
       { "name": "font-display", "status": "No" },
-      { "name": "font-variant", "status": "No", "issues": ["DioxusLabs/blitz#184"] },
+      { "name": "font-variant", "status": "No" },
       { "name": "font-feature-settings", "status": "No", "issues": ["DioxusLabs/blitz#184"] },
       { "name": "font-stretch", "status": "Yes" },
-      { "name": "font-variation-settings", "status": "No" },
+      { "name": "font-variation-settings", "status": "No", "issues": ["DioxusLabs/blitz#184"] },
       { "name": "font-variant-ligatures", "status": "No" },
     ]
   },
