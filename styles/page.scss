@@ -45,8 +45,8 @@ body {
     padding: 20px;
 
   .logo {
-    height: 80px;
-    margin-right: 20px;
+    height: 70px;
+    // margin-right: 20px;
   }
 
   .page-heading-group {
@@ -162,6 +162,7 @@ a {
     #content { margin-left: 0; }
 
     .logo { height: 70px }
+    .logo-link { margin: 0 auto }
     .page-heading { font-size: 2rem }
     .page-subheading { font-size: 1rem }
 

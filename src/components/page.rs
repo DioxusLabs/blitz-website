@@ -52,13 +52,22 @@ pub fn Page(
             body {
                 Fragment {
                     div { id: "header",
-                        a { href: "/",
-                            img { src: "/static/blitz-logo.svg", class: "logo" }
+                        a { href: "/", class: "logo-link",
+                            img {
+                                src: "/static/blitz-logo-with-text3.svg",
+                                class: "logo",
+                            }
                         }
-                        div { class: "page-heading-group",
-                            h1 { class: "page-heading", "Blitz" }
-                            h2 { class: "page-subheading", "A radically modular web engine" }
-                        }
+                    
+                    // Logo with HTML text
+                    //
+                    // a { href: "/",
+                    //     img { src: "/static/blitz-logo.svg", class: "logo" }
+                    // }
+                    // div { class: "page-heading-group",
+                    //     h1 { class: "page-heading", "Blitz" }
+                    //     h2 { class: "page-subheading", "A radically modular web engine" }
+                    // }
                     }
                     // nav {
                     //     a { href: "/crates", "Crate Directory" }

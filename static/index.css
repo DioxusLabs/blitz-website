@@ -43,8 +43,7 @@ body {
   padding: 20px;
 }
 #header .logo {
-  height: 80px;
-  margin-right: 20px;
+  height: 70px;
 }
 #header .page-heading-group {
   flex: 0 0 auto;
@@ -163,6 +162,9 @@ a:hover {
   }
   .logo {
     height: 70px;
+  }
+  .logo-link {
+    margin: 0 auto;
   }
   .page-heading {
     font-size: 2rem;

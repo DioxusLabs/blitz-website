@@ -45,11 +45,9 @@ pub fn HomePage() -> Element {
                 }
             }
         }
-        div {
-            style: "
+        div { style: "
                 height: 200vh;
                 background: #f4e8d2;
-            "
-        }
+            " }
     }
 }
