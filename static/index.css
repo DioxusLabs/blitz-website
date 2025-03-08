@@ -20,6 +20,11 @@ body {
   margin-top: 0;
 }
 
+#main-container.main-container--noframe {
+  max-width: none;
+  padding: 0;
+}
+
 #left-sidebar {
   width: 200px;
   flex-shrink: 0;

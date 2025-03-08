@@ -22,6 +22,11 @@ body {
     }
 }
 
+#main-container.main-container--noframe {
+    max-width: none;
+    padding: 0;
+}
+
 #left-sidebar {
     width: 200px;
     flex-shrink: 0;

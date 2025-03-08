@@ -1,14 +1,14 @@
 use axum::{
     body::Bytes,
     http::StatusCode,
-    response::{Html, IntoResponse, Redirect},
+    response::{Html, IntoResponse},
     routing::{get, get_service},
     Router,
 };
 use dashmap::DashMap;
 use dioxus::prelude::*;
 use dioxus_html_macro::html;
-use routes::{CssSupportPage, GettingStartedPage};
+use routes::{CssSupportPage, GettingStartedPage, HomePage};
 use std::{
     any::{Any, TypeId},
     net::{IpAddr, SocketAddr},
@@ -28,7 +28,7 @@ async fn main() {
 
     // build our application with a route
     let app = Router::new()
-        .route("/", get(|| async { Redirect::to("/support-matrix") }))
+        .route("/", get(|| dx_route_cached(|| html!(<HomePage />))))
         .route(
             "/support-matrix",
             get(|| dx_route_cached(|| html!(<CssSupportPage />))),

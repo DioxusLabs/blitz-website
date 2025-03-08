@@ -11,6 +11,8 @@ pub fn Page(
     head: Option<Element>,
     footer: Option<Element>,
     children: Element,
+    #[props(default)]
+    noframe: bool,
 ) -> Element {
 
     // Register function to get hash of CSS file. Hash doesn't need to be secure as it is
@@ -63,7 +65,11 @@ pub fn Page(
                     //     " | "
                     //     a { href: "/learning-resources", "Learning Resources" }
                     // }
-                    div { id: "main-container", {children} }
+                    div {
+                        id: "main-container",
+                        class: if noframe { "main-container--noframe" },
+                        {children}
+                    }
                     {footer}
                 }
             }
