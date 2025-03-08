@@ -72,7 +72,7 @@ nav {
 nav > a {
   padding: 24px;
   cursor: pointer;
-  font-family: "Jost";
+  font-family: "Jost*";
   font-weight: 500;
   font-size: 1.4em;
 }
@@ -127,7 +127,7 @@ section {
 
 h1, h2, h3, h4 {
   font-weight: 500;
-  font-family: "Jost";
+  font-family: "Jost*";
   margin-bottom: 0;
 }
 
