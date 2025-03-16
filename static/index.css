@@ -16,9 +16,6 @@ body {
   max-width: calc(80ch + 48px);
   background-color: white;
 }
-#main-container > h1:first-child {
-  margin-top: 0;
-}
 
 #main-container.main-container--noframe {
   max-width: none;

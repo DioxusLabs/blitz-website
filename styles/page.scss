@@ -16,10 +16,6 @@ body {
     margin: 0 auto;
     max-width: calc(80ch + 48px);
     background-color: white;
-
-    > h1:first-child {
-        margin-top: 0
-    }
 }
 
 #main-container.main-container--noframe {
