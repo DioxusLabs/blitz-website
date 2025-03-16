@@ -78,18 +78,31 @@ nav {
     display: flex;
 
     > a {
-        padding: 24px;
+        padding: 24px 12px;
         cursor: pointer;
         font-family: "Jost*";
         font-weight: 500;
         font-size: 1.4em;
+        line-height: 1;
         &, &:hover, &:visited, &:active { color: black; }
 
         &:hover {
             background-color: #cab89b;
             text-decoration: none;
         }
+        
+        &.nav-icon {
+            padding: 12px;
+            font-size: 1px;
+            display: grid;
+            place-items: center;
+            img {
+                width: 40px;
+                height: 40px;  
+            }
+        }
     }
+
 }
 
 .hero {

@@ -70,11 +70,12 @@ nav {
   display: flex;
 }
 nav > a {
-  padding: 24px;
+  padding: 24px 12px;
   cursor: pointer;
   font-family: "Jost*";
   font-weight: 500;
   font-size: 1.4em;
+  line-height: 1;
 }
 nav > a, nav > a:hover, nav > a:visited, nav > a:active {
   color: black;
@@ -82,6 +83,16 @@ nav > a, nav > a:hover, nav > a:visited, nav > a:active {
 nav > a:hover {
   background-color: #cab89b;
   text-decoration: none;
+}
+nav > a.nav-icon {
+  padding: 12px;
+  font-size: 1px;
+  display: grid;
+  place-items: center;
+}
+nav > a.nav-icon img {
+  width: 40px;
+  height: 40px;
 }
 
 .hero {

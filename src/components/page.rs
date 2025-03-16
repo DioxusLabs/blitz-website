@@ -11,10 +11,8 @@ pub fn Page(
     head: Option<Element>,
     footer: Option<Element>,
     children: Element,
-    #[props(default)]
-    noframe: bool,
+    #[props(default)] noframe: bool,
 ) -> Element {
-
     // Register function to get hash of CSS file. Hash doesn't need to be secure as it is
     // purely to prevent the old version of the file being cached when the file it updated
     let cwd = current_dir().unwrap();
@@ -70,6 +68,13 @@ pub fn Page(
                         nav {
                             a { href: "/", "About" }
                             a { href: "/support-matrix", "CSS Support" }
+                            a {
+                                class: "nav-icon",
+                                target: "_blank",
+                                alt: "Github",
+                                href: "https://github.com/dioxuslabs/blitz",
+                                img { src: "/static/github.svg" }
+                            }
                         }
                     }
                     div {
