@@ -57,13 +57,15 @@ pub fn Page(
                             }
                         }
                         // Logo with HTML text
-                        //
-                        // a { href: "/",
-                        //     img { src: "/static/blitz-logo.svg", class: "logo" }
-                        // }
-                        // div { class: "page-heading-group",
-                        //     h1 { class: "page-heading", "Blitz" }
-                        //     h2 { class: "page-subheading", "A radically modular web engine" }
+                        // div {
+                        //     style: "display: flex;align-items: center; gap: 20px;",
+                        //     a { href: "/",
+                        //         img { src: "/static/blitz-logo.svg", class: "logo" }
+                        //     }
+                        //     div { class: "page-heading-group",
+                        //         h1 { class: "page-heading", "Blitz" }
+                        //         h2 { class: "page-subheading", "A radically modular web engine" }
+                        //     }   
                         // }
                         nav {
                             a { href: "/", "About" }
