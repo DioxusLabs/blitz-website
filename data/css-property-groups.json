@@ -180,8 +180,8 @@
       { "name" : "background-size", "status": "Partial" },
       { "name" : "background-repeat", "status": "No" },
       { "name" : "background-clip", "status": "No" },
-      { "name" : "background-attachment", "status": "Yes" },
-      { "name" : "background-origin", "status": "Partial" },
+      { "name" : "background-attachment", "status": "No" },
+      { "name" : "background-origin", "status": "No" },
     ]
   },
   {
