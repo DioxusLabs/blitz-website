@@ -160,7 +160,7 @@
       { "name": "text-decoration-line", "status": "No" },
       { "name": "text-wrap", "status": "Partial" },
       { "name": "word-spacing", "status": "Yes" },
-      { "name": "text-decoration-color", "status": "No" },
+      { "name": "text-decoration-color", "status": "Yes" },
       { "name": "hyphens", "status": "No" },
       { "name": "tab-size", "status": "No" },
       { "name": "quotes", "status": "No" },
