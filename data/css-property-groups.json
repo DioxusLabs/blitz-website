@@ -134,7 +134,7 @@
       { "name": "font-variant", "status": "No" },
       { "name": "font-feature-settings", "status": "No", "issues": ["DioxusLabs/blitz#184"] },
       { "name": "font-stretch", "status": "Yes" },
-      { "name": "font-variation-settings", "status": "No", "issues": ["DioxusLabs/blitz#184"] },
+      { "name": "font-variation-settings", "status": "Yes" },
       { "name": "font-variant-ligatures", "status": "No" },
     ]
   },
