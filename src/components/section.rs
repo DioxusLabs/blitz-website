@@ -18,7 +18,7 @@ pub fn Section(
     heading: String,
     description: Option<DefaultAtom>,
     level: Option<SectionLevel>,
-    section_key: DefaultAtom,
+    section_key: Option<DefaultAtom>,
     subsection_key: Option<DefaultAtom>,
     children: Element,
 ) -> Element {
@@ -33,7 +33,12 @@ pub fn Section(
     rsx! {
         section {
             "data-toc-section": true,
-            id: if let Some(subsection_key) = subsection_key { "section-{ section_key }-subsection-{ subsection_key }" } else { "section-{ section_key }" },
+            id: match (section_key, subsection_key) {
+                (Some(key), Some(subkey)) => "section-{ key }-subsection-{ subkey }",
+                (Some(key), None) => "section-{ key }",
+                _ => ""
+            },
+            
             {
                 match level {
                     SectionLevel::H2 => html!(<h2>"{heading}"</h2>),
