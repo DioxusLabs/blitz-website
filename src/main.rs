@@ -8,7 +8,7 @@ use axum::{
 use dashmap::DashMap;
 use dioxus::prelude::*;
 use dioxus_html_macro::html;
-use routes::{CssSupportPage, GettingStartedPage, HomePage};
+use routes::{CssSupportPage, GettingStartedPage, HomePage, RoadmapPage};
 use std::{
     net::{IpAddr, SocketAddr},
     sync::LazyLock,
@@ -36,6 +36,10 @@ async fn main() {
         .route(
             "/getting-started",
             get(|| dx_route_cached(|| html!(<GettingStartedPage />))),
+        )
+        .route(
+            "/roadmap",
+            get(|| dx_route_cached(|| html!(<RoadmapPage />))),
         )
         .nest_service("/static", get_service(ServeDir::new("static")))
         .layer(TraceLayer::new_for_http());

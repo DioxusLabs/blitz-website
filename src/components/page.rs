@@ -69,6 +69,7 @@ pub fn Page(
                         nav {
                             a { href: "/", "About" }
                             a { href: "/status", "Status" }
+                            a { href: "/roadmap", "Roadmap" }
                             a {
                                 class: "nav-icon",
                                 alt: "Github",
