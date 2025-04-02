@@ -74,8 +74,17 @@ pub fn Page(
                                 class: "nav-icon",
                                 target: "_blank",
                                 alt: "Github",
+                                title: "Github",
                                 href: "https://github.com/dioxuslabs/blitz",
                                 img { src: "/static/github.svg" }
+                            }
+                            a {
+                                class: "nav-icon",
+                                target: "_blank",
+                                alt: "Discord",
+                                title: "Discord chat",
+                                href: "https://discord.gg/AnNPqT95pu",
+                                img { src: "/static/discord.svg" }
                             }
                         }
                     }
