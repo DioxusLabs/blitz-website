@@ -6,8 +6,11 @@ use string_cache::DefaultAtom;
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum SectionLevel {
+    H2,
     H3,
     H4,
+    H5,
+    H6,
 }
 
 #[component]
@@ -33,8 +36,11 @@ pub fn Section(
             id: if let Some(subsection_key) = subsection_key { "section-{ section_key }-subsection-{ subsection_key }" } else { "section-{ section_key }" },
             {
                 match level {
-                    SectionLevel::H3 => html!(< h3 > "{heading}" </ h3 >),
-                    SectionLevel::H4 => html!(< h4 > "{heading}" </ h4 >),
+                    SectionLevel::H2 => html!(<h2>"{heading}"</h2>),
+                    SectionLevel::H3 => html!(<h3>"{heading}"</h3>),
+                    SectionLevel::H4 => html!(<h4>"{heading}"</h4>),
+                    SectionLevel::H5 => html!(<h5>"{heading}"</h5>),
+                    SectionLevel::H6 => html!(<h6>"{heading}"</h6>),
                 }
             }
 
