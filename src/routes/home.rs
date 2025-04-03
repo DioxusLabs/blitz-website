@@ -8,8 +8,9 @@ pub fn HomePage() -> Element {
         Page { title: "Home".into(), noframe: true,
             div { style: "
                     height: 100vh;
+                    margin-top: -107px;
                     background: url(/static/logo-circle.svg);
-                    background-size: 150vw;
+                    background-size: 150vmax;
                     background-position-y: 60%;
                     background-position-x: center;
                     background-repeat: no-repeat;
