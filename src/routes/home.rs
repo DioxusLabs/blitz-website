@@ -5,7 +5,7 @@ use crate::components::Page;
 #[component]
 pub fn HomePage() -> Element {
     rsx! {
-        Page { title: "Home".into(), noframe: true,
+        Page { title: "Home".into(), noframe: true, transparent_header: true,
             div { style: "
                     height: 100vh;
                     margin-top: -107px;

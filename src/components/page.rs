@@ -11,6 +11,7 @@ pub fn Page(
     head: Option<Element>,
     footer: Option<Element>,
     children: Element,
+    #[props(default)] transparent_header: bool,
     #[props(default)] noframe: bool,
 ) -> Element {
     // Register function to get hash of CSS file. Hash doesn't need to be secure as it is
@@ -49,7 +50,9 @@ pub fn Page(
             }
             body {
                 Fragment {
-                    div { id: "header",
+                    div {
+                        id: "header",
+                        class: if transparent_header { "transparent-bg" },
                         a { href: "/", class: "logo-link",
                             img {
                                 src: "/static/blitz-logo-with-text3.svg",

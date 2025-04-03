@@ -35,13 +35,14 @@ body {
 #header {
   position: relative;
   z-index: 10;
-  background-color: #8c3037;
-  background-color: #f4e8d2;
-  background-color: rgba(255, 255, 255, 0.3);
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 18px;
+  background-color: #f4e8d2;
+}
+#header.transparent-bg {
+  background-color: rgba(255, 255, 255, 0.3);
 }
 #header .logo {
   height: 60px;

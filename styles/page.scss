@@ -36,40 +36,42 @@ body {
 #header {
     position: relative;
     z-index: 10;
-    background-color: #8c3037;
-    background-color: #f4e8d2;
-    background-color: rgba(255, 255, 255, 0.3);
     display: flex;
     align-items: center;
     justify-content: space-between;
     padding: 18px;
 
-  .logo {
-    height: 60px;
-    // margin-right: 20px;
-  }
-
-  .page-heading-group {
-      flex: 0 0 auto;
-      margin-top: -6px;
-
-    .page-heading {
-        color: #333;
-        color: black;
-        font-size: 4rem;
-        font-weight: normal;
-        margin: 0;
-        font-family: Futura;
+    background-color: #f4e8d2;
+    &.transparent-bg {
+        background-color: rgba(255, 255, 255, 0.3);
     }
-    .page-subheading {
-        font-size: 1.5rem;
-        font-weight: normal;
-        margin: 0;
-        color: black;
-        // color: #007445
-        font-family: Futura;
+
+    .logo {
+        height: 60px;
+        // margin-right: 20px;
     }
-  }
+
+    .page-heading-group {
+        flex: 0 0 auto;
+        margin-top: -6px;
+
+        .page-heading {
+            color: #333;
+            color: black;
+            font-size: 4rem;
+            font-weight: normal;
+            margin: 0;
+            font-family: Futura;
+        }
+        .page-subheading {
+            font-size: 1.5rem;
+            font-weight: normal;
+            margin: 0;
+            color: black;
+            // color: #007445
+            font-family: Futura;
+        }
+    }
 
 }
 
