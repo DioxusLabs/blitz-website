@@ -68,7 +68,7 @@
     "id": "visibility-isolation",
     "name": "Visibility, Clipping & Isolation",
     "entries": [
-      { "name": "opacity", "status": "Partial", "notes": "Values of 0 and 1 are supported. All other values are treated as 1." },
+      { "name": "opacity", "status": "Yes", "notes": "Nodes with opacity are currently clipped regardless of the overflow style" },
       { "name": "visibility", "status": "Yes" },
       { "name": "clip-path", "status": "No", "properties": ["clip-path", "clip"] },
       { "name": "contain", "status": "No" },
