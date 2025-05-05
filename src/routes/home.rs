@@ -5,7 +5,7 @@ use crate::components::Page;
 #[component]
 pub fn HomePage() -> Element {
     rsx! {
-        Page { title: "Home".into(), noframe: true, transparent_header: false,
+        Page { title: "A radically modular web engine".into(), noframe: true, transparent_header: false,
             div { style: "
                     // height: calc(100vh - 96px);
                     background-color: white;

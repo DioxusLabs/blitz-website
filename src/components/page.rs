@@ -34,7 +34,7 @@ pub fn Page(
                         name: "viewport",
                         content: "width=device-width, initial-scale=1.0",
                     }
-                    title { "{title} - Blitz" }
+                    title { "Blitz - {title}" }
                     link { href: "/static/normalize.css", rel: "stylesheet" }
                     link {
                         rel: "stylesheet",
