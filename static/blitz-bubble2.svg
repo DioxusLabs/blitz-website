@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg width="100%" height="100%" viewBox="0 0 700 500" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" xmlns:serif="http://www.serif.com/" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:2;">
+    <g transform="matrix(2.34102,0,0,2.34102,-2422.04,-980.713)">
+        <g transform="matrix(0.424552,0,0,0.424552,1077.94,448.204)">
+            <circle cx="250.606" cy="288.367" r="138.421" style="fill:rgb(48,34,55);"/>
+        </g>
+        <g transform="matrix(1,0,0,1,830.046,315.478)">
+            <g transform="matrix(24,0,0,24,381.167,242.176)">
+            </g>
+            <text x="326.447px" y="242.176px" style="font-family:'Jost-Book', 'Jost*';font-size:24px;fill:white;">DOM</text>
+        </g>
+        <g transform="matrix(0.541927,0,0,0.541927,1183.75,585.469)">
+            <text x="-53.91px" y="0px" style="font-family:'HelveticaNeue', 'Helvetica Neue';font-size:20px;fill:white;">DOM, Style,</text>
+            <g transform="matrix(20,0,0,20,66.13,20.56)">
+            </g>
+            <text x="-66.13px" y="20.56px" style="font-family:'HelveticaNeue', 'Helvetica Neue';font-size:20px;fill:white;">Layout, Events</text>
+        </g>
+    </g>
+    <g transform="matrix(1.43173,0,0,1.43173,-1586.38,-646.227)">
+        <g transform="matrix(0.424552,0,0,0.424552,1077.94,448.204)">
+            <circle cx="250.606" cy="288.367" r="138.421" style="fill:rgb(230,29,50);"/>
+        </g>
+        <g transform="matrix(1,0,0,1,830.046,337.155)">
+            <g transform="matrix(24,0,0,24,378.095,242.176)">
+            </g>
+            <text x="329.519px" y="242.176px" style="font-family:'Jost-Book', 'Jost*';font-size:24px;fill:white;">P<tspan x="341.951px " y="242.176px ">a</tspan>int</text>
+        </g>
+    </g>
+    <g transform="matrix(1.43173,0,0,1.43173,-1122.59,-638.821)">
+        <g transform="matrix(0.424552,0,0,0.424552,1077.94,448.204)">
+            <circle cx="250.606" cy="288.367" r="138.421" style="fill:rgb(62,149,147);"/>
+        </g>
+        <g transform="matrix(1,0,0,1,830.046,337.155)">
+            <g transform="matrix(24,0,0,24,383.075,242.176)">
+            </g>
+            <text x="324.539px" y="242.176px" style="font-family:'Jost-Book', 'Jost*';font-size:24px;fill:white;">Script</text>
+        </g>
+    </g>
+    <g transform="matrix(1.43173,0,0,1.43173,-1081.43,-405.163)">
+        <g transform="matrix(0.424552,0,0,0.424552,1077.94,448.204)">
+            <circle cx="250.606" cy="288.367" r="138.421" style="fill:rgb(233,86,41);"/>
+        </g>
+        <g transform="matrix(1,0,0,1,830.046,337.155)">
+            <g transform="matrix(24,0,0,24,378.383,242.176)">
+            </g>
+            <text x="329.231px" y="242.176px" style="font-family:'Jost-Book', 'Jost*';font-size:24px;fill:white;">Shell</text>
+        </g>
+    </g>
+    <g transform="matrix(1.43173,0,0,1.43173,-1611.42,-406.988)">
+        <g transform="matrix(0.424552,0,0,0.424552,1077.94,448.204)">
+            <circle cx="250.606" cy="288.367" r="138.421" style="fill:rgb(252,176,64);"/>
+        </g>
+        <g transform="matrix(1,0,0,1,830.046,337.155)">
+            <g transform="matrix(24,0,0,24,372.167,242.176)">
+            </g>
+            <text x="335.447px" y="242.176px" style="font-family:'Jost-Book', 'Jost*';font-size:24px;fill:white;">Net</text>
+        </g>
+    </g>
+    <g transform="matrix(1.43173,0,0,1.43173,-1346.66,-723.296)">
+        <g transform="matrix(0.424552,0,0,0.424552,1077.94,448.204)">
+            <circle cx="250.606" cy="288.367" r="138.421" style="fill:rgb(1,99,63);"/>
+        </g>
+        <g transform="matrix(1,0,0,1,830.046,337.155)">
+            <g transform="matrix(24,0,0,24,385.439,242.176)">
+            </g>
+            <text x="322.175px" y="242.176px" style="font-family:'Jost-Book', 'Jost*';font-size:24px;fill:white;">Media</text>
+        </g>
+    </g>
+</svg>
