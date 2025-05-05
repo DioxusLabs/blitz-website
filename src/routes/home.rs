@@ -93,7 +93,11 @@ pub fn HomePage() -> Element {
                 p {
                     font_size: "1.4em",
                     max_width: "800px",
-                    "Dioxus Native wraps Blitz and provides a write-once, run everywhere app development experience across all major platforms
+                    a {
+                        href: "https://github.com/DioxusLabs/dioxus/tree/main/packages/native",
+                        "Dioxus Native"
+                    }
+                    " wraps Blitz and provides a write-once, run everywhere app development experience across all major platforms
                     including web."
                 }
 
