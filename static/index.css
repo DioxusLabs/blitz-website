@@ -39,6 +39,7 @@ body {
   align-items: center;
   justify-content: space-between;
   padding: 18px;
+  height: 96px;
   background-color: #f4e8d2;
 }
 #header.transparent-bg {
@@ -71,7 +72,9 @@ nav {
   display: flex;
 }
 nav > a {
-  padding: 24px 12px;
+  padding: 12px;
+  display: flex;
+  align-items: center;
   cursor: pointer;
   font-family: "Jost*";
   font-weight: 500;

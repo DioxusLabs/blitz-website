@@ -7,7 +7,7 @@ pub fn HomePage() -> Element {
     rsx! {
         Page { title: "Home".into(), noframe: true, transparent_header: false,
             div { style: "
-                    height: calc(100vh - 107px);
+                    height: calc(100vh - 96px);
                     background: url(/static/logo-circle.svg);
                     background-size: 150vmax;
                     background-position-y: 60%;
