@@ -1,3 +1,12 @@
+@font-face {
+  font-family: "Jost";
+  src: url("/static/fonts/jost-variable.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Jost";
+  font-style: italic;
+  src: url("/static/fonts/jost-italic-variable.woff2") format("woff2");
+}
 * {
   box-sizing: border-box;
 }
