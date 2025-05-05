@@ -5,10 +5,9 @@ use crate::components::Page;
 #[component]
 pub fn HomePage() -> Element {
     rsx! {
-        Page { title: "Home".into(), noframe: true, transparent_header: true,
+        Page { title: "Home".into(), noframe: true, transparent_header: false,
             div { style: "
-                    height: 100vh;
-                    margin-top: -107px;
+                    height: calc(100vh - 107px);
                     background: url(/static/logo-circle.svg);
                     background-size: 150vmax;
                     background-position-y: 60%;
