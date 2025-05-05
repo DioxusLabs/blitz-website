@@ -68,7 +68,7 @@ pub fn Page(
                         //     div { class: "page-heading-group",
                         //         h1 { class: "page-heading", "Blitz" }
                         //         h2 { class: "page-subheading", "A radically modular web engine" }
-                        //     }   
+                        //     }
                         // }
                         nav {
                             a { href: "/", "About" }

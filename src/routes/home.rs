@@ -7,41 +7,97 @@ pub fn HomePage() -> Element {
     rsx! {
         Page { title: "Home".into(), noframe: true, transparent_header: false,
             div { style: "
-                    height: calc(100vh - 96px);
+                    // height: calc(100vh - 96px);
+                    background-color: white;
+                    background-color: #f4e8d2;
                     background: url(/static/logo-circle.svg);
-                    background-size: 150vmax;
-                    background-position-y: 60%;
+                    background-size: 150%;
+                    background-position-y: center;
                     background-position-x: center;
                     background-repeat: no-repeat;
-                    background-color: #f4e8d2;
                     position: relative;
-                    display: grid;
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    padding: 40px 0;
                 ",
-                div { style: "
-                        font-size: 20em;
-                        justify-self: center;
-                        align-self: start;
-                        color: #f4e8d2;
-                        font-family: Futura;
-                        width: min-content;
-                        margin-top: 25vh;
-                        grid-row: 1;
-                        grid-column: 1;
-                    ",
-                    "Blitz"
+
+                img {
+                    src: "/static/counter-example.png",
+                    style: "
+                    width: 80%;
+                    background-color: transparent;
+                    margin: 0 auto;
+                    "
                 }
+            }
+
+            div {
+                style: "
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    background-color: #f4e8d2;
+                ",
+
+                div {
+                    style: "
+                        font-size: 3em;
+                        color: black;
+                        // font-family: Futura;
+                        font-family: Jost;
+                        margin-top: 28px;
+                        line-height: 1.5;
+                    ",
+                    "A "
+                    em {
+                        "radically modular"
+                    }
+                    " web engine"
+                },
+
+                img {
+                    src: "/static/blitz-bubble.svg",
+                    style: "
+                        width: 70%;
+                        background-color: #f4e8d2;
+                        margin: 0 auto;
+                    "
+                }
+            }
+
+            div {
+                style: "
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    background-color: #f4e8d2;
+                    text-align: center;
+                ",
+
                 div { style: "
                         font-size: 3em;
-                        justify-self: center;
-                        align-self: start;
-                        color: #f4e8d2;
-                        font-family: Futura;
-                        width: max-content;
-                        margin-top: 70vh;
-                        grid-row: 1;
-                        grid-column: 1;
+                        color: black;
+                        // font-family: Futura;
+                        font-family: Jost;
+                        margin-top: 28px;
+                        line-height: 1.5;
                     ",
-                    "A radically modular web engine"
+                    "Write once, run everywhere with Dioxus Native"
+                },
+
+                p {
+                    "Dioxus Native wraps Blitz and provides a write-once, run everywhere experience accross all major platforms
+                    including web."
+                }
+
+                img {
+                    src: "/static/counter-example.png",
+                    style: "
+                    width: 70%;
+                    background-color: #f4e8d2;
+                    margin: 0 auto;
+                ",
                 }
             }
         }
