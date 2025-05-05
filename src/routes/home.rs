@@ -38,6 +38,7 @@ pub fn HomePage() -> Element {
                     flex-direction: column;
                     align-items: center;
                     background-color: #f4e8d2;
+                    background-color: white;
                 ",
 
                 div {
@@ -46,6 +47,7 @@ pub fn HomePage() -> Element {
                         color: black;
                         // font-family: Futura;
                         font-family: Jost;
+                        font-weight: 500;
                         margin-top: 28px;
                         line-height: 1.5;
                     ",
@@ -61,6 +63,7 @@ pub fn HomePage() -> Element {
                     style: "
                         width: 70%;
                         background-color: #f4e8d2;
+                        background-color: white;
                         margin: 0 auto;
                     "
                 }
@@ -80,6 +83,7 @@ pub fn HomePage() -> Element {
                         color: black;
                         // font-family: Futura;
                         font-family: Jost;
+                        font-weight: 500;
                         margin-top: 28px;
                         line-height: 1.5;
                     ",
@@ -87,7 +91,9 @@ pub fn HomePage() -> Element {
                 },
 
                 p {
-                    "Dioxus Native wraps Blitz and provides a write-once, run everywhere experience accross all major platforms
+                    font_size: "1.4em",
+                    max_width: "800px",
+                    "Dioxus Native wraps Blitz and provides a write-once, run everywhere app development experience across all major platforms
                     including web."
                 }
 
