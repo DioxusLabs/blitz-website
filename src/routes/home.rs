@@ -38,7 +38,6 @@ pub fn HomePage() -> Element {
                     width: "100%",
                     max_width: "1000px",
                     padding: "40px",
-                    font_family: "sans-serif",
                     div {
                         width: "50%",
                         flex: "0 0 50%",
