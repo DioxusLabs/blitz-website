@@ -70,7 +70,7 @@
     "entries": [
       { "name": "opacity", "status": "Yes", "notes": "Nodes with opacity are currently clipped regardless of the overflow style" },
       { "name": "visibility", "status": "Yes" },
-      { "name": "clip-path", "status": "No", "properties": ["clip-path", "clip"] },
+      { "name": "clip-path", "status": "No", "properties": ["clip-path", "clip"], "issues": ["DioxusLabs/blitz#211"] },
       { "name": "contain", "status": "No" },
       { "name": "mask", "status": "No", "properties": ["mask", "mask-image", "mask-size", "mask-position", "mask-repeat", "mask-composite"] },
       { "name": "isolation", "status": "No" },
