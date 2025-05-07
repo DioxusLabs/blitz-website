@@ -96,7 +96,7 @@ pub fn HomePage() -> Element {
                 ",
 
                 img {
-                    src: "/static/counter-example.png",
+                    src: "/static/markdown-screenshot-wide.png",
                     style: "
                     width: 80%;
                     background-color: transparent;
