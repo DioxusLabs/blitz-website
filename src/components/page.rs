@@ -72,7 +72,7 @@ pub fn Page(
                         // }
                         nav {
                             a { href: "/", "About" }
-                            a { href: "/support-matrix", "CSS Support" }
+                            a { href: "/status", "Status" }
                             a {
                                 class: "nav-icon",
                                 target: "_blank",

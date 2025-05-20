@@ -1,7 +1,7 @@
 use axum::{
     body::Bytes,
     http::StatusCode,
-    response::{Html, IntoResponse},
+    response::{Html, IntoResponse, Redirect},
     routing::{get, get_service},
     Router,
 };
@@ -28,8 +28,9 @@ async fn main() {
     // build our application with a route
     let app = Router::new()
         .route("/", get(|| dx_route_cached(|| html!(<HomePage />))))
+        .route("/status", get(|| async { Redirect::to("/status/css") }))
         .route(
-            "/support-matrix",
+            "/status/css",
             get(|| dx_route_cached(|| html!(<CssSupportPage />))),
         )
         .route(
@@ -93,7 +94,10 @@ fn render_component(render_fn: fn() -> Element) -> (String, Duration) {
     let mut dom = VirtualDom::new(render_fn);
     dom.rebuild_in_place();
     let rendered = dioxus_ssr::render(&dom);
-    let html = format!("<!DOCTYPE html><html{}</html>", &rendered[4..(rendered.len()-6)]);
+    let html = format!(
+        "<!DOCTYPE html><html{}</html>",
+        &rendered[4..(rendered.len() - 6)]
+    );
 
     (html, start.elapsed())
 }
