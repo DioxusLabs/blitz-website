@@ -75,7 +75,6 @@ pub fn Page(
                             a { href: "/status", "Status" }
                             a {
                                 class: "nav-icon",
-                                target: "_blank",
                                 alt: "Github",
                                 title: "Github",
                                 href: "https://github.com/dioxuslabs/blitz",
