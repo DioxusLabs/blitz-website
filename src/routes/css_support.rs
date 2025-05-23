@@ -103,8 +103,9 @@ static CSS_PROPERTIES: GlobalSignal<Vec<PropGroup>> = Signal::global(|| {
 #[component]
 pub fn CssSupportPage() -> Element {
     rsx! {
-        Page { title: "Supported CSS Properties".into(),
-            h1 { "Supported CSS Properties" }
+        Page { title: "Status: CSS".into(),
+            h1 { "Status" }
+            h2 { "Supported CSS Properties" }
             p {
                 class: "introduction",
                 dangerous_inner_html: r#"
