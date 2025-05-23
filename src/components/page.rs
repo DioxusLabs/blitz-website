@@ -41,10 +41,6 @@ pub fn Page(
                         href: "/static/index.css?{index_css_hash}",
                     }
                     link { rel: "icon", href: "/static/blitz-logo.svg" }
-                    link {
-                        rel: "stylesheet",
-                        href: "https://indestructibletype.com/fonts/Jost.css",
-                    }
                     {head}
                 }
             }
