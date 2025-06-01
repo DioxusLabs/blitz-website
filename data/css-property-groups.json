@@ -87,8 +87,8 @@
       { "name": "max-width / max-height", "status": "Yes", "properties": ["max-width", "max-height", "max-inline-size", "max-block-size"] },
       { "name": "inset", "status": "Yes", "properties": ["top", "left", "bottom", "right"] },
       { "name": "aspect-ratio", "status": "Yes", "properties": ["aspect-ratio"] },
-      { "name": "object-fit", "status": "No" },
-      { "name": "object-position", "status": "No" },
+      { "name": "object-fit", "status": "Yes" },
+      { "name": "object-position", "status": "Yes" },
     ]
   },
   {
