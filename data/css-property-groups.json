@@ -175,12 +175,12 @@
     "entries": [
       { "name" : "background-color", "status": "Yes" },
       { "name" : "background-image", "status": "Yes" },
-      { "name" : "background-position", "status": "Partial", "properties": ["background-position", "background-position-x", "background-position-y"] },
-      { "name" : "background-size", "status": "Partial" },
-      { "name" : "background-repeat", "status": "No" },
-      { "name" : "background-clip", "status": "No" },
+      { "name" : "background-position", "status": "Yes", "properties": ["background-position", "background-position-x", "background-position-y"] },
+      { "name" : "background-size", "status": "Yes" },
+      { "name" : "background-repeat", "status": "Yes" },
+      { "name" : "background-clip", "status": "Yes" },
       { "name" : "background-attachment", "status": "No" },
-      { "name" : "background-origin", "status": "No" },
+      { "name" : "background-origin", "status": "Yes" },
     ]
   },
   {
