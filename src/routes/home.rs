@@ -24,7 +24,8 @@ pub fn HomePage() -> Element {
                         // font-family: Futura;
                         font-family: Jost;
                         font-weight: 500;
-                        margin-top: 28px;
+                        margin-top: 18px;
+                        margin-bottom: 18px;
                         line-height: 1.5;
                     ",
                     "A "
@@ -32,50 +33,50 @@ pub fn HomePage() -> Element {
                     " web engine"
                 }
 
-                div {
-                    display: "flex",
-                    gap: "40px",
-                    width: "100%",
-                    max_width: "1000px",
-                    padding: "40px",
-                    div {
-                        width: "50%",
-                        flex: "0 0 50%",
-                        font_size: "1.2em",
-                        line_height: 1.35,
-                        ul {
-                            li { margin_bottom: "6px",
-                                "A core built on standalone libraries like "
-                                a { href: "https://github.com/servo/stylo", "Stylo" }
-                                " (CSS), "
-                                a { href: "https://github.com/DioxusLabs/taffy", "Taffy" }
-                                " (layout), "
-                                a { href: "https://github.com/linebender/parley",
-                                    "Parley"
-                                }
-                                " (text), and "
-                                a { href: "https://github.com/accesskit/accesskit",
-                                    "AccessKit"
-                                }
-                                " (accessibility)."
-                            }
-                            li { margin_bottom: "6px",
-                                "Independent modules for parsing, networking, media decoding, rendering, and script."
-                            }
-                            li { margin_bottom: "6px", "iewrhgfioh rog" }
-                            li { margin_bottom: "6px", "iewrhgfioh rog" }
-                        }
-                    }
-                    img {
-                        flex: "0 0 50%",
-                        src: "/static/blitz-bubble2.svg",
-                        style: "
-                            width: 50%;
-                            background-color: #f4e8d2;
-                            background-color: white;
-                        ",
-                    }
-                }
+                // div {
+                //     display: "flex",
+                //     gap: "40px",
+                //     width: "100%",
+                //     max_width: "1000px",
+                //     padding: "40px",
+                //     div {
+                //         width: "50%",
+                //         flex: "0 0 50%",
+                //         font_size: "1.2em",
+                //         line_height: 1.35,
+                //         ul {
+                //             li { margin_bottom: "6px",
+                //                 "A core built on standalone libraries like "
+                //                 a { href: "https://github.com/servo/stylo", "Stylo" }
+                //                 " (CSS), "
+                //                 a { href: "https://github.com/DioxusLabs/taffy", "Taffy" }
+                //                 " (layout), "
+                //                 a { href: "https://github.com/linebender/parley",
+                //                     "Parley"
+                //                 }
+                //                 " (text), and "
+                //                 a { href: "https://github.com/accesskit/accesskit",
+                //                     "AccessKit"
+                //                 }
+                //                 " (accessibility)."
+                //             }
+                //             li { margin_bottom: "6px",
+                //                 "Independent modules for parsing, networking, media decoding, rendering, and script."
+                //             }
+                //             li { margin_bottom: "6px", "iewrhgfioh rog" }
+                //             li { margin_bottom: "6px", "iewrhgfioh rog" }
+                //         }
+                //     }
+                //     img {
+                //         flex: "0 0 50%",
+                //         src: "/static/blitz-bubble2.svg",
+                //         style: "
+                //             width: 50%;
+                //             background-color: #f4e8d2;
+                //             background-color: white;
+                //         ",
+                //     }
+                // }
             
             }
 
