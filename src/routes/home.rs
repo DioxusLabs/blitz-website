@@ -145,7 +145,7 @@ pub fn HomePage() -> Element {
             }
         }
         div { style: "
-                height: 200vh;
+                height: 48px;
                 background: #f4e8d2;
             " }
     }
