@@ -8,7 +8,7 @@ use axum::{
 use dashmap::DashMap;
 use dioxus::prelude::*;
 use dioxus_html_macro::html;
-use routes::{CssSupportPage, ElementSupportPage, EventSupportPage, GettingStartedPage, HomePage};
+use routes::{AboutPage, CssSupportPage, ElementSupportPage, EventSupportPage, GettingStartedPage, HomePage};
 use std::{
     net::{IpAddr, SocketAddr},
     sync::LazyLock,
@@ -28,6 +28,7 @@ async fn main() {
     // build our application with a route
     let app = Router::new()
         .route("/", get(|| dx_route_cached(|| html!(<HomePage />))))
+        .route("/about", get(|| dx_route_cached(|| html!(<AboutPage />))))
         .route("/status", get(|| async { Redirect::to("/status/css") }))
         .route(
             "/status/css",

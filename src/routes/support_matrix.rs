@@ -60,6 +60,7 @@ pub fn StatusTabs(current_tab: &'static str) -> Element {
 
     rsx!(
         div {
+            style: "margin-top: 48px",
             class: "tab-container",
             for tab in TABS {
                 a {
@@ -79,7 +80,7 @@ pub fn StatusTabs(current_tab: &'static str) -> Element {
 #[component]
 pub fn StatusHeader() -> Element {
     rsx!(
-         h1 { "Status" }
+        h1 { "Status" }
         p {
             class: "introduction",
             dangerous_inner_html: r#"

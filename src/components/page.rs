@@ -67,7 +67,7 @@ pub fn Page(
                         //     }
                         // }
                         nav {
-                            a { href: "/", "About" }
+                            a { href: "/about", "About" }
                             a { href: "/status", "Status" }
                             a {
                                 class: "nav-icon",
