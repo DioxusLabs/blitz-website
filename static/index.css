@@ -138,6 +138,9 @@ p.introduction {
   color: #494949;
   max-width: 80ch;
 }
+p.introduction.introduction--small {
+  font-size: 0.9em;
+}
 
 p, li {
   color: #000;
@@ -319,4 +322,28 @@ table td {
 
 .css-prop--split-by-value {
   background: rgba(244, 232, 210, 0.3);
+}
+
+.tab-container {
+  display: flex;
+  border-bottom: 1px solid #CCC;
+  margin-top: 24px;
+  margin-bottom: 24px;
+}
+
+.tab {
+  display: block;
+  padding: 12px;
+  border: 0 solid #CCC;
+  border-top-left-radius: 4px;
+  border-top-right-radius: 4px;
+  margin-bottom: -1px;
+  border-bottom-width: 1px;
+}
+.tab.tab--selected {
+  border-width: 1px;
+  border-bottom-color: white;
+}
+.tab.tab--selected, .tab:hover {
+  color: inherit;
 }

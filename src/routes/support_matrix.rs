@@ -38,23 +38,64 @@ static CSS_PROPERTIES: GlobalSignal<Vec<PropGroup>> = Signal::global(|| {
 });
 
 #[component]
+pub fn StatusTabs(current_tab: &'static str) -> Element {
+    struct Tab {
+        href: &'static str,
+        label: &'static str,
+    }
+    const TABS: [Tab; 2] = [
+        Tab {
+            href: "/status/css",
+            label: "CSS Properties",
+        },
+        Tab {
+            href: "/status/events",
+            label: "HTML Events",
+        },
+    ];
+
+    rsx!(
+        div {
+            class: "tab-container",
+            for tab in TABS {
+                a {
+                    class: if tab.href.ends_with(current_tab) {
+                        "tab tab--selected"
+                    } else {
+                        "tab"
+                    },
+                    href: tab.href,
+                    {tab.label}
+                }
+            }
+        }
+    )
+}
+
+#[component]
+pub fn StatusHeader() -> Element {
+    rsx!(
+         h1 { "Status" }
+        p {
+            class: "introduction",
+            dangerous_inner_html: r#"
+                This page documents the implementation status of various HTML and CSS features in Blitz.
+            "#,
+        }
+    )
+}
+
+#[component]
 pub fn CssSupportPage() -> Element {
     rsx! {
         Page { title: "Status: CSS".into(),
-            h1 { "Status" }
-            h2 { "Supported CSS Properties" }
+            StatusHeader {}
+            StatusTabs { current_tab: "css" }
             p {
-                class: "introduction",
+                class: "introduction introduction--small",
                 dangerous_inner_html: r#"
-                    This page documents which CSS properties (and for some properties, which values are supported for that property).
-                    Properties are grouped into logical feature grouping, and  within each group they are roughly ordered by the percentage of web pages 
-                    that use that property.
-                "#,
-            }
-            p {
-                class: "introduction",
-                dangerous_inner_html: r#"
-                    You can generally assume that if the longhand versions of a property are supported then the shorthand version will also be supported and vice-versa.
+                    CSS Properties are grouped into logical feature grouping, and  within each group they are roughly ordered by the percentage of web pages 
+                    that use that property. You can generally assume that if the longhand versions of a property are supported then the shorthand version will also be supported and vice-versa.
                 "#,
             }
             for group in CSS_PROPERTIES() {
@@ -79,22 +120,8 @@ static HTML_EVENTS: GlobalSignal<Vec<PropGroup>> = Signal::global(|| {
 pub fn EventSupportPage() -> Element {
     rsx! {
         Page { title: "Status: Events".into(),
-            h1 { "Status" }
-            h2 { "Supported HTML Events" }
-            // p {
-            //     class: "introduction",
-            //     dangerous_inner_html: r#"
-            //         This page documents which CSS properties (and for some properties, which values are supported for that property).
-            //         Properties are grouped into logical feature grouping, and  within each group they are roughly ordered by the percentage of web pages 
-            //         that use that property.
-            //     "#,
-            // }
-            // p {
-            //     class: "introduction",
-            //     dangerous_inner_html: r#"
-            //         You can generally assume that if the longhand versions of a property are supported then the shorthand version will also be supported and vice-versa.
-            //     "#,
-            // }
+            StatusHeader {}
+            StatusTabs { current_tab: "events" }
             for group in HTML_EVENTS() {
                 Section {
                     section_key: group.id.clone(),
@@ -201,7 +228,7 @@ fn SupportTableRow(entry: PropEntry, use_column: bool) -> Element {
             if use_column {
                 td { style: "vertical-align: top;color: #666;text-align: right",
                     {format!("{:.0}%", entry.percentage * 100.0)}
-                } 
+                }
             }
             td { style: "vertical-align: top;font-weight: bold;", {entry.name.clone()} }
             td {

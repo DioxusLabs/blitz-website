@@ -34,7 +34,7 @@ async fn main() {
             get(|| dx_route_cached(|| html!(<CssSupportPage />))),
         )
         .route(
-            "/status/html",
+            "/status/events",
             get(|| dx_route_cached(|| html!(<EventSupportPage />))),
         )
         .route(

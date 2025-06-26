@@ -130,6 +130,10 @@ nav {
 p.introduction {
     color: #494949;
     max-width: 80ch;
+
+    &.introduction--small {
+        font-size: 0.9em;
+    }
 }
 
 p, li {
