@@ -1,0 +1,149 @@
+[
+  {
+    "id": "head",
+    "name": "Head elements",
+    "entries": [
+      { "name": "<title>", "status": "Yes" },
+      { "name": "<meta>", "status": "No" },
+      { "name": "<base>", "status": "No" },
+      { "name": "<style>", "status": "Yes" },
+      { 
+        "name": "<link>",
+        "values": [
+          { "value": "rel=\"stylesheet\"", "status": "Yes" },
+          { "value": "rel=\"icon\"", "status": "No" },
+        ],
+      },
+    ]
+  },
+  {
+    "id": "images",
+    "name": "Images",
+    "entries": [
+      {
+        "name": "<img>",
+        "values": [
+          { "value": "src", "status": "Yes" },
+          { "value": "srcset", "status": "No" },
+        ]
+      },
+      { "name": "<picture>", "status": "No" },
+      {
+        "name": "<svg>",
+        "status": "Partial",
+        "notes": "Static SVGs are supported. Support for CSS is limited. Some features such as filters are missing."
+      },
+    ]
+  },
+  {
+    "id": "interactivity",
+    "name": "Interactivity",
+    "entries": [
+      { "name": "<a>", "status": "Yes" },
+      { "name": "<dialog>", "status": "No" },
+      { "name": "<details>/<summary>", "status": "No" },
+    ]
+  },
+  {
+    "id": "form-controls",
+    "name": "Form Controls",
+    "entries": [
+      { "name": "Hidden input", "status": "Yes" },
+      { "name": "Label", "status": "Yes" },
+      {
+        "name": "Button",
+        "values": [
+          { "value": "general", "status": "Yes" },
+          { "value": "type=\"submit\"", "status": "Yes" },
+          { "value": "type=\"reset\"", "status": "No" },
+        ]
+      },
+      {
+        "name": "Text input",
+        "values": [
+          { "value": "type=\"text\"", "status": "Yes" },
+          { "value": "type=\"password\"", "status": "No" },
+          { "value": "type=\"email\"", "status": "No" },
+          { "value": "type=\"url\"", "status": "No" },
+        ]
+      },
+      { "name": "Textarea", "status": "Yes" },
+      { "name": "Radio button", "status": "Yes" },
+      { "name": "Checkbox", "status": "Yes" },
+      { "name": "Select", "status": "No" },
+      { "name": "Color picker", "status": "No" },
+      { "name": "File picker", "status": "No" },
+      
+      { "name": "Output", "status": "No" },
+      { "name": "Meter", "status": "No" },
+      { "name": "Progress", "status": "No" },
+    ]
+  },
+  {
+    "id": "embedded-content",
+    "name": "Embedded content",
+    "entries": [
+      { 
+        "name": "<canvas>",
+        "status": "Yes",
+        "notes": "A propreitary API to render a raw WGPU texture is supported"
+      },
+      { "name": "<iframe>", "status": "No" },
+      { "name": "<fencedframe>", "status": "No" },
+      { "name": "<video>", "status": "No" },
+      { "name": "<audio>", "status": "No" },
+      { "name": "<map>/<area>", "status": "No" },
+      { "name": "<math>", "status": "No" },
+      { "name": "<embed>", "status": "No" },
+      { "name": "<object>", "status": "No" },
+    ]
+  },
+  {
+    "id": "scripting",
+    "name": "Scripting",
+    "entries": [
+      { "name": "<script>", "status": "No" },
+      { "name": "<noscript>", "status": "Yes" },
+    ]
+  },
+  {
+    "id": "block",
+    "name": "Block Formatting",
+    "entries": [
+      { "name": "<h1> - <h6>", "status": "Yes" },
+      { "name": "<ul>", "status": "Yes" },
+      { "name": "<ol>", "status": "Yes" },
+      { "name": "<pre>", "status": "Yes" },
+      { "name": "<center>", "status": "Yes" },
+      { "name": "<blockquote>", "status": "Yes" },
+      { "name": "<br>", "status": "Yes" },
+      { "name": "<hr>", "status": "No" },
+    ]
+  },
+  {
+    "id": "formatting",
+    "name": "Inline Formatting",
+    "entries": [
+      { "name": "<i>/<em>", "status": "Yes" },
+      { "name": "<b>/<strong>", "status": "Yes" },
+      { "name": "<u>", "status": "Yes" },
+    ]
+  },
+  {
+    "id": "table",
+    "name": "Table",
+    "notes": "Table layout is currently emulated using CSS Grid",
+    "entries": [
+      { "name": "<table>", "status": "Yes" },
+      { "name": "<tr>", "status": "Yes" },
+      { "name": "<th>", "status": "Yes" },
+      { "name": "<td>", "status": "Yes" },
+      { "name": "<thead>", "status": "Yes" },
+      { "name": "<tbody>", "status": "Yes" },
+      { "name": "<tfoot>", "status": "No" },
+      { "name": "<col>", "status": "No" },
+      { "name": "<colgroup>", "status": "No" },
+      { "name": "<caption>", "status": "No" },
+    ]
+  },
+]

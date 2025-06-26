@@ -8,7 +8,7 @@ use axum::{
 use dashmap::DashMap;
 use dioxus::prelude::*;
 use dioxus_html_macro::html;
-use routes::{CssSupportPage, EventSupportPage, GettingStartedPage, HomePage};
+use routes::{CssSupportPage, ElementSupportPage, EventSupportPage, GettingStartedPage, HomePage};
 use std::{
     net::{IpAddr, SocketAddr},
     sync::LazyLock,
@@ -32,6 +32,10 @@ async fn main() {
         .route(
             "/status/css",
             get(|| dx_route_cached(|| html!(<CssSupportPage />))),
+        )
+        .route(
+            "/status/elements",
+            get(|| dx_route_cached(|| html!(<ElementSupportPage />))),
         )
         .route(
             "/status/events",

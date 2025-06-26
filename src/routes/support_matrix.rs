@@ -43,14 +43,18 @@ pub fn StatusTabs(current_tab: &'static str) -> Element {
         href: &'static str,
         label: &'static str,
     }
-    const TABS: [Tab; 2] = [
+    const TABS: &[Tab] = &[
         Tab {
             href: "/status/css",
             label: "CSS Properties",
         },
         Tab {
+            href: "/status/elements",
+            label: "HTML Elements",
+        },
+        Tab {
             href: "/status/events",
-            label: "HTML Events",
+            label: "Events",
         },
     ];
 
@@ -123,6 +127,30 @@ pub fn EventSupportPage() -> Element {
             StatusHeader {}
             StatusTabs { current_tab: "events" }
             for group in HTML_EVENTS() {
+                Section {
+                    section_key: group.id.clone(),
+                    heading: group.name,
+                    description: group.notes,
+                    SupportTable { entries: group.entries, use_column: false }
+                }
+            }
+        }
+    }
+}
+
+static HTML_ELEMENTS: GlobalSignal<Vec<PropGroup>> = Signal::global(|| {
+    // Load crate data
+    let raw_html_event_groups: &str = include_str!("../../data/html-element-groups.json");
+    serde_json5::from_str(&raw_html_event_groups).unwrap()
+});
+
+#[component]
+pub fn ElementSupportPage() -> Element {
+    rsx! {
+        Page { title: "Status: Elements".into(),
+            StatusHeader {}
+            StatusTabs { current_tab: "elements" }
+            for group in HTML_ELEMENTS() {
                 Section {
                     section_key: group.id.clone(),
                     heading: group.name,
