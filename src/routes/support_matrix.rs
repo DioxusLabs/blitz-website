@@ -6,6 +6,107 @@ use string_cache::DefaultAtom;
 
 use crate::components::{Page, Section};
 
+static CSS_PROPERTIES: GlobalSignal<Vec<PropGroup>> = Signal::global(|| {
+    // Load a hashmap of popularity data
+    // Source: https://chromestatus.com/data/csspopularity
+    let raw_css_popularity: &str = include_str!("../../data/css-popularity.json");
+    let css_popularity: Vec<PropPopularity> = serde_json5::from_str(&raw_css_popularity).unwrap();
+    let css_popularity: HashMap<DefaultAtom, f64> = css_popularity
+        .into_iter()
+        .map(|prop| (prop.property_name, prop.day_percentage))
+        .collect();
+
+    // Load crate data
+    let raw_css_prop_groups: &str = include_str!("../../data/css-property-groups.json");
+    let mut css_prop_groups: Vec<PropGroup> = serde_json5::from_str(&raw_css_prop_groups).unwrap();
+
+    // Fill in percentages for each entry
+    for group in &mut css_prop_groups {
+        for entry in &mut group.entries {
+            entry.percentage = match &entry.properties {
+                Some(props) => *props
+                    .iter()
+                    .filter_map(|prop_name| css_popularity.get(prop_name))
+                    .max_by(|a, b| a.total_cmp(&b))
+                    .unwrap_or(&0.0),
+                None => *css_popularity.get(&entry.name).unwrap_or(&0.0),
+            }
+        }
+    }
+
+    css_prop_groups
+});
+
+#[component]
+pub fn CssSupportPage() -> Element {
+    rsx! {
+        Page { title: "Status: CSS".into(),
+            h1 { "Status" }
+            h2 { "Supported CSS Properties" }
+            p {
+                class: "introduction",
+                dangerous_inner_html: r#"
+                    This page documents which CSS properties (and for some properties, which values are supported for that property).
+                    Properties are grouped into logical feature grouping, and  within each group they are roughly ordered by the percentage of web pages 
+                    that use that property.
+                "#,
+            }
+            p {
+                class: "introduction",
+                dangerous_inner_html: r#"
+                    You can generally assume that if the longhand versions of a property are supported then the shorthand version will also be supported and vice-versa.
+                "#,
+            }
+            for group in CSS_PROPERTIES() {
+                Section {
+                    section_key: group.id.clone(),
+                    heading: group.name,
+                    description: group.notes,
+                    SupportTable { entries: group.entries, use_column: true }
+                }
+            }
+        }
+    }
+}
+
+static HTML_EVENTS: GlobalSignal<Vec<PropGroup>> = Signal::global(|| {
+    // Load crate data
+    let raw_html_event_groups: &str = include_str!("../../data/html-event-groups.json");
+    serde_json5::from_str(&raw_html_event_groups).unwrap()
+});
+
+#[component]
+pub fn EventSupportPage() -> Element {
+    rsx! {
+        Page { title: "Status: Events".into(),
+            h1 { "Status" }
+            h2 { "Supported HTML Events" }
+            // p {
+            //     class: "introduction",
+            //     dangerous_inner_html: r#"
+            //         This page documents which CSS properties (and for some properties, which values are supported for that property).
+            //         Properties are grouped into logical feature grouping, and  within each group they are roughly ordered by the percentage of web pages 
+            //         that use that property.
+            //     "#,
+            // }
+            // p {
+            //     class: "introduction",
+            //     dangerous_inner_html: r#"
+            //         You can generally assume that if the longhand versions of a property are supported then the shorthand version will also be supported and vice-versa.
+            //     "#,
+            // }
+            for group in HTML_EVENTS() {
+                Section {
+                    section_key: group.id.clone(),
+                    heading: group.name,
+                    description: group.notes,
+                    SupportTable { entries: group.entries, use_column: false }
+                }
+            }
+        }
+    }
+}
+
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct PropPopularity {
     pub property_name: DefaultAtom,
@@ -69,86 +170,24 @@ pub struct PropValue {
     pub notes: Option<String>,
 }
 
-static CSS_PROPERTIES: GlobalSignal<Vec<PropGroup>> = Signal::global(|| {
-    // Load a hashmap of popularity data
-    // Source: https://chromestatus.com/data/csspopularity
-    let raw_css_popularity: &str = include_str!("../../data/css-popularity.json");
-    let css_popularity: Vec<PropPopularity> = serde_json5::from_str(&raw_css_popularity).unwrap();
-    let css_popularity: HashMap<DefaultAtom, f64> = css_popularity
-        .into_iter()
-        .map(|prop| (prop.property_name, prop.day_percentage))
-        .collect();
-
-    // Load crate data
-    let raw_css_prop_groups: &str = include_str!("../../data/css-property-groups.json");
-    let mut css_prop_groups: Vec<PropGroup> = serde_json5::from_str(&raw_css_prop_groups).unwrap();
-
-    // Fill in percentages for each entry
-    for group in &mut css_prop_groups {
-        for entry in &mut group.entries {
-            entry.percentage = match &entry.properties {
-                Some(props) => *props
-                    .iter()
-                    .filter_map(|prop_name| css_popularity.get(prop_name))
-                    .max_by(|a, b| a.total_cmp(&b))
-                    .unwrap_or(&0.0),
-                None => *css_popularity.get(&entry.name).unwrap_or(&0.0),
-            }
-        }
-    }
-
-    css_prop_groups
-});
-
 #[component]
-pub fn CssSupportPage() -> Element {
+pub fn SupportTable(entries: Vec<PropEntry>, use_column: bool) -> Element {
     rsx! {
-        Page { title: "Status: CSS".into(),
-            h1 { "Status" }
-            h2 { "Supported CSS Properties" }
-            p {
-                class: "introduction",
-                dangerous_inner_html: r#"
-                    This page documents which CSS properties (and for some properties, which values are supported for that property).
-                    Properties are grouped into logical feature grouping, and  within each group they are roughly ordered by the percentage of web pages 
-                    that use that property.
-                "#,
-            }
-            p {
-                class: "introduction",
-                dangerous_inner_html: r#"
-                    You can generally assume that if the longhand versions of a property are supported then the shorthand version will also be supported and vice-versa.
-                "#,
-            }
-            for group in CSS_PROPERTIES() {
-                Section {
-                    section_key: group.id.clone(),
-                    heading: group.name,
-                    description: group.notes,
-                    SupportTable { entries: group.entries }
-                }
-            }
-        }
-    }
-}
-
-#[component]
-pub fn SupportTable(entries: Vec<PropEntry>) -> Element {
-    rsx! {
-
         table {
             class: "full-width fixed-layout",
             style: "background: transparent",
             thead {
                 tr {
-                    th { style: "color: #666;text-align: right;width: 60px", "% use" }
+                    if use_column {
+                        th { style: "color: #666;text-align: right;width: 60px", "% use" }
+                    }
                     th { style: "color: #666", class: "use-case-column", "Property" }
                     th { style: "color: #666", "Status" }
                 }
             }
             tbody { style: "background: transparent",
                 for entry in entries {
-                    SupportTableRow { entry }
+                    SupportTableRow { entry, use_column }
                 }
             }
         }
@@ -156,11 +195,13 @@ pub fn SupportTable(entries: Vec<PropEntry>) -> Element {
 }
 
 #[component]
-fn SupportTableRow(entry: PropEntry) -> Element {
+fn SupportTableRow(entry: PropEntry, use_column: bool) -> Element {
     rsx! {
         tr { class: if entry.values.is_none() { entry.status.map(|status| status.class()).unwrap_or("") } else { "css-prop--split-by-value" },
-            td { style: "vertical-align: top;color: #666;text-align: right",
-                {format!("{:.0}%", entry.percentage * 100.0)}
+            if use_column {
+                td { style: "vertical-align: top;color: #666;text-align: right",
+                    {format!("{:.0}%", entry.percentage * 100.0)}
+                } 
             }
             td { style: "vertical-align: top;font-weight: bold;", {entry.name.clone()} }
             td {

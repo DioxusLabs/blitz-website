@@ -1,6 +1,6 @@
-mod css_support;
-pub use css_support::CssSupportPage;
+mod support_matrix;
+pub use support_matrix::*;
 mod getting_started;
-pub use getting_started::GettingStartedPage;
+pub use getting_started::*;
 mod home;
-pub use home::HomePage;
+pub use home::*;

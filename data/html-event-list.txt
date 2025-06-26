@@ -4,10 +4,10 @@ onauxclick
 ondblclick
 onmousedown
 onmouseup
-onmouseenter
 oncontextmenu
 
 MOUSE MOVE
+onmouseenter
 onmouseleave
 onmousemove
 onmouseout

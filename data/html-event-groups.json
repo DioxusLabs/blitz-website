@@ -1,0 +1,141 @@
+[
+  {
+    "id": "mouse",
+    "name": "Mouse",
+    "entries": [
+      { "name": "mousedown", "status": "Yes" },
+      { "name": "mouseup", "status": "Yes" },
+      { "name": "click", "status": "Yes" },
+      { "name": "auxclick", "status": "No" },
+      { "name": "dblclick", "status": "No" },
+      { "name": "contextmenu", "status": "No" },
+      { "name": "mousemove", "status": "No" },
+      { "name": "mouseenter", "status": "No" },
+      { "name": "mouseleave", "status": "No" },
+      { "name": "mouseover", "status": "No" },
+      { "name": "mouseout", "status": "No" },
+      { "name": "select", "status": "No" },
+    ]
+  },
+  {
+    "id": "scroll-wheel",
+    "name": "Scroll / Wheel",
+    "entries": [
+      { "name": "scroll", "status": "No" },
+      { "name": "scrollend", "status": "No" },
+      { "name": "wheel", "status": "No" },
+    ]
+  },
+  {
+    "id": "keyboard",
+    "name": "Keyboard",
+    "entries": [
+      { "name": "keydown", "status": "Yes" },
+      { "name": "keyup", "status": "Yes" },
+      { "name": "keypress", "status": "Yes" },
+    ]
+  },
+  {
+    "id": "change-input",
+    "name": "Change / Input",
+    "entries": [
+      { "name": "change", "status": "No" },
+      { "name": "input", "status": "Yes" },
+      { "name": "beforeinput", "status": "No" },
+    ]
+  },
+  {
+    "id": "focus",
+    "name": "Focus",
+    "entries": [
+      { "name": "focus", "status": "No" },
+      { "name": "blur", "status": "No" },
+      { "name": "focusin", "status": "No" },
+      { "name": "focusout", "status": "No" },
+    ]
+  },
+  {
+    "id": "composition",
+    "name": "Composition",
+    "entries": [
+      { "name": "compositionstart", "status": "No" },
+      { "name": "compositionend", "status": "No" },
+      { "name": "compositionupdate", "status": "No" },
+    ]
+  },
+  {
+    "id": "clipboard",
+    "name": "Clipboard",
+    "entries": [
+      { "name": "cut", "status": "No" },
+      { "name": "copy", "status": "No" },
+      { "name": "paste", "status": "No" },
+    ]
+  },
+  {
+    "id": "form",
+    "name": "Form",
+    "entries": [
+      { "name": "submit", "status": "Yes" },
+      { "name": "reset", "status": "No" },
+      { "name": "formdata", "status": "No" },
+      { "name": "invalid", "status": "No" },
+    ]
+  },
+  {
+    "id": "loading",
+    "name": "Loading",
+    "entries": [
+      { "name": "load", "status": "No" },
+      { "name": "unload", "status": "No" },
+      { "name": "error", "status": "No" },
+      { "name": "abort", "status": "No" },
+    ]
+  },
+  {
+    "id": "global",
+    "name": "Window / Global",
+    "entries": [
+      { "name": "load", "status": "No" },
+      { "name": "resize", "status": "No" },
+    ]
+  },
+  {
+    "id": "touch",
+    "name": "Touch",
+    "entries": [
+      { "name": "touchstart", "status": "No" },
+      { "name": "touchend", "status": "No" },
+      { "name": "touchmove", "status": "No" },
+      { "name": "touchcancel", "status": "No" },
+    ]
+  },
+  {
+    "id": "pointer",
+    "name": "Pointer",
+    "entries": [
+      { "name": "pointerdown", "status": "No" },
+      { "name": "pointerup", "status": "No" },
+      { "name": "pointermove", "status": "No" },
+      { "name": "pointercancel", "status": "No" },
+      { "name": "pointerover", "status": "No" },
+      { "name": "pointerout", "status": "No" },
+      { "name": "pointerenter", "status": "No" },
+      { "name": "pointerleave", "status": "No" },
+      { "name": "pointerrawupdate", "status": "No" },
+    ]
+  },
+  {
+    "id": "drap-and-drop",
+    "name": "Drag & Drop",
+    "entries": [
+      { "name": "dragstart", "status": "No" },
+      { "name": "dragend", "status": "No" },
+      { "name": "drag", "status": "No" },
+      { "name": "drop", "status": "No" },
+      { "name": "dragover", "status": "No" },
+      { "name": "dragenter", "status": "No" },
+      { "name": "dragleave", "status": "No" },
+    ]
+  },
+]

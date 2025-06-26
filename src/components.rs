@@ -9,8 +9,8 @@
 #![allow(unused_imports)]
 
 mod page;
-pub use page::{MainContent, Page};
+pub use page::*;
 mod section;
-pub use section::{Section, SectionLevel};
+pub use section::*;
 mod toc;
-pub use toc::{TableOfContents, TocSection, TocSubSection};
+pub use toc::*;
