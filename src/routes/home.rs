@@ -27,6 +27,7 @@ pub fn HomePage() -> Element {
                         margin-top: 18px;
                         margin-bottom: 18px;
                         line-height: 1.5;
+                        text-align: center;
                     ",
                     "A "
                     em { "radically modular" }
