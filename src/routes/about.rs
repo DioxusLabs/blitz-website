@@ -13,8 +13,17 @@ pub fn AboutPage() -> Element {
             h1 { "About" }
 
             p {
-                class: "introduction",
-                "Blitz is an open source web engine written in Rust with a focus on modularity, embeddibilty, and API flexibility."
+                dangerous_inner_html: r#"
+                    Blitz is an open source web engine written in Rust with a focus on modularity, embeddibilty, and API flexibility.
+                    Blitz is currently in <b>alpha</b>. This means that it ready for experimentation and early adoption, but is not ready for production
+                    usage. We are aiming to reach a broadly usable <b>beta</b> status by the end of 2025, with a production-ready release sometime in 2026.
+                "#
+            }
+            p {
+                dangerous_inner_html: r#"
+                    For more details on the current status, see the dedicated <a href="/status">status page</a>.<br/ >
+                    For details on planned work, see the <a href="https://github.com/DioxusLabs/blitz/issues/119">roadmap issue</a>
+                "#
             }
 
             AnchorHeader {
@@ -90,12 +99,21 @@ pub fn AboutPage() -> Element {
                     "#
                 }
                 li {
-                    dangerous_inner_html: r#"
-                        <b>Create a healthier, more competitive browser ecosystem by lowering the barrier to entry for creating new browser engines.</b>
-                        - The web specification is nowTraditional browser engines are largely monolithic: while some components may be made available as reusable 
-                        libraries – commonly the JavaScript engine (V8, SpiderMonkey, etc) or rendering backend (Skia, WebRender, etc) – for the most part core 
-                        components like style, layout, DOM and networking are tightly coupled to the rest of the browser. This means that any
-                    "#
+                    p {
+                        dangerous_inner_html: r#"
+                            <b>Lower the barrier to entry for creating new browser engines</b>
+                            — Traditional browser engines are largely monolithic meaning
+                            that if you want to create a new engine you are left with a choice between forking the existing engine or rebuilding most
+                            things from scratch. Given how enormous the web specification is, this makes it difficult to bootstrap new independent engines.
+                        "#
+                    }
+                     p {
+                        dangerous_inner_html: r#"
+                            By building on existing general-purpose libraries (making our improvements available to all users) and making core parts of our
+                            stack (style, layout, text, etc) available as libraries with supported public APIs, Blitz aims to make it easier to create new
+                            engines by enabling new engine creators to combine modular <em>parts</em> of our engine with new modules of their own.
+                        "#
+                    }
                 }
             }
 
@@ -116,14 +134,15 @@ pub fn AboutPage() -> Element {
                 features it supports) much sooner. And we hope that "
             }
 
+
             AnchorHeader {
                 level: H2,
                 target: "comparison-to-other-projects",
-                "Blitz compared to other projects"
+                "Comparison with other projects"
             }
 
             p {
-
+                ""
             }
 
             AnchorHeader {
@@ -198,6 +217,17 @@ pub fn AboutPage() -> Element {
                         compete with them eventually, but is unlikely to be able do so anytime soon.
                     "#
                 }
+            }
+
+            AnchorHeader {
+                level: H2,
+                target: "dependencies",
+                "Relationship to dependencies"
+            }
+
+            p {
+                "Blitz's approach to modularity allows it to take full advantage of existing libraries where appropriate libraries are available which,
+                (due to the flourishing Rust crates ecosystem and the legacy of the Servo project), turns out to be quite a lot of places."
             }
 
 
