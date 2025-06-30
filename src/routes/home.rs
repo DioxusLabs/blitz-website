@@ -78,7 +78,7 @@ pub fn HomePage() -> Element {
                 //         ",
                 //     }
                 // }
-            
+
             }
 
             div { style: "
@@ -96,6 +96,40 @@ pub fn HomePage() -> Element {
                     align-items: center;
                     padding: 40px 0;
                 ",
+
+                // div {
+                //     style: "
+                //         background-color: rgba(255, 255, 255, 0.5);
+                //         background: transparent;
+                //         width: 100%;
+                //         display: flex;
+                //         flex-direction: column;
+                //         align-items: center;
+                //         padding: 20px 0;
+                //     ",
+                //     div { style: "
+                //             font-size: 3em;
+                //             color: black;
+                //             // font-family: Futura;
+                //             font-family: Jost;
+                //             font-weight: 500;
+                //             margin-top: 0;
+                //             line-height: 1.5;
+                //         ",
+                //         "Render markdown with Readme"
+                //     }
+
+                //     p {
+                //         font_size: "1.4em",
+                //         max_width: "1000px",
+                //         text_align: "center",
+                //         color: "black",
+                //         a { href: "https://blitz.is/readme",
+                //             "Readme"
+                //         }
+                //         " provides a local, github-styled, live-reloading markdown preview with Blitz."
+                //     }
+                // }
 
                 img {
                     src: "/static/markdown-screenshot-wide.png",
