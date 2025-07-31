@@ -226,7 +226,7 @@ pub fn AboutPage() -> Element {
             }
 
             p {
-                "Blitz lis icensed under a variety of permissive open source licenses:"
+                "Blitz is licensed under a variety of permissive open source licenses:"
             }
 
             ul {
