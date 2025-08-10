@@ -211,13 +211,13 @@
           { "value": "px / percentage / fr", "status": "Yes" },
           { "value": "min-content / max-content / auto", "status": "Yes" },
           { "value": "fit-content()", "status": "Yes" },
-          { "value": "named lines", "status": "No", "issues": ["DioxusLabs/taffy#750"] },
+          { "value": "named lines", "status": "Yes" },
           { "value": "subgrid", "status": "No", "issues": ["DioxusLabs/taffy#468"] },
         ]
       },
       { "name": "grid-{row,column}", "status": "Yes", "properties": ["grid-row", "grid-column"] },
-      { "name": "grid-area", "status": "No", "issues": ["DioxusLabs/taffy#750"] },
-      { "name": "grid-template-areas", "status": "No", "issues": ["DioxusLabs/taffy#750"] },
+      { "name": "grid-area", "status": "Yes" },
+      { "name": "grid-template-areas", "status": "Yes" },
       { "name": "grid-auto-flow", "status": "Yes" },
       { "name": "grid-auto-{rows,columns}", "status": "Yes", "properties": ["grid-auto-rows", "grid-auto-columns"] },
     ]
