@@ -248,8 +248,8 @@
     "id": "transition-animations",
     "name": "Transitions & Animations",
     "entries": [
-      { "name": "Transitions", "status": "No", "properties": ["transition", "transition-duration", "transition-property", "transition-timing-function", "transition-delay"] },
-      { "name": "Animations", "status": "No", "properties": ["animation", "animation-timing-function", "animation-duration", "animation-name", "animation-delay", "animation-iteration-count", "animation-fill-mode", "animation-direction", "animation-play-state", "webkit-animation-direction"] },
+      { "name": "Transitions", "status": "Yes", "properties": ["transition", "transition-duration", "transition-property", "transition-timing-function", "transition-delay"] },
+      { "name": "Animations", "status": "Yes", "properties": ["animation", "animation-timing-function", "animation-duration", "animation-name", "animation-delay", "animation-iteration-count", "animation-fill-mode", "animation-direction", "animation-play-state", "webkit-animation-direction"] },
     ]
   },
   {
