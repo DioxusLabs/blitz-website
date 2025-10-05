@@ -16,6 +16,8 @@ pub fn HomePage() -> Element {
                     align-items: center;
                     background-color: #f4e8d2;
                     background-color: white;
+                    max-width: 1600px;
+                    margin: 0 auto;
                 ",
 
                 div { style: "
@@ -95,6 +97,8 @@ pub fn HomePage() -> Element {
                     flex-direction: column;
                     align-items: center;
                     padding: 40px 0;
+                    max-width: 1600px;
+                    margin: 0 auto;
                 ",
 
                 // div {
@@ -147,6 +151,9 @@ pub fn HomePage() -> Element {
                     align-items: center;
                     background-color: #f4e8d2;
                     text-align: center;
+                    max-width: 1600px;
+                    margin: 0 auto;
+
                 ",
 
                 div { style: "
@@ -182,6 +189,9 @@ pub fn HomePage() -> Element {
         div { style: "
                 height: 48px;
                 background: #f4e8d2;
+                max-width: 1600px;
+                margin: 0 auto;
+
             " }
     }
 }
