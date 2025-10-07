@@ -1,16 +1,19 @@
-use std::collections::HashMap;
-
 use dioxus::prelude::*;
 use serde::{Deserialize, Serialize};
 use string_cache::DefaultAtom;
 
+use foldhash::HashMap;
+
 use crate::components::{Page, Section};
 
 static CSS_PROPERTIES: GlobalSignal<Vec<PropGroup>> = Signal::global(|| {
+
+    let now = std::time::Instant::now();
+
     // Load a hashmap of popularity data
     // Source: https://chromestatus.com/data/csspopularity
     let raw_css_popularity: &str = include_str!("../../data/css-popularity.json");
-    let css_popularity: Vec<PropPopularity> = serde_json5::from_str(&raw_css_popularity).unwrap();
+    let css_popularity: Vec<PropPopularity> = serde_json::from_str(&raw_css_popularity).unwrap();
     let css_popularity: HashMap<DefaultAtom, f64> = css_popularity
         .into_iter()
         .map(|prop| (prop.property_name, prop.day_percentage))
@@ -18,7 +21,7 @@ static CSS_PROPERTIES: GlobalSignal<Vec<PropGroup>> = Signal::global(|| {
 
     // Load crate data
     let raw_css_prop_groups: &str = include_str!("../../data/css-property-groups.json");
-    let mut css_prop_groups: Vec<PropGroup> = serde_json5::from_str(&raw_css_prop_groups).unwrap();
+    let mut css_prop_groups: Vec<PropGroup> = serde_json::from_str(&raw_css_prop_groups).unwrap();
 
     // Fill in percentages for each entry
     for group in &mut css_prop_groups {
@@ -33,6 +36,8 @@ static CSS_PROPERTIES: GlobalSignal<Vec<PropGroup>> = Signal::global(|| {
             }
         }
     }
+
+    println!("{}ms", now.elapsed().as_millis());
 
     css_prop_groups
 });
