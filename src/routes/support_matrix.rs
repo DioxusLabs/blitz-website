@@ -1,11 +1,11 @@
-use dioxus::prelude::*;
+use dioxus::{prelude::*, stores::GlobalStore};
 use serde::{Deserialize, Serialize};
 
 use foldhash::HashMap;
 
 use crate::components::{Page, Section};
 
-static CSS_PROPERTIES: GlobalSignal<Vec<PropGroup>> = Signal::global(|| {
+static CSS_PROPERTIES: GlobalStore<Vec<PropGroup>> = GlobalStore::new(|| {
     let now = std::time::Instant::now();
 
     // Load a hashmap of popularity data
@@ -106,19 +106,19 @@ pub fn CssSupportPage() -> Element {
                     that use that property. You can generally assume that if the longhand versions of a property are supported then the shorthand version will also be supported and vice-versa.
                 "#,
             }
-            for group in CSS_PROPERTIES() {
+            for group in CSS_PROPERTIES.resolve().iter() {
                 Section {
-                    section_key: group.id.clone(),
-                    heading: group.name,
-                    description: group.notes,
-                    SupportTable { entries: group.entries, use_column: true }
+                    section_key: group().id.clone(),
+                    heading: group().name,
+                    description: group().notes,
+                    SupportTable { entries: group.entries(), use_column: false }
                 }
             }
         }
     }
 }
 
-static HTML_EVENTS: GlobalSignal<Vec<PropGroup>> = Signal::global(|| {
+static HTML_EVENTS: GlobalStore<Vec<PropGroup>> = GlobalStore::new(|| {
     // Load crate data
     let raw_html_event_groups: &str = include_str!("../../data/html-event-groups.json");
     serde_json5::from_str(&raw_html_event_groups).unwrap()
@@ -130,19 +130,19 @@ pub fn EventSupportPage() -> Element {
         Page { title: "Status: Events".into(),
             StatusHeader {}
             StatusTabs { current_tab: "events" }
-            for group in HTML_EVENTS() {
+            for group in HTML_EVENTS.resolve().iter() {
                 Section {
-                    section_key: group.id.clone(),
-                    heading: group.name,
-                    description: group.notes,
-                    SupportTable { entries: group.entries, use_column: false }
+                    section_key: group().id.clone(),
+                    heading: group().name,
+                    description: group().notes,
+                    SupportTable { entries: group.entries(), use_column: false }
                 }
             }
         }
     }
 }
 
-static HTML_ELEMENTS: GlobalSignal<Vec<PropGroup>> = Signal::global(|| {
+static HTML_ELEMENTS: GlobalStore<Vec<PropGroup>> = GlobalStore::new(|| {
     // Load crate data
     let raw_html_event_groups: &str = include_str!("../../data/html-element-groups.json");
     serde_json5::from_str(&raw_html_event_groups).unwrap()
@@ -154,12 +154,12 @@ pub fn ElementSupportPage() -> Element {
         Page { title: "Status: Elements".into(),
             StatusHeader {}
             StatusTabs { current_tab: "elements" }
-            for group in HTML_ELEMENTS() {
+            for group in HTML_ELEMENTS.resolve().iter() {
                 Section {
-                    section_key: group.id.clone(),
-                    heading: group.name,
-                    description: group.notes,
-                    SupportTable { entries: group.entries, use_column: false }
+                    section_key: group().id.clone(),
+                    heading: group().name,
+                    description: group().notes,
+                    SupportTable { entries: group.entries(), use_column: false }
                 }
             }
         }
@@ -172,7 +172,7 @@ pub struct PropPopularity {
     pub day_percentage: f64,
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Store)]
 pub struct PropGroup {
     pub id: String,
     pub name: String,
@@ -180,7 +180,7 @@ pub struct PropGroup {
     pub entries: Vec<PropEntry>,
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Store)]
 pub struct PropEntry {
     pub name: String,
     pub status: Option<PropStatus>,
@@ -230,7 +230,7 @@ pub struct PropValue {
 }
 
 #[component]
-pub fn SupportTable(entries: Vec<PropEntry>, use_column: bool) -> Element {
+pub fn SupportTable(entries: Store<Vec<PropEntry>>, use_column: bool) -> Element {
     rsx! {
         table {
             class: "full-width fixed-layout",
@@ -245,7 +245,7 @@ pub fn SupportTable(entries: Vec<PropEntry>, use_column: bool) -> Element {
                 }
             }
             tbody { style: "background: transparent",
-                for entry in entries {
+                for entry in entries.iter() {
                     SupportTableRow { entry, use_column }
                 }
             }
@@ -254,7 +254,8 @@ pub fn SupportTable(entries: Vec<PropEntry>, use_column: bool) -> Element {
 }
 
 #[component]
-fn SupportTableRow(entry: PropEntry, use_column: bool) -> Element {
+fn SupportTableRow(entry: Store<PropEntry>, use_column: bool) -> Element {
+    let entry = entry();
     rsx! {
         tr { class: if entry.values.is_none() { entry.status.map(|status| status.class()).unwrap_or("") } else { "css-prop--split-by-value" },
             if use_column {
