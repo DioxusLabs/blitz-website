@@ -8,7 +8,9 @@ use axum::{
 use dashmap::DashMap;
 use dioxus::prelude::*;
 use dioxus_html_macro::html;
-use routes::{AboutPage, CssSupportPage, ElementSupportPage, EventSupportPage, GettingStartedPage, HomePage};
+use routes::{
+    AboutPage, CssSupportPage, ElementSupportPage, EventSupportPage, GettingStartedPage, HomePage,
+};
 use std::{
     net::{IpAddr, SocketAddr},
     sync::LazyLock,

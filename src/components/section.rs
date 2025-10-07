@@ -2,7 +2,6 @@ use std::borrow::Cow;
 
 use dioxus::prelude::*;
 use dioxus_html_macro::html;
-use string_cache::DefaultAtom;
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 #[allow(dead_code)]
@@ -30,10 +29,10 @@ pub fn AnchorHeader(level: SectionLevel, target: &'static str, children: Element
 #[component]
 pub fn Section(
     heading: String,
-    description: Option<DefaultAtom>,
+    description: Option<String>,
     level: Option<SectionLevel>,
-    section_key: Option<DefaultAtom>,
-    subsection_key: Option<DefaultAtom>,
+    section_key: Option<String>,
+    subsection_key: Option<String>,
     children: Element,
 ) -> Element {
     let level = level.unwrap_or_else(|| {

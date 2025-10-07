@@ -1,20 +1,18 @@
 use dioxus::prelude::*;
 use serde::{Deserialize, Serialize};
-use string_cache::DefaultAtom;
 
 use foldhash::HashMap;
 
 use crate::components::{Page, Section};
 
 static CSS_PROPERTIES: GlobalSignal<Vec<PropGroup>> = Signal::global(|| {
-
     let now = std::time::Instant::now();
 
     // Load a hashmap of popularity data
     // Source: https://chromestatus.com/data/csspopularity
     let raw_css_popularity: &str = include_str!("../../data/css-popularity.json");
     let css_popularity: Vec<PropPopularity> = serde_json::from_str(&raw_css_popularity).unwrap();
-    let css_popularity: HashMap<DefaultAtom, f64> = css_popularity
+    let css_popularity: HashMap<String, f64> = css_popularity
         .into_iter()
         .map(|prop| (prop.property_name, prop.day_percentage))
         .collect();
@@ -170,28 +168,28 @@ pub fn ElementSupportPage() -> Element {
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct PropPopularity {
-    pub property_name: DefaultAtom,
+    pub property_name: String,
     pub day_percentage: f64,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct PropGroup {
-    pub id: DefaultAtom,
-    pub name: DefaultAtom,
-    pub notes: Option<DefaultAtom>,
+    pub id: String,
+    pub name: String,
+    pub notes: Option<String>,
     pub entries: Vec<PropEntry>,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct PropEntry {
-    pub name: DefaultAtom,
+    pub name: String,
     pub status: Option<PropStatus>,
     #[serde(default)]
-    pub issues: Vec<DefaultAtom>,
+    pub issues: Vec<String>,
     pub notes: Option<String>,
     #[serde(default)]
     pub percentage: f64,
-    pub properties: Option<Vec<DefaultAtom>>,
+    pub properties: Option<Vec<String>>,
     pub values: Option<Vec<PropValue>>,
 }
 
@@ -224,10 +222,10 @@ impl PropStatus {
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct PropValue {
-    pub value: DefaultAtom,
+    pub value: String,
     pub status: PropStatus,
     #[serde(default)]
-    pub issues: Vec<DefaultAtom>,
+    pub issues: Vec<String>,
     pub notes: Option<String>,
 }
 
@@ -300,7 +298,7 @@ fn SupportTableRow(entry: PropEntry, use_column: bool) -> Element {
 }
 
 #[component]
-fn PropValueItem(prop: DefaultAtom, value: PropValue) -> Element {
+fn PropValueItem(prop: String, value: PropValue) -> Element {
     rsx!(
         tr { class: value.status.class(),
             td { style: "vertical-align:top;border: 0;width: 40%", {value.value} }
@@ -324,7 +322,7 @@ fn PropValueItem(prop: DefaultAtom, value: PropValue) -> Element {
 }
 
 #[component]
-fn IssueLink(issue: DefaultAtom) -> Element {
+fn IssueLink(issue: String) -> Element {
     let (repo, num) = issue.rsplit_once('#').unwrap();
     let (org, repo) = repo.rsplit_once('/').unwrap();
     rsx!(

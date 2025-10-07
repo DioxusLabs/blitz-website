@@ -1,11 +1,9 @@
 use dioxus::prelude::*;
-use string_cache::Atom;
 
 use crate::components::{MainContent, Page, Section, TocSection, TocSubSection};
 
 #[component]
 pub fn GettingStartedPage() -> Element {
-
     let toc_sections = vec![
         TocSection {
             name: "Installation".into(),
@@ -65,11 +63,11 @@ pub fn GettingStartedPage() -> Element {
             }
             MainContent { toc_sections: Some(toc_sections),
                 Section {
-                    section_key: Atom::from("installation"),
+                    section_key: String::from("installation"),
                     heading: "Installation",
                     Section {
-                        section_key: Atom::from("installation"),
-                        subsection_key: Atom::from("cargo-rustc"),
+                        section_key: String::from("installation"),
+                        subsection_key: String::from("cargo-rustc"),
                         heading: "Rust Compiler",
                         div {
                             dangerous_inner_html: r#"
@@ -99,8 +97,8 @@ pub fn GettingStartedPage() -> Element {
                     }
 
                     Section {
-                        section_key: Atom::from("installation"),
-                        subsection_key: Atom::from("editor-setup"),
+                        section_key: String::from("installation"),
+                        subsection_key: String::from("editor-setup"),
                         heading: "Editor Setup",
                         div { dangerous_inner_html: r#""# }
                     }

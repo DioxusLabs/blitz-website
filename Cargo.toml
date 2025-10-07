@@ -22,7 +22,6 @@ tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 dioxus-html-macro = "0.3.0"
 dashmap = "6.1.0"
-string_cache = "0.8.8"
 serde_json5 = "0.2.1"
 foldhash = "0.2.0"
 
