@@ -39,7 +39,7 @@
         ]
       },
       { "name": "box-sizing", "status": "Yes" },
-      { "name": "z-index", "status": "Partial", "notes": "z-index is implemented for sibling nodes" },
+      { "name": "z-index", "status": "Yes" },
       {
         "name": "cursor",
         "values": [
