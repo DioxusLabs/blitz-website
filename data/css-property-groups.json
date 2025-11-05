@@ -269,8 +269,8 @@
     "entries": [
       { "name": "list-style-type", "status": "Yes" },
       { "name": "list-style-position", "status": "Yes" },
-      { "name": "counter-increment", "status": "No" },
-      { "name": "counter-reset", "status": "No" }
+      { "name": "counter-increment", "status": "Yes" },
+      { "name": "counter-reset", "status": "Yes" }
     ]
   },
   {
