@@ -72,7 +72,7 @@
       { "name": "Checkbox", "status": "Yes" },
       { "name": "Select", "status": "No" },
       { "name": "Color picker", "status": "No" },
-      { "name": "File picker", "status": "No" },
+      { "name": "File picker", "status": "Yes" },
       
       { "name": "Output", "status": "No" },
       { "name": "Meter", "status": "No" },
@@ -86,7 +86,7 @@
       { 
         "name": "<canvas>",
         "status": "Yes",
-        "notes": "A propreitary API to render a raw WGPU texture is supported"
+        "notes": "A proprietary API to render a raw WGPU texture is supported"
       },
       { "name": "<iframe>", "status": "No" },
       { "name": "<fencedframe>", "status": "No" },
