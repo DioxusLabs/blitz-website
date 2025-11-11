@@ -70,8 +70,8 @@
       { "name": "opacity", "status": "Yes", "notes": "Nodes with opacity are currently clipped regardless of the overflow style" },
       { "name": "visibility", "status": "Yes" },
       { "name": "clip-path", "status": "InProgress", "properties": ["clip-path", "clip"], "issues": ["DioxusLabs/blitz#211"] },
-      { "name": "contain", "status": "No" },
       { "name": "mask", "status": "No", "properties": ["mask", "mask-image", "mask-size", "mask-position", "mask-repeat", "mask-composite"] },
+      { "name": "contain", "status": "No" },
       { "name": "isolation", "status": "No" },
       { "name": "content-visibility", "status": "No" }
     ]
@@ -151,8 +151,8 @@
       { "name": "text-transform", "status": "No" },
       { "name": "text-overflow", "status": "No", "issues": ["linebender/parley#304"] },
       { "name": "letter-spacing", "status": "Yes" },
-      { "name": "overflow-wrap / word-wrap", "status": "Yes", "properties": ["overflow-wrap", "word-wrap"] },
       { "name": "word-break", "status": "Yes" },
+      { "name": "overflow-wrap / word-wrap", "status": "Yes", "properties": ["overflow-wrap", "word-wrap"] },
       { "name": "text-shadow", "status": "No" },
       { "name": "webkit-line-clamp", "status": "No" },
       { "name": "text-indent", "status": "No" },
