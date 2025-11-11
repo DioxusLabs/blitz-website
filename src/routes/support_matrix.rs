@@ -198,6 +198,7 @@ pub enum PropStatus {
     Yes,
     No,
     Partial,
+    InProgress,
 }
 
 impl PropStatus {
@@ -206,6 +207,7 @@ impl PropStatus {
             Self::Yes => "✅ Supported",
             Self::No => "❌ Not supported",
             Self::Partial => "⚠️ Partial support",
+            Self::InProgress => "🚧 In Progress",
         }
     }
 }
@@ -216,6 +218,7 @@ impl PropStatus {
             Self::Yes => "css-prop--supported",
             Self::No => "css-prop--not-supported",
             Self::Partial => "css-prop--partial-support",
+            Self::InProgress => "css-prop--in-progress",
         }
     }
 }
