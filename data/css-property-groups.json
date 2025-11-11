@@ -85,6 +85,7 @@
       { "name": "min-width / min-height", "status": "Yes", "properties": ["min-width", "min-height", "min-inline-size", "min-block-size"] },
       { "name": "max-width / max-height", "status": "Yes", "properties": ["max-width", "max-height", "max-inline-size", "max-block-size"] },
       { "name": "inset", "status": "Yes", "properties": ["top", "left", "bottom", "right"] },
+      { "name": "gap", "status": "Yes", "properties": ["gap", "row-gap", "column-gap", "grid-gap", "grid-column-gap", "grid-row-gap"] },
       { "name": "aspect-ratio", "status": "Yes", "properties": ["aspect-ratio"] },
       { "name": "object-fit", "status": "Yes" },
       { "name": "object-position", "status": "Yes" }
@@ -97,11 +98,10 @@
     "entries": [
       { "name": "padding", "status": "Yes", "properties": ["padding", "padding-top", "padding-left", "padding-bottom", "padding-right"] },
       { "name": "margin", "status": "Yes", "properties": ["margin", "margin-top", "margin-left", "margin-bottom", "margin-right"] },
-      { "name": "gap", "status": "Yes", "properties": ["gap", "row-gap", "column-gap", "grid-gap", "grid-column-gap", "grid-row-gap"] },
+      { "name": "border-radius", "status": "Yes" },
+      { "name": "border-color", "status": "Yes" },
       { "name": "border-width", "status": "Yes" },
       { "name": "border-style", "status": "No" },
-      { "name": "border-color", "status": "Yes" },
-      { "name": "border-radius", "status": "Yes" },
       { "name": "border-image", "status": "No" }
     ]
   },
