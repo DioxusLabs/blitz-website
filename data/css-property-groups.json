@@ -147,7 +147,7 @@
       { "name": "text-decoration", "status": "Yes" },
       { "name": "vertical-align", "status": "No", "issues": ["linebender/parley#291"] },
       { "name": "white-space-collapse", "status": "Partial", "properties": ["white-space-collapse", "white-space"] },
-      { "name": "text-wrap-mode", "status": "No", "properties": ["text-wrap-mode", "text-wrap", "white-space"] },
+      { "name": "text-wrap-mode", "status": "Yes", "properties": ["text-wrap-mode", "text-wrap", "white-space"] },
       { "name": "text-transform", "status": "No" },
       { "name": "text-overflow", "status": "No", "issues": ["linebender/parley#304"] },
       { "name": "letter-spacing", "status": "Yes" },
