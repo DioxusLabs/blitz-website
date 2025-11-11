@@ -240,7 +240,7 @@
         "properties": ["transform", "transform-origin"],
         "notes": "2D transforms are currently applied visually, but hit detection doesn't yet work properly for transformed nodes"
       },
-      { "name": "3D Transforms", "status": "No", "properties": ["transform", "transform-origin", "transform-style", "backface-visibility", "perspective"] }
+      { "name": "3D Transforms", "status": "No", "properties": ["transform-style", "backface-visibility", "perspective"] }
     ]
   },
   {
