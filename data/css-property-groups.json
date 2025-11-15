@@ -57,8 +57,9 @@
           { "value": "counter", "status": "No" }
         ]
       },
-      { "name": "float", "status": "InProgress", "issues": ["DioxusLabs/taffy#437", "linebender/parley#99"] },
-      { "name": "clear", "status": "InProgress", "issues": ["DioxusLabs/taffy#437", "linebender/parley#99"] },
+      {
+        "name": "float","status": "Yes" },
+      { "name": "clear", "status": "Yes" },
       { "name": "order", "status": "Yes" },
       { "name": "zoom", "status": "No" }
     ]
