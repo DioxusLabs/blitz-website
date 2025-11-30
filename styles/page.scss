@@ -14,7 +14,7 @@ body {
 #main-container {
     padding: 24px 48px;
     margin: 0 auto;
-    max-width: calc(80ch + 48px);
+    max-width: calc(100ch + 48px);
     background-color: white;
 }
 
@@ -129,7 +129,7 @@ nav {
 
 p.introduction {
     color: #494949;
-    max-width: 80ch;
+    max-width: 100ch;
 
     &.introduction--small {
         font-size: 0.9em;

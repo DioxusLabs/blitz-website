@@ -31,7 +31,7 @@ body {
 #main-container {
   padding: 24px 48px;
   margin: 0 auto;
-  max-width: calc(80ch + 48px);
+  max-width: calc(100ch + 48px);
   background-color: white;
 }
 
@@ -136,7 +136,7 @@ nav > a.nav-icon img {
 
 p.introduction {
   color: #494949;
-  max-width: 80ch;
+  max-width: 100ch;
 }
 p.introduction.introduction--small {
   font-size: 0.9em;
