@@ -154,7 +154,6 @@
       { "name": "letter-spacing", "status": "Yes" },
       { "name": "word-break", "status": "Yes" },
       { "name": "overflow-wrap / word-wrap", "status": "Yes", "properties": ["overflow-wrap", "word-wrap"] },
-      { "name": "text-shadow", "status": "No" },
       { "name": "webkit-line-clamp", "status": "No" },
       { "name": "text-indent", "status": "No" },
       { "name": "text-rendering", "status": "No" },
@@ -259,6 +258,7 @@
       { "name": "box-shadow", "status": "Yes" },
       { "name": "outline", "status": "Yes", "properties": ["outline-width", "outline-style", "outline-color", "outline-offset"] },
       { "name": "filter", "status": "No"},
+      { "name": "text-shadow", "status": "No" },
       { "name": "backdrop-filter", "status": "No" },
       { "name": "mix-blend-mode", "status": "No" },
       { "name": "background-blend-mode", "status": "No" }
