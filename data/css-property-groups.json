@@ -112,7 +112,7 @@
     "entries": [
       { "name": "direction", "status": "No" },
       { "name": "unicode-bidi", "status": "No" },
-      { "name": "all", "status": "No" },
+      { "name": "all", "status": "Yes" },
       { "name": "writing-mode", "status": "No" }
     ]
   },
