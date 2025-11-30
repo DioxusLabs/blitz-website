@@ -278,8 +278,8 @@
     "id": "table",
     "name": "Tables",
     "entries": [
-      { "name": "border-collapse", "status": "No" },
-      { "name": "border-spacing", "status": "No" },
+      { "name": "border-collapse", "status": "Partial", "notes": "It is currently assumed that borders in tables with collapsed borders are uniform (have the same width/style/color). The border styles from the first cell are used." },
+      { "name": "border-spacing", "status": "Yes" },
       { "name": "table-layout", "status": "Yes" },
       { "name": "caption-side", "status": "No" }
     ]
