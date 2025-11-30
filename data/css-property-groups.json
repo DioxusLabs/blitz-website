@@ -316,7 +316,6 @@
     "id": "ua-hints",
     "name": "User Agent Hints",
     "entries": [
-      { "name": "webkit-appearance", "status": "No" },
       { "name": "webkit-font-smoothing", "status": "No" },
       { "name": "appearance", "status": "No" },
       { "name": "will-change", "status": "No" },
