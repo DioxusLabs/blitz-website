@@ -45,9 +45,9 @@
     "id": "scroll-wheel",
     "name": "Scroll / Wheel",
     "entries": [
-      { "name": "scroll", "status": "No" },
+      { "name": "wheel", "status": "Yes" },
+      { "name": "scroll", "status": "Yes" },
       { "name": "scrollend", "status": "No" },
-      { "name": "wheel", "status": "No" },
     ]
   },
   {
