@@ -6,14 +6,14 @@
       { "name": "mousedown", "status": "Yes" },
       { "name": "mouseup", "status": "Yes" },
       { "name": "click", "status": "Yes" },
-      { "name": "auxclick", "status": "No" },
-      { "name": "dblclick", "status": "No" },
-      { "name": "contextmenu", "status": "No" },
-      { "name": "mousemove", "status": "No" },
-      { "name": "mouseenter", "status": "No" },
-      { "name": "mouseleave", "status": "No" },
-      { "name": "mouseover", "status": "No" },
-      { "name": "mouseout", "status": "No" }
+      { "name": "auxclick", "status": "Yes" },
+      { "name": "dblclick", "status": "Yes" },
+      { "name": "contextmenu", "status": "Yes" },
+      { "name": "mousemove", "status": "Yes" },
+      { "name": "mouseenter", "status": "Yes" },
+      { "name": "mouseleave", "status": "Yes" },
+      { "name": "mouseover", "status": "Yes" },
+      { "name": "mouseout", "status": "Yes" }
     ]
   },
   {
