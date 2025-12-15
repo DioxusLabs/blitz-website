@@ -13,8 +13,7 @@
       { "name": "mouseenter", "status": "No" },
       { "name": "mouseleave", "status": "No" },
       { "name": "mouseover", "status": "No" },
-      { "name": "mouseout", "status": "No" },
-      { "name": "select", "status": "No" },
+      { "name": "mouseout", "status": "No" }
     ]
   },
   {
@@ -37,11 +36,12 @@
   },
   {
     "id": "change-input",
-    "name": "Change / Input",
+    "name": "Change, Input & Selection",
     "entries": [
       { "name": "change", "status": "No" },
       { "name": "input", "status": "Yes" },
       { "name": "beforeinput", "status": "No" },
+      { "name": "select", "status": "No" }
     ]
   },
   {
