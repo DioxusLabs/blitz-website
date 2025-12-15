@@ -17,6 +17,31 @@
     ]
   },
   {
+    "id": "touch",
+    "name": "Touch",
+    "entries": [
+      { "name": "touchstart", "status": "No" },
+      { "name": "touchend", "status": "No" },
+      { "name": "touchmove", "status": "No" },
+      { "name": "touchcancel", "status": "No" },
+    ]
+  },
+  {
+    "id": "pointer",
+    "name": "Pointer",
+    "entries": [
+      { "name": "pointerdown", "status": "No" },
+      { "name": "pointerup", "status": "No" },
+      { "name": "pointermove", "status": "No" },
+      { "name": "pointercancel", "status": "No" },
+      { "name": "pointerover", "status": "No" },
+      { "name": "pointerout", "status": "No" },
+      { "name": "pointerenter", "status": "No" },
+      { "name": "pointerleave", "status": "No" },
+      { "name": "pointerrawupdate", "status": "No" },
+    ]
+  },
+  {
     "id": "scroll-wheel",
     "name": "Scroll / Wheel",
     "entries": [
@@ -98,31 +123,6 @@
     "entries": [
       { "name": "load", "status": "No" },
       { "name": "resize", "status": "No" },
-    ]
-  },
-  {
-    "id": "touch",
-    "name": "Touch",
-    "entries": [
-      { "name": "touchstart", "status": "No" },
-      { "name": "touchend", "status": "No" },
-      { "name": "touchmove", "status": "No" },
-      { "name": "touchcancel", "status": "No" },
-    ]
-  },
-  {
-    "id": "pointer",
-    "name": "Pointer",
-    "entries": [
-      { "name": "pointerdown", "status": "No" },
-      { "name": "pointerup", "status": "No" },
-      { "name": "pointermove", "status": "No" },
-      { "name": "pointercancel", "status": "No" },
-      { "name": "pointerover", "status": "No" },
-      { "name": "pointerout", "status": "No" },
-      { "name": "pointerenter", "status": "No" },
-      { "name": "pointerleave", "status": "No" },
-      { "name": "pointerrawupdate", "status": "No" },
     ]
   },
   {
