@@ -126,7 +126,6 @@
     "entries": [
       { "name": "submit", "status": "Yes" },
       { "name": "reset", "status": "No" },
-      { "name": "formdata", "status": "No" },
       { "name": "invalid", "status": "No" },
     ]
   },
