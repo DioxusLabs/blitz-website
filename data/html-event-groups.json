@@ -138,4 +138,14 @@
       { "name": "dragleave", "status": "No" },
     ]
   },
+  {
+    "id": "observers",
+    "name": "Observers",
+    "entries": [
+      { "name": "ResizeObserver", "status": "No" },
+      { "name": "MutationObserver", "status": "No" },
+      { "name": "IntersectionObserver", "status": "No" },
+      { "name": "PerformanceObserver", "status": "No" }
+    ]
+  },
 ]
