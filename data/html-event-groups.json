@@ -1,5 +1,15 @@
 [
   {
+    "id": "observers",
+    "name": "Observers",
+    "entries": [
+      { "name": "ResizeObserver", "status": "No" },
+      { "name": "MutationObserver", "status": "No" },
+      { "name": "IntersectionObserver", "status": "No" },
+      { "name": "PerformanceObserver", "status": "No" }
+    ]
+  },
+  {
     "id": "mouse",
     "name": "Mouse",
     "entries": [
@@ -48,6 +58,19 @@
       { "name": "wheel", "status": "Yes" },
       { "name": "scroll", "status": "Yes" },
       { "name": "scrollend", "status": "No" },
+    ]
+  },
+  {
+    "id": "drap-and-drop",
+    "name": "Drag & Drop",
+    "entries": [
+      { "name": "dragstart", "status": "No" },
+      { "name": "dragend", "status": "No" },
+      { "name": "drag", "status": "No" },
+      { "name": "drop", "status": "No" },
+      { "name": "dragover", "status": "No" },
+      { "name": "dragenter", "status": "No" },
+      { "name": "dragleave", "status": "No" },
     ]
   },
   {
@@ -121,31 +144,9 @@
     "id": "global",
     "name": "Window / Global",
     "entries": [
-      { "name": "load", "status": "No" },
       { "name": "resize", "status": "No" },
+      { "name": "load", "status": "No" },
+      { "name": "DOMContentLoaded", "status": "No" },
     ]
-  },
-  {
-    "id": "drap-and-drop",
-    "name": "Drag & Drop",
-    "entries": [
-      { "name": "dragstart", "status": "No" },
-      { "name": "dragend", "status": "No" },
-      { "name": "drag", "status": "No" },
-      { "name": "drop", "status": "No" },
-      { "name": "dragover", "status": "No" },
-      { "name": "dragenter", "status": "No" },
-      { "name": "dragleave", "status": "No" },
-    ]
-  },
-  {
-    "id": "observers",
-    "name": "Observers",
-    "entries": [
-      { "name": "ResizeObserver", "status": "No" },
-      { "name": "MutationObserver", "status": "No" },
-      { "name": "IntersectionObserver", "status": "No" },
-      { "name": "PerformanceObserver", "status": "No" }
-    ]
-  },
+  }
 ]
