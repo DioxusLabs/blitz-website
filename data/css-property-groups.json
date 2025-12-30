@@ -12,7 +12,7 @@
           { "value": "display:flex", "status": "Yes" },
           { "value": "display:grid", "status": "Yes", "notes": "Subgrid is not supported" },
           { "value": "display:table", "status": "Partial", "notes": "Table layout is emulated with CSS Grid." },
-          { "value": "display:masonry", "status": "No" },
+          { "value": "display:grid-lanes", "status": "No" },
           { "value": "display:none", "status": "Yes" },
           { "value": "display:contents", "status": "Yes" }
         ] 
@@ -70,7 +70,7 @@
     "entries": [
       { "name": "opacity", "status": "Yes", "notes": "Nodes with opacity are currently clipped regardless of the overflow style" },
       { "name": "visibility", "status": "Yes" },
-      { "name": "clip-path", "status": "InProgress", "properties": ["clip-path", "clip"], "issues": ["DioxusLabs/blitz#211"] },
+      { "name": "clip-path", "status": "No", "properties": ["clip-path", "clip"], "issues": ["DioxusLabs/blitz#211"] },
       { "name": "mask", "status": "No", "properties": ["mask", "mask-image", "mask-size", "mask-position", "mask-repeat", "mask-composite"] },
       { "name": "contain", "status": "No" },
       { "name": "isolation", "status": "No" },
