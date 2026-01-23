@@ -27,6 +27,22 @@
     ]
   },
   {
+    "id": "pointer",
+    "name": "Pointer",
+    "notes": "The pointer event support currently only handles a single primary pointer",
+    "entries": [
+      { "name": "pointerdown", "status": "Yes" },
+      { "name": "pointerup", "status": "Yes" },
+      { "name": "pointermove", "status": "Yes" },
+      { "name": "pointerover", "status": "Yes" },
+      { "name": "pointerout", "status": "Yes" },
+      { "name": "pointerenter", "status": "Yes" },
+      { "name": "pointerleave", "status": "Yes" },
+      { "name": "pointercancel", "status": "No" },
+      { "name": "pointerrawupdate", "status": "No" },
+    ]
+  },
+  {
     "id": "touch",
     "name": "Touch",
     "entries": [
@@ -34,21 +50,6 @@
       { "name": "touchend", "status": "No" },
       { "name": "touchmove", "status": "No" },
       { "name": "touchcancel", "status": "No" },
-    ]
-  },
-  {
-    "id": "pointer",
-    "name": "Pointer",
-    "entries": [
-      { "name": "pointerdown", "status": "No" },
-      { "name": "pointerup", "status": "No" },
-      { "name": "pointermove", "status": "No" },
-      { "name": "pointercancel", "status": "No" },
-      { "name": "pointerover", "status": "No" },
-      { "name": "pointerout", "status": "No" },
-      { "name": "pointerenter", "status": "No" },
-      { "name": "pointerleave", "status": "No" },
-      { "name": "pointerrawupdate", "status": "No" },
     ]
   },
   {
