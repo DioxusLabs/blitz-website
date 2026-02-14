@@ -11,8 +11,8 @@
           { "value": "display:inline-block", "status": "Yes" },
           { "value": "display:flex", "status": "Yes" },
           { "value": "display:grid", "status": "Yes", "notes": "Subgrid is not supported" },
-          { "value": "display:table", "status": "Partial", "notes": "Table layout is emulated with CSS Grid." },
-          { "value": "display:grid-lanes", "status": "No" },
+          { "value": "display:table", "status": "Partial", "notes": "Table layout is emulated with CSS Grid.",  "issues": ["DioxusLabs/taffy#467"] },
+          { "value": "display:grid-lanes", "status": "No", "issues": ["DioxusLabs/taffy#910"] },
           { "value": "display:none", "status": "Yes" },
           { "value": "display:contents", "status": "Yes" }
         ] 
@@ -110,7 +110,7 @@
     "id": "text-direction",
     "name": "Text Direction",
     "entries": [
-      { "name": "direction", "status": "No" },
+      { "name": "direction", "status": "No",  "issues": ["DioxusLabs/taffy#906"] },
       { "name": "unicode-bidi", "status": "No" },
       { "name": "all", "status": "Yes" },
       { "name": "writing-mode", "status": "No" }
@@ -155,7 +155,7 @@
       { "name": "word-break", "status": "Yes" },
       { "name": "overflow-wrap / word-wrap", "status": "Yes", "properties": ["overflow-wrap", "word-wrap"] },
       { "name": "webkit-line-clamp", "status": "No" },
-      { "name": "text-indent", "status": "No" },
+      { "name": "text-indent", "status": "No", "issues": ["linebender/parley#545"] },
       { "name": "text-decoration-line", "status": "No" },
       { "name": "text-wrap-style", "status": "No", "properties": ["text-wrap-style", "text-wrap"] },
       { "name": "word-spacing", "status": "Yes" },
