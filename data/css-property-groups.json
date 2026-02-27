@@ -155,7 +155,7 @@
       { "name": "word-break", "status": "Yes" },
       { "name": "overflow-wrap / word-wrap", "status": "Yes", "properties": ["overflow-wrap", "word-wrap"] },
       { "name": "webkit-line-clamp", "status": "No" },
-      { "name": "text-indent", "status": "No", "issues": ["linebender/parley#545"] },
+      { "name": "text-indent", "status": "Yes" },
       { "name": "text-decoration-line", "status": "No" },
       { "name": "text-wrap-style", "status": "No", "properties": ["text-wrap-style", "text-wrap"] },
       { "name": "word-spacing", "status": "Yes" },
