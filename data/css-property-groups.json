@@ -111,8 +111,8 @@
     "name": "Text Direction",
     "entries": [
       { "name": "direction", "status": "No",  "issues": ["DioxusLabs/taffy#906"] },
-      { "name": "unicode-bidi", "status": "No" },
       { "name": "all", "status": "Yes" },
+      { "name": "unicode-bidi", "status": "No" },
       { "name": "writing-mode", "status": "No" }
     ]
   },
@@ -132,8 +132,8 @@
       { "name": "font-style", "status": "Yes" },
       { "name": "font-display", "status": "No" },
       { "name": "font-variant", "status": "No" },
-      { "name": "font-feature-settings", "status": "No", "issues": ["DioxusLabs/blitz#184"] },
       { "name": "font-stretch", "status": "Yes" },
+      { "name": "font-feature-settings", "status": "No", "issues": ["DioxusLabs/blitz#184"] },
       { "name": "font-variation-settings", "status": "Yes" },
       { "name": "font-variant-ligatures", "status": "No" }
     ]
@@ -150,22 +150,22 @@
       { "name": "white-space-collapse", "status": "Partial", "properties": ["white-space-collapse", "white-space"] },
       { "name": "text-wrap-mode", "status": "Yes", "properties": ["text-wrap-mode", "text-wrap", "white-space"] },
       { "name": "text-transform", "status": "No" },
-      { "name": "text-overflow", "status": "No", "issues": ["linebender/parley#304"] },
       { "name": "letter-spacing", "status": "Yes" },
+      { "name": "text-overflow", "status": "No", "issues": ["linebender/parley#304"] },
       { "name": "word-break", "status": "Yes" },
-      { "name": "overflow-wrap / word-wrap", "status": "Yes", "properties": ["overflow-wrap", "word-wrap"] },
       { "name": "webkit-line-clamp", "status": "No" },
+      { "name": "overflow-wrap / word-wrap", "status": "Yes", "properties": ["overflow-wrap", "word-wrap"] },
       { "name": "text-indent", "status": "Yes" },
-      { "name": "text-decoration-line", "status": "No" },
       { "name": "text-wrap-style", "status": "No", "properties": ["text-wrap-style", "text-wrap"] },
-      { "name": "word-spacing", "status": "Yes" },
+      { "name": "text-decoration-line", "status": "No" },
       { "name": "text-decoration-color", "status": "Yes" },
-      { "name": "hyphens", "status": "No" },
-      { "name": "tab-size", "status": "No" },
-      { "name": "quotes", "status": "No" },
-      { "name": "webkit-text-fill-color", "status": "No" },
       { "name": "text-underline-offset", "status": "No" },
-      { "name": "text-decoration-thickness", "status": "No" }
+      { "name": "word-spacing", "status": "Yes" },
+      { "name": "tab-size", "status": "No" },
+      { "name": "text-decoration-thickness", "status": "No" },
+      { "name": "hyphens", "status": "No" },
+      { "name": "webkit-text-fill-color", "status": "No" },
+      { "name": "quotes", "status": "No" }
     ]
   },
   {
@@ -178,8 +178,8 @@
       { "name" : "background-size", "status": "Yes" },
       { "name" : "background-repeat", "status": "Yes" },
       { "name" : "background-clip", "status": "Yes" },
-      { "name" : "background-attachment", "status": "No" },
-      { "name" : "background-origin", "status": "Yes" }
+      { "name" : "background-origin", "status": "Yes" },
+      { "name" : "background-attachment", "status": "No" }
     ]
   },
   {
@@ -305,11 +305,10 @@
     "entries": [
       { "name": "pointer-events", "status": "No" },
       { "name": "user-select", "status": "No" },
-      { "name": "webkit-user-select", "status": "No" },
-      { "name": "webkit-tap-highlight-color", "status": "No", "properties": ["webkit-tap-highlight-color-0"] },
       { "name": "touch-action", "status": "No" },
       { "name": "caret-color", "status": "No" },
-      { "name": "webkit-user-drag", "status": "No" }
+      { "name": "webkit-user-drag", "status": "No" },
+      { "name": "webkit-tap-highlight-color", "status": "No", "properties": ["webkit-tap-highlight-color-0"] }
     ]
   },
   {
@@ -324,16 +323,16 @@
       { "name": "forced-color-adjust", "status": "No" },
       { "name": "color-scheme", "status": "No" },
       { "name": "scrollbar-color", "status": "No" },
-      { "name": "image-rendering", "status": "No" },
       { "name": "overflow-anchor", "status": "No" }
+      { "name": "image-rendering", "status": "No" },
     ]
   },
   {
     "id": "misc",
     "name": "Miscellaneous / Other",
     "entries": [
-      { "name": "resize", "status": "No" },
       { "name": "scrollbar-width", "status": "No" },
+      { "name": "resize", "status": "No" },
       { "name": "speak", "status": "No" },
       { "name": "container", "status": "No" }
     ]
@@ -342,11 +341,11 @@
     "id": "scroll-behaviour",
     "name": "Scroll Behaviour",
     "entries": [
-      { "name": "scroll-boundary-behavior", "status": "No" },
       { "name": "scroll-behavior", "status": "No" },
       { "name": "scroll-snap-type", "status": "No" },
       { "name": "scroll-snap-align", "status": "No" },
       { "name": "scroll-padding", "status": "No" },
+      { "name": "scroll-boundary-behavior", "status": "No" },
       { "name": "scroll-boundary-behavior-y", "status": "No" }
     ]
   },
