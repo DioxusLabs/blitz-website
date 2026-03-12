@@ -306,7 +306,7 @@
       { "name": "pointer-events", "status": "No" },
       { "name": "user-select", "status": "No" },
       { "name": "touch-action", "status": "No" },
-      { "name": "caret-color", "status": "No" },
+      { "name": "caret-color", "status": "Yes" },
       { "name": "webkit-user-drag", "status": "No" },
       { "name": "webkit-tap-highlight-color", "status": "No", "properties": ["webkit-tap-highlight-color-0"] }
     ]
