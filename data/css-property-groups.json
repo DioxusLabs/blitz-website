@@ -323,8 +323,8 @@
       { "name": "forced-color-adjust", "status": "No" },
       { "name": "color-scheme", "status": "No" },
       { "name": "scrollbar-color", "status": "No" },
-      { "name": "overflow-anchor", "status": "No" }
-      { "name": "image-rendering", "status": "No" },
+      { "name": "overflow-anchor", "status": "No" },
+      { "name": "image-rendering", "status": "No" }
     ]
   },
   {
