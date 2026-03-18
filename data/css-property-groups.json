@@ -110,7 +110,7 @@
     "id": "text-direction",
     "name": "Text Direction",
     "entries": [
-      { "name": "direction", "status": "No",  "issues": ["DioxusLabs/taffy#906"] },
+      { "name": "direction", "status": "Partial", "notes": "Supported for block-level but not inline-level boxes. Auto-detection of RTL text is support for inline content." },
       { "name": "all", "status": "Yes" },
       { "name": "unicode-bidi", "status": "No" },
       { "name": "writing-mode", "status": "No" }
