@@ -149,7 +149,13 @@
       { "name": "vertical-align", "status": "No", "issues": ["linebender/parley#291"] },
       { "name": "white-space-collapse", "status": "Partial", "properties": ["white-space-collapse", "white-space"] },
       { "name": "text-wrap-mode", "status": "Yes", "properties": ["text-wrap-mode", "text-wrap", "white-space"] },
-      { "name": "text-transform", "status": "No" },
+      { "name": "text-transform",
+        "values": [
+          { "value": "uppercase", "status": "Yes" },
+          { "value": "lowercase", "status": "Yes" },
+          { "value": "capitalize", "status": "No" }
+        ]
+      },
       { "name": "letter-spacing", "status": "Yes" },
       { "name": "text-overflow", "status": "No", "issues": ["linebender/parley#304"] },
       { "name": "word-break", "status": "Yes" },
