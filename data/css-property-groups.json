@@ -236,17 +236,33 @@
     ]
   },
   {
-    "id": "transforms",
-    "name": "Transforms",
+    "id": "2d-transforms",
+    "name": "2D Transforms",
+    "notes": "2D transforms are currently applied visually, but hit detection doesn't yet work properly for transformed nodes",
     "entries": [
-      {
-        "name": "2D Transforms",
-        "status": "Partial",
-        "properties": ["transform", "transform-origin"],
-        "notes": "2D transforms are currently applied visually, but hit detection doesn't yet work properly for transformed nodes"
-      },
-      { "name": "3D Transforms", "status": "No", "properties": ["transform-style", "backface-visibility", "perspective"] }
-    ]
+          { "name": "transform", "status": "Partial", "properties": ["transform"] },
+          { "name": "transform-origin", "status": "Partial", "properties": ["transform-origin"] },
+          { "name": "scale", "status": "Partial", "properties": ["scale"] },
+          { "name": "rotate", "status": "Partial", "properties": ["rotate"] },
+          { "name": "translate", "status": "Partial", "properties": ["translate"] },
+          { "name": "transform-box", "status": "No", "properties": ["transform-box"] }
+        ]
+  },
+  {
+    "id": "3d-transforms",
+    "name": "3D Transforms",
+    "notes": "3D transforms are not currently supported",
+    "entries": [
+          { "name": "transform", "status": "No", "properties": ["transform"] },
+          { "name": "transform-origin", "status": "No", "properties": ["transform-origin"] },
+          { "name": "scale", "status": "No", "properties": ["scale"] },
+          { "name": "rotate", "status": "No", "properties": ["rotate"] },
+          { "name": "translate", "status": "No", "properties": ["translate"] },
+          { "name": "backface-visibility", "status": "No", "properties": ["backface-visibility"] },
+          { "name": "transform-style", "status": "No", "properties": ["transform-style"] },
+          { "name": "perspective", "status": "No", "properties": ["perspective"] },
+          { "name": "transform-box", "status": "No", "properties": ["transform-box"] }
+        ]
   },
   {
     "id": "transition-animations",
