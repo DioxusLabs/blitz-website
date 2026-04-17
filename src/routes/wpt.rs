@@ -72,6 +72,7 @@ pub fn WptResults(scores: ArcWptScores) -> Element {
             width: "100%",
             tr {
                 th { "Area" }
+                th { "Interop Score", }
                 th { "Tests", }
                 th { "Test %", }
                 th { "Subtests" }
@@ -86,6 +87,10 @@ pub fn WptResults(scores: ArcWptScores) -> Element {
                     rsx!(
                         tr {
                             td { {area.clone()} }
+                            td {
+                                text_align: "right",
+                                {format!("{:.2}%", (scores.interop_score() as f32 / 1000.0) * 100.0)}
+                            }
                             td {
                                 text_align: "right",
                                 {format!("({}/{})", tests.pass, tests.total)}
