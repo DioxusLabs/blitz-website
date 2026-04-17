@@ -72,7 +72,7 @@ pub fn WptResultsPage(report: ArcWptReport, scores: ArcWptScores) -> Element {
             StatusTabs { current_tab: "wpt" }
             p {
                 dangerous_inner_html: r#"
-                This page documents Blitz's scores on the "css" subsuite of the <a href="https://github.com/web-platform-tests/wpt">Web Platform Tests</a>."#
+                This page documents Blitz's scores on the "css" subsuite of the <a href="https://github.com/web-platform-tests/wpt" target="_blank">Web Platform Tests</a>."#
             }
             p {
                 font_size: "smaller",
