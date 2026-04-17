@@ -10,7 +10,7 @@ use dioxus::{core::ComponentFunction, prelude::*};
 use dioxus_html_macro::html;
 use routes::{
     AboutPage, ArcWptReport, ArcWptScores, CssSupportPage, ElementSupportPage, EventSupportPage,
-    GettingStartedPage, HomePage, WptResultsPage, WptResultsPageProps,
+    GettingStartedPage, HomePage, NLNetInstructionsPage, WptResultsPage, WptResultsPageProps,
 };
 use std::{
     io::Cursor,
@@ -34,6 +34,10 @@ async fn main() {
     let app = Router::new()
         .route("/", get(|| dx_route_cached(|| html!(<HomePage />))))
         .route("/about", get(|| dx_route_cached(|| html!(<AboutPage />))))
+        .route(
+            "/nlnet-testing-instructions",
+            get(|| dx_route_cached(|| html!(<NLNetInstructionsPage />))),
+        )
         .route(
             "/status/wpt",
             get(async || {

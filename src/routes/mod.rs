@@ -6,5 +6,7 @@ mod home;
 pub use home::*;
 mod about;
 pub use about::*;
+mod nlnet_instructions;
+pub use nlnet_instructions::*;
 mod wpt;
 pub use wpt::*;
