@@ -6,3 +6,5 @@ mod home;
 pub use home::*;
 mod about;
 pub use about::*;
+mod wpt;
+pub use wpt::*;

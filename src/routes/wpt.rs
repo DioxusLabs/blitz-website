@@ -1,0 +1,100 @@
+use std::{collections::BTreeMap, ops::Deref, sync::Arc};
+
+use dioxus::prelude::*;
+use wptreport::{wpt_report::WptReport, AreaScores};
+
+use crate::{
+    components::Page,
+    routes::{StatusHeader, StatusTabs},
+};
+
+#[derive(Clone)]
+pub struct ArcWptReport(pub Arc<WptReport>);
+impl PartialEq for ArcWptReport {
+    fn eq(&self, other: &Self) -> bool {
+        Arc::ptr_eq(&self.0, &other.0)
+    }
+}
+impl Deref for ArcWptReport {
+    type Target = WptReport;
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+type WptScores = BTreeMap<String, AreaScores>;
+
+#[derive(Clone)]
+pub struct ArcWptScores(pub Arc<WptScores>);
+impl PartialEq for ArcWptScores {
+    fn eq(&self, other: &Self) -> bool {
+        Arc::ptr_eq(&self.0, &other.0)
+    }
+}
+impl Deref for ArcWptScores {
+    type Target = WptScores;
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+#[component]
+pub fn WptResultsPage(report: ArcWptReport, scores: ArcWptScores) -> Element {
+    rsx! {
+        Page { title: "Status: WPT".into(),
+            StatusHeader {}
+            StatusTabs { current_tab: "wpt" }
+            WptResults { scores }
+        }
+    }
+}
+
+fn is_focus_area(area: &str) -> bool {
+    let slash_count = area.chars().filter(|c| *c == '/').count();
+    slash_count < 2 || (slash_count == 2 && area.starts_with("css/CSS2"))
+}
+
+#[component]
+pub fn WptResults(scores: ArcWptScores) -> Element {
+    rsx!(
+        table {
+            width: "100%",
+            tr {
+                th { "Area" }
+                th { "Tests", }
+                th { "Test %", }
+                th { "Subtests" }
+                th { "Subtest %" }
+            }
+            {
+                scores.iter().filter(|(area, _)| is_focus_area(area)).map(|(area, scores)| {
+
+                    let tests = scores.tests;
+                    let subtests = scores.subtests;
+
+                    rsx!(
+                        tr {
+                            td { {area.clone()} }
+                            td {
+                                text_align: "right",
+                                {format!("({}/{})", tests.pass, tests.total)}
+                            }
+                            td {
+                                text_align: "right",
+                                {format!("{:.2}%", tests.pass_fraction() * 100.0)}
+                            }
+                            td {
+                                text_align: "right",
+                                {format!("({}/{})", subtests.pass, subtests.total)}
+                            }
+                            td {
+                                text_align: "right",
+                                {format!("{:.2}%", subtests.pass_fraction() * 100.0)}
+                            }
+                        }
+                    )
+                })
+            }
+        }
+    )
+}

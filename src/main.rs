@@ -6,18 +6,21 @@ use axum::{
     Router,
 };
 use dashmap::DashMap;
-use dioxus::prelude::*;
+use dioxus::{core::ComponentFunction, prelude::*};
 use dioxus_html_macro::html;
 use routes::{
-    AboutPage, CssSupportPage, ElementSupportPage, EventSupportPage, GettingStartedPage, HomePage,
+    AboutPage, ArcWptReport, ArcWptScores, CssSupportPage, ElementSupportPage, EventSupportPage,
+    GettingStartedPage, HomePage, WptResultsPage, WptResultsPageProps,
 };
 use std::{
+    io::Cursor,
     net::{IpAddr, SocketAddr},
-    sync::LazyLock,
+    sync::{Arc, LazyLock},
     time::{Duration, Instant},
 };
 use tokio::net::TcpListener;
 use tower_http::{services::ServeDir, trace::TraceLayer};
+use wptreport::{score_wpt_report, wpt_report::WptReport};
 
 mod components;
 mod routes;
@@ -31,6 +34,30 @@ async fn main() {
     let app = Router::new()
         .route("/", get(|| dx_route_cached(|| html!(<HomePage />))))
         .route("/about", get(|| dx_route_cached(|| html!(<AboutPage />))))
+        .route(
+            "/status/wpt",
+            get(async || {
+                let compressed_report =
+                    reqwest::get("https://dioxuslabs.github.io/blitz/wptreport.json.zst")
+                        .await
+                        .unwrap()
+                        .bytes()
+                        .await
+                        .unwrap();
+
+                let uncompressed_report =
+                    zstd::decode_all(Cursor::new(&compressed_report)).unwrap();
+                let report: WptReport = serde_json::from_slice(&uncompressed_report).unwrap();
+                let scores = score_wpt_report::<WptReport>(&report);
+
+                let report = ArcWptReport(Arc::new(report));
+                let scores = ArcWptScores(Arc::new(scores));
+
+                let props = WptResultsPageProps { report, scores };
+
+                dx_route_with_props(WptResultsPage, props).await
+            }),
+        )
         .route("/status", get(|| async { Redirect::to("/status/css") }))
         .route(
             "/status/css",
@@ -78,7 +105,7 @@ async fn dx_route_cached(render_fn: fn() -> Element) -> impl IntoResponse {
     let fn_key = render_fn as *const () as usize;
 
     let html = CACHE.entry(fn_key).or_insert_with(|| {
-        let (html, duration) = render_component(render_fn);
+        let (html, duration) = render_component(render_fn, ());
 
         let duration_millis = duration.as_micros() as f64 / 1000.0;
         println!("Rendered in {duration_millis:.2}ms",);
@@ -91,7 +118,7 @@ async fn dx_route_cached(render_fn: fn() -> Element) -> impl IntoResponse {
 
 #[allow(unused)]
 async fn dx_route(render_fn: fn() -> Element) -> impl IntoResponse {
-    let (html, duration) = render_component(render_fn);
+    let (html, duration) = render_component(render_fn, ());
 
     let duration_millis = duration.as_micros() as f64 / 1000.0;
     println!("Rendered dx in {duration_millis:.2}ms",);
@@ -99,10 +126,26 @@ async fn dx_route(render_fn: fn() -> Element) -> impl IntoResponse {
     (StatusCode::OK, Html(html))
 }
 
-fn render_component(render_fn: fn() -> Element) -> (String, Duration) {
+#[allow(unused)]
+async fn dx_route_with_props<P: Clone + 'static, M: 'static>(
+    render_fn: impl ComponentFunction<P, M>,
+    props: P,
+) -> impl IntoResponse {
+    let (html, duration) = render_component(render_fn, props);
+
+    let duration_millis = duration.as_micros() as f64 / 1000.0;
+    println!("Rendered dx in {duration_millis:.2}ms",);
+
+    (StatusCode::OK, Html(html))
+}
+
+fn render_component<P: Clone + 'static, M: 'static>(
+    render_fn: impl ComponentFunction<P, M>,
+    props: P,
+) -> (String, Duration) {
     let start = Instant::now();
 
-    let mut dom = VirtualDom::new(render_fn);
+    let mut dom = VirtualDom::new_with_props(render_fn, props);
     dom.rebuild_in_place();
     let rendered = dioxus_ssr::render(&dom);
     let html = format!(
