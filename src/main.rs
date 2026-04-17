@@ -6,8 +6,12 @@ use axum::{
     Router,
 };
 use dashmap::DashMap;
-use dioxus::{core::ComponentFunction, prelude::*};
+use dioxus::{
+    core::{ComponentFunction, SpawnIfAsync},
+    prelude::*,
+};
 use dioxus_html_macro::html;
+use reqwest::{Client, RequestBuilder};
 use routes::{
     AboutPage, ArcWptReport, ArcWptScores, CssSupportPage, ElementSupportPage, EventSupportPage,
     GettingStartedPage, HomePage, NLNetInstructionsPage, WptResultsPage, WptResultsPageProps,
@@ -20,10 +24,11 @@ use std::{
 };
 use tokio::net::TcpListener;
 use tower_http::{services::ServeDir, trace::TraceLayer};
-use wptreport::{score_wpt_report, wpt_report::WptReport};
+use wpt::{load_wpt_results, WPT_REPORT_CACHE};
 
 mod components;
 mod routes;
+mod wpt;
 
 #[tokio::main]
 async fn main() {
@@ -41,23 +46,36 @@ async fn main() {
         .route(
             "/status/wpt",
             get(async || {
-                let compressed_report =
-                    reqwest::get("https://dioxuslabs.github.io/blitz/wptreport.json.zst")
-                        .await
-                        .unwrap()
-                        .bytes()
-                        .await
-                        .unwrap();
+                let now = Instant::now();
+                let cache_entry = WPT_REPORT_CACHE.get_cloned();
+                let etag = cache_entry.as_ref().and_then(|entry| entry.etag.clone());
 
-                let uncompressed_report =
-                    zstd::decode_all(Cursor::new(&compressed_report)).unwrap();
-                let report: WptReport = serde_json::from_slice(&uncompressed_report).unwrap();
-                let scores = score_wpt_report::<WptReport>(&report);
+                // Cache with 30s validity
+                let mut await_revalidation = true;
+                if let Some(entry) = &cache_entry {
+                    let cache_age = now.duration_since(entry.cached_at);
+                    if cache_age <= Duration::from_secs(30) {
+                        let props = WptResultsPageProps {
+                            report: entry.report.clone(),
+                            scores: entry.scores.clone(),
+                        };
+                        return dx_route_with_props(WptResultsPage, props).await;
+                    } else if cache_age <= Duration::from_mins(30) {
+                        await_revalidation = false
+                    }
+                }
 
-                let report = ArcWptReport(Arc::new(report));
-                let scores = ArcWptScores(Arc::new(scores));
+                let handle = tokio::spawn(async move { load_wpt_results(etag).await });
 
-                let props = WptResultsPageProps { report, scores };
+                if await_revalidation {
+                    handle.await.unwrap();
+                }
+
+                let entry = WPT_REPORT_CACHE.get_cloned().unwrap();
+                let props = WptResultsPageProps {
+                    report: entry.report.clone(),
+                    scores: entry.scores.clone(),
+                };
 
                 dx_route_with_props(WptResultsPage, props).await
             }),
@@ -94,6 +112,9 @@ async fn main() {
         .unwrap_or(3333);
     let addr = SocketAddr::from((host, port));
     let listener = TcpListener::bind(addr).await.unwrap();
+
+    // Prime WPT result cache
+    tokio::spawn(async move { load_wpt_results(None).await });
 
     let msg = format!("Serving blitz-website at http://{addr}").replace("[::]", "localhost");
     println!("{msg}");
