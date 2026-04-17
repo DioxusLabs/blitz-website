@@ -8,6 +8,32 @@ use crate::{
     routes::{StatusHeader, StatusTabs},
 };
 
+struct Colors(&'static [[u8; 3]]);
+
+impl Colors {
+    fn get(&self, pass_fraction: f32) -> [u8; 3] {
+        if pass_fraction == 0.0 {
+            return self.0[0];
+        }
+
+        if pass_fraction == 1.0 {
+            return self.0[self.0.len() - 1];
+        }
+
+        self.0[((self.0.len() - 2) as f32 * pass_fraction).floor() as usize + 1]
+    }
+}
+
+const COLORS: Colors = Colors(&[
+    [229, 115, 115],
+    [255, 183, 77],
+    [255, 213, 79],
+    [255, 241, 118],
+    [220, 231, 117],
+    [174, 213, 129],
+    [129, 199, 132],
+]);
+
 #[derive(Clone)]
 pub struct ArcWptReport(pub Arc<WptReport>);
 impl PartialEq for ArcWptReport {
@@ -71,7 +97,7 @@ pub fn WptResults(scores: ArcWptScores) -> Element {
         table {
             width: "100%",
             tr {
-                th { "Area" }
+                th { width: "min-content", "Area",  }
                 th { "Interop Score", }
                 th { "Tests", }
                 th { "Test %", }
@@ -84,9 +110,15 @@ pub fn WptResults(scores: ArcWptScores) -> Element {
                     let tests = scores.tests;
                     let subtests = scores.subtests;
 
+                    let color = COLORS.get(subtests.pass_fraction() as f32);
+
                     rsx!(
                         tr {
-                            td { {area.clone()} }
+                            background_color: format!("rgb({},{},{})", color[0], color[1], color[2]),
+                            td {
+                                background_color: "white",
+                                {area.clone()}
+                            }
                             td {
                                 text_align: "right",
                                 {format!("{:.2}%", (scores.interop_score() as f32 / 1000.0) * 100.0)}
