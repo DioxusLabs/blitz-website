@@ -61,7 +61,7 @@ pub fn StatusTabs(current_tab: &'static str) -> Element {
         },
         Tab {
             href: "/status/wpt",
-            label: "WPT Test results",
+            label: "WPT Tests",
         },
     ];
 
