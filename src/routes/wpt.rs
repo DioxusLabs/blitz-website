@@ -1,7 +1,6 @@
 use std::{collections::BTreeMap, ops::Deref, sync::Arc};
 
 use dioxus::prelude::*;
-use dioxus_html_macro::html;
 use wptreport::{wpt_report::WptReport, AreaScores};
 
 use crate::{
