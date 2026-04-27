@@ -5,7 +5,10 @@ use std::{
 };
 
 use reqwest::Client;
-use wptreport::{score_wpt_report, wpt_report::WptReport};
+use wptreport::{
+    score_wpt_report,
+    wpt_report::{TestStatus, WptReport},
+};
 
 use crate::routes::{ArcWptReport, ArcWptScores};
 
@@ -21,7 +24,8 @@ impl WptReportCache {
         (*self.0.lock().unwrap()).clone()
     }
 
-    pub fn get_mut(&self) -> MutexGuard<Option<Arc<WptReportCacheEntry>>> {
+    #[allow(dead_code)]
+    pub fn get_mut(&self) -> MutexGuard<'_, Option<Arc<WptReportCacheEntry>>> {
         self.0.lock().unwrap()
     }
 
@@ -85,7 +89,13 @@ pub async fn load_wpt_results(etag: Option<Arc<str>>) {
     let compressed_report = result.bytes().await.unwrap();
 
     let uncompressed_report = zstd::decode_all(Cursor::new(&compressed_report)).unwrap();
-    let report: WptReport = serde_json::from_slice(&uncompressed_report).unwrap();
+    let mut report: WptReport = serde_json::from_slice(&uncompressed_report).unwrap();
+
+    // Strip skipped tests
+    report
+        .results
+        .retain(|test| test.status != TestStatus::Skip);
+
     let scores = score_wpt_report::<WptReport>(&report);
 
     let report = ArcWptReport(Arc::new(report));

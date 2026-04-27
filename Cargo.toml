@@ -32,3 +32,6 @@ foldhash = "0.2.0"
 grass = { version = "0.13", default-features = false }
 
 [features]
+
+# [patch.crates-io]
+# wptreport = { path = "../../../wpt-rs/crates/wptreport" }

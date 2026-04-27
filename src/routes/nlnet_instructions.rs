@@ -82,7 +82,7 @@ pub fn NLNetInstructionsPage() -> Element {
                                 just build
                             "#
                         }
-                    }       
+                    }
                 }
                 li {
                     dangerous_inner_html: r#"

@@ -6,20 +6,15 @@ use axum::{
     Router,
 };
 use dashmap::DashMap;
-use dioxus::{
-    core::{ComponentFunction, SpawnIfAsync},
-    prelude::*,
-};
+use dioxus::{core::ComponentFunction, prelude::*};
 use dioxus_html_macro::html;
-use reqwest::{Client, RequestBuilder};
 use routes::{
-    AboutPage, ArcWptReport, ArcWptScores, CssSupportPage, ElementSupportPage, EventSupportPage,
-    GettingStartedPage, HomePage, NLNetInstructionsPage, WptResultsPage, WptResultsPageProps,
+    AboutPage, CssSupportPage, ElementSupportPage, EventSupportPage, GettingStartedPage, HomePage,
+    NLNetInstructionsPage, WptResultsPage, WptResultsPageProps,
 };
 use std::{
-    io::Cursor,
     net::{IpAddr, SocketAddr},
-    sync::{Arc, LazyLock},
+    sync::LazyLock,
     time::{Duration, Instant},
 };
 use tokio::net::TcpListener;
