@@ -142,7 +142,7 @@ pub async fn load_downloads(_etag: Option<Arc<str>>) {
 
             DownloadLink {
                 url: format!(
-                    "https://github.com/DioxusLabs/blitz/actions/runs/{}/artifacts/{})",
+                    "https://github.com/DioxusLabs/blitz/actions/runs/{}/artifacts/{}",
                     latest_build_workflow.id, artifact.id
                 ),
                 filename: artifact.name,
