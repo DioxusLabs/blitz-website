@@ -9,7 +9,7 @@ license = "MIT OR Apache-2.0"
 axum = "0.8"
 tokio = { version = "1", features = ["full"] }
 tower-http = { version = "0.6", features = ["fs", "trace"] }
-reqwest = "0.13"
+reqwest = { version = "0.13", features = ["json"] }
 zstd = "0.13"
 
 # Content
@@ -27,6 +27,7 @@ dioxus-html-macro = "0.3.0"
 dashmap = "6.1.0"
 serde_json5 = "0.2.1"
 foldhash = "0.2.0"
+humansize = "2.1.3"
 
 [build-dependencies]
 grass = { version = "0.13", default-features = false }
