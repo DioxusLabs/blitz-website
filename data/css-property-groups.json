@@ -326,7 +326,15 @@
     "name": "Interaction & Pointer events",
     "entries": [
       { "name": "pointer-events", "status": "No" },
-      { "name": "user-select", "status": "No", "issues": ["DioxusLabs/blitz#411"] },
+      {
+        "name": "user-select",
+        "values": [
+          { "value": "auto", "status": "Yes", "notes": "Pseudo-elements are currently selectable by default" },
+          { "value": "text", "status": "Yes" },
+          { "value": "none", "status": "Partial", "notes": "Current implementation only prevents selections from being started in elements with user-select:none" },
+          { "value": "all", "status": "No" }
+        ]
+      },
       { "name": "touch-action", "status": "No" },
       { "name": "caret-color", "status": "Yes" },
       { "name": "webkit-user-drag", "status": "No" },
