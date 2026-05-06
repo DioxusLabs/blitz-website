@@ -136,7 +136,7 @@ pub fn HomePage() -> Element {
                 // }
 
                 img {
-                    src: "/static/markdown-screenshot-wide.png",
+                    src: "/static/screenshots/wikipedia.png",
                     style: "
                     width: 80%;
                     background-color: transparent;
