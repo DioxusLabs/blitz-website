@@ -1,12 +1,8 @@
-mod support_matrix;
-pub use support_matrix::*;
-mod getting_started;
-pub use getting_started::*;
-mod home;
-pub use home::*;
-mod about;
-pub use about::*;
-mod nlnet_instructions;
-pub use nlnet_instructions::*;
-mod wpt;
-pub use wpt::*;
+#![cfg_attr(rustfmt, rustfmt::skip)]
+mod support_matrix;     pub use support_matrix::*;
+mod getting_started;    pub use getting_started::*;
+mod home;               pub use home::*;
+mod downloads;          pub use downloads::*;
+mod about;              pub use about::*;
+mod nlnet_instructions; pub use nlnet_instructions::*;
+mod wpt;                pub use wpt::*;

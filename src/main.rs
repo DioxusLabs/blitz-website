@@ -8,9 +8,11 @@ use axum::{
 use dashmap::DashMap;
 use dioxus::{core::ComponentFunction, prelude::*};
 use dioxus_html_macro::html;
+use downloads::{load_downloads, DOWNLOAD_CACHE};
 use routes::{
-    AboutPage, CssSupportPage, ElementSupportPage, EventSupportPage, GettingStartedPage, HomePage,
-    NLNetInstructionsPage, WptResultsPage, WptResultsPageProps,
+    AboutPage, ArcDownloadLinks, CssSupportPage, DownloadsPage, DownloadsPageProps,
+    ElementSupportPage, EventSupportPage, GettingStartedPage, HomePage, NLNetInstructionsPage,
+    WptResultsPage, WptResultsPageProps,
 };
 use std::{
     net::{IpAddr, SocketAddr},
@@ -22,6 +24,8 @@ use tower_http::{services::ServeDir, trace::TraceLayer};
 use wpt::{load_wpt_results, WPT_REPORT_CACHE};
 
 mod components;
+mod downloads;
+mod github;
 mod routes;
 mod wpt;
 
@@ -75,6 +79,41 @@ async fn main() {
                 dx_route_with_props(WptResultsPage, props).await
             }),
         )
+        .route(
+            "/downloads",
+            get(async || {
+                let now = Instant::now();
+                let cache_entry = DOWNLOAD_CACHE.get_cloned();
+                let etag = cache_entry.as_ref().and_then(|entry| entry.etag.clone());
+
+                // Cache with 30s validity
+                let mut await_revalidation = true;
+                if let Some(entry) = &cache_entry {
+                    let cache_age = now.duration_since(entry.cached_at);
+                    if cache_age <= Duration::from_secs(30) {
+                        let props = DownloadsPageProps {
+                            links: ArcDownloadLinks(entry.artifacts.clone()),
+                        };
+                        return dx_route_with_props(DownloadsPage, props).await;
+                    } else if cache_age <= Duration::from_mins(30) {
+                        await_revalidation = false
+                    }
+                }
+
+                let handle = tokio::spawn(async move { load_downloads(etag).await });
+
+                if await_revalidation {
+                    handle.await.unwrap();
+                }
+
+                let entry = DOWNLOAD_CACHE.get_cloned().unwrap();
+                let props = DownloadsPageProps {
+                    links: ArcDownloadLinks(entry.artifacts.clone()),
+                };
+
+                dx_route_with_props(DownloadsPage, props).await
+            }),
+        )
         .route("/status", get(|| async { Redirect::to("/status/css") }))
         .route(
             "/status/css",
@@ -108,7 +147,7 @@ async fn main() {
     let addr = SocketAddr::from((host, port));
     let listener = TcpListener::bind(addr).await.unwrap();
 
-    // Prime WPT result cache
+    // Prime WPT result and download caches
     tokio::spawn(async move { load_wpt_results(None).await });
 
     let msg = format!("Serving blitz-website at http://{addr}").replace("[::]", "localhost");

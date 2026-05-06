@@ -69,6 +69,7 @@ pub fn Page(
                         nav {
                             a { href: "/about", "About" }
                             a { href: "/status", "Status" }
+                            a { href: "/downloads", "Downloads" }
                             a {
                                 class: "nav-icon",
                                 alt: "Github",

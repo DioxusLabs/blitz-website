@@ -17,11 +17,21 @@ pub enum SectionLevel {
 pub fn AnchorHeader(level: SectionLevel, target: &'static str, children: Element) -> Element {
     rsx!({
         match level {
-            SectionLevel::H2 => html!(<h2><a style="color: inherit" href="#{target}" id="{target}">{children}</a></h2>),
-            SectionLevel::H3 => html!(<h3><a style="color: inherit" href="#{target}" id="{target}">{children}</a></h3>),
-            SectionLevel::H4 => html!(<h4><a style="color: inherit" href="#{target}" id="{target}">{children}</a></h4>),
-            SectionLevel::H5 => html!(<h5><a style="color: inherit" href="#{target}" id="{target}">{children}</a></h5>),
-            SectionLevel::H6 => html!(<h6><a style="color: inherit" href="#{target}" id="{target}">{children}</a></h6>),
+            SectionLevel::H2 => {
+                html!(<h2><a style="color: inherit" href="#{target}" id="{target}">{children}</a></h2>)
+            }
+            SectionLevel::H3 => {
+                html!(<h3><a style="color: inherit" href="#{target}" id="{target}">{children}</a></h3>)
+            }
+            SectionLevel::H4 => {
+                html!(<h4><a style="color: inherit" href="#{target}" id="{target}">{children}</a></h4>)
+            }
+            SectionLevel::H5 => {
+                html!(<h5><a style="color: inherit" href="#{target}" id="{target}">{children}</a></h5>)
+            }
+            SectionLevel::H6 => {
+                html!(<h6><a style="color: inherit" href="#{target}" id="{target}">{children}</a></h6>)
+            }
         }
     })
 }
