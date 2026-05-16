@@ -164,8 +164,8 @@
       { "name": "text-indent", "status": "Yes" },
       { "name": "text-wrap-style", "status": "No", "properties": ["text-wrap-style", "text-wrap"] },
       { "name": "text-decoration-line", "status": "No" },
-      { "name": "text-decoration-color", "status": "Yes" },
       { "name": "text-underline-offset", "status": "No" },
+      { "name": "text-decoration-color", "status": "Yes" },
       { "name": "word-spacing", "status": "Yes" },
       { "name": "tab-size", "status": "No" },
       { "name": "text-decoration-thickness", "status": "No" },
@@ -350,8 +350,8 @@
       { "name": "will-change", "status": "No" },
       { "name": "text-rendering", "status": "No" },
       { "name": "text-size-adjust", "status": "No" },
-      { "name": "forced-color-adjust", "status": "No" },
       { "name": "color-scheme", "status": "No" },
+      { "name": "forced-color-adjust", "status": "No" },
       { "name": "scrollbar-color", "status": "No" },
       { "name": "overflow-anchor", "status": "No" },
       { "name": "image-rendering", "status": "No" }
@@ -365,6 +365,18 @@
       { "name": "resize", "status": "No" },
       { "name": "speak", "status": "No" },
       { "name": "container", "status": "No" }
+    ]
+  },
+  {
+    "id": "anchor-positioning",
+    "name": "Anchor Positioning",
+    "entries": [
+      { "name": "anchor-scope", "status": "No" },
+      { "name": "anchor-name", "status": "No" },
+      { "name": "position-anchor", "status": "No" },
+      { "name": "position-area", "status": "No" },
+      { "name": "position-try", "status": "No", "properties": ["position-try-fallbacks", "position-try-order", "position-try"] },
+      { "name": "position-visibility", "status": "No" }
     ]
   },
   {
