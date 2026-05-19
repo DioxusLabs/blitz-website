@@ -1,7 +1,11 @@
 use std::{
+    io::Write as _,
+    path::PathBuf,
     sync::{Arc, Mutex, MutexGuard},
     time::Instant,
 };
+
+use tempfile::NamedTempFile;
 
 use crate::github::GithubClient;
 
@@ -65,6 +69,9 @@ pub struct DownloadLink {
     /// The bundle format (DMG, AppImage, etc)
     #[allow(dead_code)]
     pub bundle_format: String,
+    pub _file: NamedTempFile,
+    /// The file content
+    pub file_path: PathBuf,
 }
 
 pub async fn load_downloads(_etag: Option<Arc<str>>) {
@@ -115,44 +122,54 @@ pub async fn load_downloads(_etag: Option<Arc<str>>) {
         .await;
     // dbg!(&workflow_artifact_response.artifacts);
 
-    let mut artifacts: Vec<DownloadLink> = workflow_artifact_response
-        .artifacts
-        .into_iter()
-        .map(|artifact| {
-            // "Blitz_0.0.0_aarch64.dmg"
+    let mut artifacts: Vec<DownloadLink> =
+        Vec::with_capacity(workflow_artifact_response.artifacts.len());
 
-            let (rest, bundle_format) = artifact
-                .name
-                .rsplit_once('.')
-                .expect("Artifact name has extensions");
-            let bundle_format = bundle_format.to_string();
-            let rest = rest.trim_end_matches("-setup");
-            let mut parts = rest.splitn(3, '_').skip(1);
-            let _version_str = parts.next().unwrap();
-            let arch = parts.next().unwrap().to_string();
+    for artifact in workflow_artifact_response.artifacts.into_iter() {
+        // "Blitz_0.0.0_aarch64.dmg"
 
-            let platform = match bundle_format.as_str() {
-                "app" | "dmg" => "macOS",
-                "exe" | "msi" => "Windows",
-                "deb" | "rpm" | "AppImage" => "Linux",
-                "apk" => "Android",
-                _ => "Unknown,",
-            }
-            .to_string();
+        let (rest, bundle_format) = artifact
+            .name
+            .rsplit_once('.')
+            .expect("Artifact name has extensions");
+        let bundle_format = bundle_format.to_string();
+        let rest = rest.trim_end_matches("-setup");
+        let mut parts = rest.splitn(3, '_').skip(1);
+        let _version_str = parts.next().unwrap();
+        let arch = parts.next().unwrap().to_string();
 
-            DownloadLink {
-                url: format!(
-                    "https://github.com/DioxusLabs/blitz/actions/runs/{}/artifacts/{}",
-                    latest_build_workflow.id, artifact.id
-                ),
-                filename: artifact.name,
-                size_in_bytes: artifact.size_in_bytes as u64,
-                platform,
-                arch,
-                bundle_format,
-            }
-        })
-        .collect();
+        let platform = match bundle_format.as_str() {
+            "app" | "dmg" => "macOS",
+            "exe" | "msi" => "Windows",
+            "deb" | "rpm" | "AppImage" => "Linux",
+            "apk" => "Android",
+            _ => "Unknown,",
+        }
+        .to_string();
+        println!("{}", &artifact.name);
+
+        let file_content = client.get_bytes(&artifact.archive_download_url).await;
+        let mut file = NamedTempFile::new().unwrap();
+        file.write_all(&file_content).unwrap();
+        let file_path = file.path().to_path_buf();
+
+        artifacts.push(DownloadLink {
+            // url: format!(
+            //     "https://github.com/DioxusLabs/blitz/actions/runs/{}/artifacts/{}",
+            //     latest_build_workflow.id, artifact.id
+            // ),
+            url: format!(
+                "downloads/file?arch={arch}&platform={platform}&bundle_format={bundle_format}"
+            ),
+            filename: artifact.name,
+            size_in_bytes: artifact.size_in_bytes as u64,
+            platform,
+            arch,
+            bundle_format,
+            _file: file,
+            file_path,
+        });
+    }
 
     artifacts.sort_by(|a, b| {
         a.platform

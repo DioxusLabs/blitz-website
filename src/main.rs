@@ -1,10 +1,19 @@
 use axum::{
-    body::Bytes,
-    http::StatusCode,
-    response::{Html, IntoResponse, Redirect},
+    body::{Body, Bytes},
+    extract::Query,
+    http::{header, StatusCode},
+    response::{AppendHeaders, Html, IntoResponse, Redirect},
     routing::{get, get_service},
     Router,
 };
+use tokio_util::io::ReaderStream;
+// use axum::{
+//     body::,
+//     http::{, StatusCode},
+//     response::{Headers, IntoResponse},
+//     routing::get,
+//     Router,
+// };
 use dashmap::DashMap;
 use dioxus::{core::ComponentFunction, prelude::*};
 use dioxus_html_macro::html;
@@ -14,6 +23,7 @@ use routes::{
     ElementSupportPage, EventSupportPage, GettingStartedPage, HomePage, NLNetInstructionsPage,
     WptResultsPage, WptResultsPageProps,
 };
+use serde::Deserialize;
 use std::{
     net::{IpAddr, SocketAddr},
     sync::LazyLock,
@@ -29,6 +39,13 @@ mod github;
 mod routes;
 mod wpt;
 
+#[derive(Deserialize)]
+struct DownloadLinkKey {
+    platform: String,
+    arch: String,
+    bundle_format: String,
+}
+
 #[tokio::main]
 async fn main() {
     // initialize tracing
@@ -41,6 +58,56 @@ async fn main() {
         .route(
             "/nlnet-testing-instructions",
             get(|| dx_route_cached(|| html!(<NLNetInstructionsPage />))),
+        )
+        .route(
+            "/downloads/file",
+            get(async |query: Query<DownloadLinkKey>| {
+                let query: DownloadLinkKey = query.0;
+                let Some(cache_entry) = DOWNLOAD_CACHE.get_cloned() else {
+                    return Err((
+                        StatusCode::INTERNAL_SERVER_ERROR,
+                        format!("Downloads not available"),
+                    ));
+                };
+
+                let Some(link) =
+                    cache_entry
+                        .artifacts
+                        .iter()
+                        .find(|artifact: &&downloads::DownloadLink| {
+                            artifact.arch == query.arch
+                                && artifact.platform == query.platform
+                                && artifact.bundle_format == query.bundle_format
+                        })
+                else {
+                    return Err((
+                        StatusCode::NOT_FOUND,
+                        format!("Matching artifact not found"),
+                    ));
+                };
+
+                // `File` implements `AsyncRead`
+                let file = match tokio::fs::File::open(&link.file_path).await {
+                    Ok(file) => file,
+                    Err(err) => {
+                        return Err((StatusCode::NOT_FOUND, format!("File not found: {}", err)))
+                    }
+                };
+                // convert the `AsyncRead` into a `Stream`
+                let stream = ReaderStream::new(file);
+                // convert the `Stream` into an `axum::body::HttpBody`
+                let body = Body::from_stream(stream);
+
+                let headers = AppendHeaders([
+                    (header::CONTENT_TYPE, "text/toml; charset=utf-8".to_string()),
+                    (
+                        header::CONTENT_DISPOSITION,
+                        format!("attachment; filename=\"{}\"", link.filename),
+                    ),
+                ]);
+
+                Ok((headers, body))
+            }),
         )
         .route(
             "/status/wpt",
@@ -149,6 +216,10 @@ async fn main() {
 
     // Prime WPT result and download caches
     tokio::spawn(async move { load_wpt_results(None).await });
+
+    if std::env::var("PRECACHE_DOWNLOADS").is_ok() {
+        tokio::spawn(async move { load_downloads(None).await });
+    }
 
     let msg = format!("Serving blitz-website at http://{addr}").replace("[::]", "localhost");
     println!("{msg}");
