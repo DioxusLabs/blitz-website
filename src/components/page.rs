@@ -67,6 +67,7 @@ pub fn Page(
                         //     }
                         // }
                         nav {
+                            class: "desktop",
                             a { href: "/about", "About" }
                             a { href: "/status", "Status" }
                             a { href: "/downloads", "Downloads" }
@@ -86,6 +87,19 @@ pub fn Page(
                                 img { src: "/static/discord.svg" }
                             }
                         }
+                        // div {
+                        //     class: "mobile",
+                        //     HamburgerMenu {}
+                        // }
+                    }
+                    a {
+                        display: "block",
+                        padding: "12px",
+                        text_align: "center",
+                        background_color: "#3e9593",
+                        color: "white",
+                        href: "/downloads",
+                        "Click here to download the Blitz Browser!"
                     }
                     div {
                         id: "main-container",
@@ -126,4 +140,76 @@ pub fn MainContent(
             }
         }
     }
+}
+
+#[component]
+pub fn HamburgerMenu() -> Element {
+    rsx!(
+
+        style {
+            r#type: "text/css",
+            {"
+                .mobile-menu {
+                    display: none;
+                    position: fixed;
+                    width: 100vw;
+                    height: 400px;
+                    background: red;
+                    left: 0;
+                    top: 96px;
+                }
+
+                #toggle:checked ~ .mobile-menu {
+                    display: block;
+                }
+
+                label {    
+                    padding: 0.5rem 1rem;
+                    border-radius: 0.5rem;
+                }
+
+                .visually-hidden {
+                    position: absolute;
+                    left: -100vw;
+                }
+            "}
+        }
+        div {
+            class: "hamburger-menu",
+            label {
+                r#for: "toggle",
+                class: "nav-icon",
+                HamburgerIcon {}
+            }
+            input {
+                r#type: "checkbox",
+                id: "toggle",
+                class: "visually-hidden"
+            }
+
+            div {
+                class: "mobile-menu"
+            }
+        }
+    )
+}
+
+#[component]
+fn HamburgerIcon() -> Element {
+    rsx!(
+        svg {
+            width:"24",
+            height:"24",
+            view_box:"0 0 24 24",
+            fill:"none",
+            stroke:"currentColor",
+            stroke_width:"2",
+            stroke_linecap:"round",
+            stroke_linejoin:"round",
+            class:"lucide lucide-menu-icon lucide-menu",
+            path { d:"M4 5h16" }
+            path { d:"M4 12h16" }
+            path { d:"M4 19h16" }
+        }
+    )
 }
