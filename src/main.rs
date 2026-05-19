@@ -156,6 +156,9 @@ async fn main() {
                 // Cache with 30s validity
                 let mut await_revalidation = true;
                 if let Some(entry) = &cache_entry {
+                    await_revalidation = false;
+
+
                     let cache_age = now.duration_since(entry.cached_at);
                     if cache_age <= Duration::from_secs(30) {
                         let props = DownloadsPageProps {
