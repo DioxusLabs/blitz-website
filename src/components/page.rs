@@ -68,7 +68,7 @@ pub fn Page(
                         // }
                         nav {
                             class: "desktop",
-                            a { href: "/about", "About" }
+                            // a { href: "/about", "About" }
                             a { href: "/status", "Status" }
                             a { href: "/downloads", "Downloads" }
                             a {
