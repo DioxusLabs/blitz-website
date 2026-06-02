@@ -238,13 +238,12 @@
   {
     "id": "2d-transforms",
     "name": "2D Transforms",
-    "notes": "2D transforms are currently applied visually, but hit detection doesn't yet work properly for transformed nodes",
     "entries": [
-          { "name": "transform", "status": "Partial", "properties": ["transform"] },
-          { "name": "transform-origin", "status": "Partial", "properties": ["transform-origin"] },
-          { "name": "scale", "status": "Partial", "properties": ["scale"] },
-          { "name": "rotate", "status": "Partial", "properties": ["rotate"] },
-          { "name": "translate", "status": "Partial", "properties": ["translate"] },
+          { "name": "transform", "status": "Yes", "properties": ["transform"] },
+          { "name": "transform-origin", "status": "Yes", "properties": ["transform-origin"] },
+          { "name": "scale", "status": "Yes", "properties": ["scale"] },
+          { "name": "rotate", "status": "Yes", "properties": ["rotate"] },
+          { "name": "translate", "status": "Yes", "properties": ["translate"] },
           { "name": "transform-box", "status": "No", "properties": ["transform-box"] }
         ]
   },
