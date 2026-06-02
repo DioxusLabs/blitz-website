@@ -367,18 +367,6 @@
     ]
   },
   {
-    "id": "anchor-positioning",
-    "name": "Anchor Positioning",
-    "entries": [
-      { "name": "anchor-scope", "status": "No" },
-      { "name": "anchor-name", "status": "No" },
-      { "name": "position-anchor", "status": "No" },
-      { "name": "position-area", "status": "No" },
-      { "name": "position-try", "status": "No", "properties": ["position-try-fallbacks", "position-try-order", "position-try"] },
-      { "name": "position-visibility", "status": "No" }
-    ]
-  },
-  {
     "id": "scroll-behaviour",
     "name": "Scroll Behaviour",
     "entries": [
@@ -394,7 +382,21 @@
     "id": "multi-column",
     "name": "Multi-column Layout",
     "entries": [
-      { "name": "column-count", "status": "No" }
+      { "name": "column-count", "status": "No" },
+      { "name": "column-width", "status": "No" },
+      { "name": "column-span", "status": "No" }
+    ]
+  },
+  {
+    "id": "anchor-positioning",
+    "name": "Anchor Positioning",
+    "entries": [
+      { "name": "anchor-scope", "status": "No" },
+      { "name": "anchor-name", "status": "No" },
+      { "name": "position-anchor", "status": "No" },
+      { "name": "position-area", "status": "No" },
+      { "name": "position-try", "status": "No", "properties": ["position-try-fallbacks", "position-try-order", "position-try"] },
+      { "name": "position-visibility", "status": "No" }
     ]
   },
   {
@@ -402,7 +404,9 @@
     "name": "@page",
     "entries": [
       { "name": "size", "status": "No" },
-      { "name": "page-break-inside", "status": "No" }
+      { "name": "break-inside", "status": "No" },
+      { "name": "break-after", "status": "No" },
+      { "name": "break-before", "status": "No" }
     ]
   }
 ]
