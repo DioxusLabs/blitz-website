@@ -200,20 +200,7 @@ a:hover {
   text-decoration: underline;
 }
 
-.mobile {
-  display: none
-}
-
 @media screen and (max-width: 800px) {
-
-  .mobile {
-    display: block;
-  }
-
-  .desktop {
-    display: none;
-  }
-
   #main-container {
     padding: 12px;
   }

@@ -276,10 +276,10 @@
     "name": "Composition & Effects",
     "entries": [
       { "name": "box-shadow", "status": "Yes" },
+      { "name": "filter", "status": "Partial", "notes": "Supported with the Skia backend. Partially supported (blur and drop-shadow only) with Vello Hybrid."},
       { "name": "outline", "status": "Yes", "properties": ["outline-width", "outline-style", "outline-color", "outline-offset"] },
-      { "name": "filter", "status": "No"},
       { "name": "text-shadow", "status": "No" },
-      { "name": "backdrop-filter", "status": "No" },
+      { "name": "backdrop-filter", "status": "Partial", "notes": "Supported with the Skia backend. Partially supported (blur and drop-shadow only) with Vello Hybrid." },
       { "name": "mix-blend-mode", "status": "No" },
       { "name": "background-blend-mode", "status": "No" }
     ]
