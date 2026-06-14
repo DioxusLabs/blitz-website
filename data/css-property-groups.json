@@ -66,20 +66,20 @@
   },
   {
     "id": "visibility-isolation",
-    "name": "Visibility, Clipping & Isolation",
+    "name": "Visibility & Isolation",
     "entries": [
       { "name": "opacity", "status": "Yes", "notes": "Nodes with opacity are currently clipped regardless of the overflow style" },
       { "name": "visibility", "status": "Yes" },
-      { "name": "clip-path", "status": "Yes", "properties": ["clip-path", "clip"] },
       { "name": "contain", "status": "No" },
       { "name": "isolation", "status": "No" },
       { "name": "content-visibility", "status": "No" }
     ]
   },
     {
-    "id": "masking",
-    "name": "Masking",
+    "id": "clipping-masking",
+    "name": "Clipping & Masking",
     "entries": [
+      { "name": "clip-path", "status": "Yes", "properties": ["clip-path", "clip"] },
       { "name": "mask-image", "status": "Yes" },
       { "name": "mask-position", "status": "Yes" },
       { "name": "mask-repeat", "status": "Yes" },
