@@ -337,7 +337,7 @@
     "id": "cursor-pointer-events",
     "name": "Interaction & Pointer events",
     "entries": [
-      { "name": "pointer-events", "status": "No" },
+      { "name": "pointer-events", "status": "Yes" },
       {
         "name": "user-select",
         "values": [
