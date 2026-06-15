@@ -292,7 +292,7 @@
       { "name": "filter", "status": "Partial", "notes": "Supported with the Skia backend. Partially supported (blur and drop-shadow only) with Vello Hybrid."},
       { "name": "outline", "status": "Yes", "properties": ["outline-width", "outline-style", "outline-color", "outline-offset"] },
       { "name": "text-shadow", "status": "No" },
-      { "name": "backdrop-filter", "status": "Partial", "notes": "Supported with the Skia backend. Partially supported (blur and drop-shadow only) with Vello Hybrid." },
+      { "name": "backdrop-filter", "status": "Partial", "notes": "Supported with the Skia backend." },
       { "name": "mix-blend-mode", "status": "No" },
       { "name": "background-blend-mode", "status": "No" }
     ]
