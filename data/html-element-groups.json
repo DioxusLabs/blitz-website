@@ -11,7 +11,7 @@
         "name": "<link>",
         "values": [
           { "value": "rel=\"stylesheet\"", "status": "Yes" },
-          { "value": "rel=\"icon\"", "status": "No" },
+          { "value": "rel=\"icon\"", "status": "Yes" },
         ],
       },
     ]
