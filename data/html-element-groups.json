@@ -117,7 +117,7 @@
       { "name": "<center>", "status": "Yes" },
       { "name": "<blockquote>", "status": "Yes" },
       { "name": "<br>", "status": "Yes" },
-      { "name": "<hr>", "status": "No" },
+      { "name": "<hr>", "status": "Yes" },
     ]
   },
   {
