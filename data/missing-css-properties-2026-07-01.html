@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<!--
+  ============================================================================
+  REGENERATION INSTRUCTIONS
+  ============================================================================
+  This file lists CSS properties found in data/css-popularity.json that are
+  NOT referenced in data/css-property-groups.json, filtered and sorted as
+  described below. To regenerate:
+
+  1. Read data/css-popularity.json (array of {property_name, day_percentage, ...}).
+  2. Read data/css-property-groups.json (array of groups with "entries"; each
+     entry may have a "name" and/or a "properties" array of property names).
+  3. Build the set of "grouped" property names from css-property-groups.json:
+     - Add every value in each entry's "properties" array.
+     - Add each entry's "name" if it has no "properties" array AND the name
+       contains no space and no "/" (i.e. it is a single property name, not
+       a descriptive label like "width / height").
+  4. From css-popularity.json, select entries where day_percentage >= 0.01.
+  5. Exclude an entry if its property_name:
+     - is in the "grouped" set (step 3), OR
+     - starts with "alias", OR
+     - is one of these shorthands whose longhands are already listed:
+       border, background, outline, font, flex, list-style, flex-flow, mask, inset, OR
+     - is a border side-specific longhand (covered by border-color /
+       border-width / border-style / border-radius entries):
+       border-{top,left,bottom,right},
+       border-{top,left,bottom,right}-color,
+       border-{top,left,bottom,right}-width,
+       border-{top,left,bottom,right}-style,
+       border-{top,bottom}-{left,right}-radius, OR
+     - is a logical property (starts with one of): margin-inline, margin-block,
+       padding-inline, padding-block, inset-inline, inset-block,
+       border-inline, border-block, border-start-, border-end-, OR
+     - is one of these grid longhands (covered by existing grid entries):
+       grid-template-rows, grid-row-start, grid-row-end,
+       grid-column-start, grid-column-end.
+  6. Sort the remaining entries by day_percentage descending.
+  7. Mark entries whose property_name is one of {variable, inherits, syntax,
+     initial-value} as @property descriptors (rendered with a purple badge).
+  8. For each entry, link the property name to MDN:
+     - @property descriptors: https://developer.mozilla.org/en-US/docs/Web/CSS/@property/{name}
+       (except "variable", which links to .../Web/CSS/@property)
+     - @font-face descriptors (size-adjust, ascent-override, descent-override,
+       line-gap-override): https://developer.mozilla.org/en-US/docs/Web/CSS/@font-face/{name}
+     - all others: https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/{name}
+  9. Render as an HTML table with two columns: Popularity (right-aligned,
+     percentage to 2 decimals) and Property (monospace, linked, with optional
+     @property badge). Open links in a new tab (target="_blank" rel="noopener").
+
+  Generated: 2026-07-01
+  Data snapshot: data/css-popularity.json dated 2026-06-30
+  Threshold: day_percentage >= 0.01
+  Result count: 106 properties
+  ============================================================================
+-->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Missing CSS Properties</title>
+<style>
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    max-width: 800px;
+    margin: 2rem auto;
+    padding: 0 1rem;
+    color: #1a1a1a;
+  }
+  h1 {
+    font-size: 1.5rem;
+  }
+  p.note {
+    color: #666;
+    font-size: 0.9rem;
+    line-height: 1.5;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1rem;
+  }
+  th, td {
+    text-align: left;
+    padding: 0.5rem 0.75rem;
+    border-bottom: 1px solid #e0e0e0;
+  }
+  th {
+    background: #f5f5f5;
+    font-weight: 600;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #555;
+  }
+  td.pct {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+    color: #555;
+  }
+  td.name {
+    font-family: "SF Mono", "Fira Code", "Consolas", monospace;
+    font-size: 0.9rem;
+  }
+  td.name a {
+    color: #1a6fb5;
+    text-decoration: none;
+  }
+  td.name a:hover {
+    text-decoration: underline;
+  }
+  .badge {
+    display: inline-block;
+    font-size: 0.7rem;
+    font-weight: 600;
+    padding: 0.1rem 0.4rem;
+    border-radius: 3px;
+    background: #e8e0f7;
+    color: #6b3fd4;
+    margin-left: 0.5rem;
+    vertical-align: middle;
+  }
+  tr:hover {
+    background: #fafafa;
+  }
+</style>
+</head>
+<body>
+
+<h1>CSS properties with &ge;0.01% popularity not in <code>css-property-groups.json</code></h1>
+
+<p class="note">
+  Excludes: shorthands whose longhands are listed, logical properties, grid longhands,
+  border side-specific longhands, and any property starting with <code>alias</code>.
+  Properties marked <span class="badge">@property</span> are <code>@property</code> descriptors.
+  Each property links to its MDN documentation.
+</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Popularity</th>
+      <th>Property</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr><td class="pct">69.88%</td><td class="name"><a href="https://developer.mozilla.org/en-US/docs/Web/CSS/@property" target="_blank" rel="noopener">variable</a><span class="badge">@property</span></td></tr>
+    <tr><td class="pct">50.09%</td><td class="name"><a href="https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/webkit-box-orient" target="_blank" rel="noopener">webkit-box-orient</a></td></tr>
+    <tr><td class="pct">39.22%</td><td class="name"><a href="https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/webkit-box-pack" target="_blank" rel="noopener">webkit-box-pack</a></td></tr>
+    <tr><td class="pct">29.39%</td><td class="name"><a href="https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/webkit-box-align" target="_blank" rel="noopener">webkit-box-align</a></td></tr>
+    <tr><td class="pct">24.43%</td><td class="name"><a href="https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/webkit-box-flex" target="_blank" rel="noopener">webkit-box-flex</a></td></tr>
+    <tr><td class="pct">21.65%</td><td class="name"><a href="https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/webkit-box-direction" target="_blank" rel="noopener">webkit-box-direction</a></td></tr>
+    <tr><td class="pct">18.93%</td><td class="name"><a href="https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/overscroll-behavior" target="_blank" rel="noopener">overscroll-behavior</a></td></tr>
+    <tr><td class="pct">18.76%</td><td class="name"><a href="https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/container-type" target="_blank" rel="noopener">container-type</a></td></tr>
+    <tr><td class="pct">16.48%</td><td class="name"><a href="https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/place-content" target="_blank" rel="noopener">place-content</a></td></tr>
+    <tr><td class="pct">16.23%</td><td class="name"><a href="https://developer.mozilla.org/en-US/docs/Web/CSS/@property/inherits" target="_blank" rel="noopener">inherits</a><span class="badge">@property</span></td></tr>
+    <tr><td class="pct">16.20%</td><td class="name"><a href="https://developer.mozilla.org/en-US/docs/Web/CSS/@property/syntax" target="_blank" rel="noopener">syntax</a><span class="badge">@property</span></td></tr>
+    <tr><td class="pct">15.00%</td><td class="name"><a href="https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/scrollbar-gutter" target="_blank" rel="noopener">scrollbar-gutter</a></td></tr>
+    <tr><td class="pct">14.85%</td><td class="name"><a href="https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/place-items" target="_blank" rel="noopener">place-items</a></td></tr>
+    <tr><td class="pct">14.69%</td><td class="name"><a href="https://developer.mozilla.org/en-US/docs/Web/CSS/@property/initial-value" target="_blank" rel="noopener">initial-value</a><span class="badge">@property</span></td></tr>
+    <tr><td class="pct">13.63%</td><td class="name"><a href="https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/text-decoration-style" target="_blank" rel="noopener">text-decoration-style</a></td></tr>
+    <tr><td class="pct">12.44%</td><td class="name"><a href="https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/view-transition-name" target="_blank" rel="noopener">view-transition-name</a></td></tr>
+    <tr><td class="pct">11.14%</td><td class="name"><a href="https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/navigation" target="_blank" rel="noopener">navigation</a></td></tr>
+    <tr><td class="pct">11.04%</td><td class="name"><a href="https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/line-clamp" target="_blank" rel="noopener">line-clamp</a></td></tr>
+    <tr><td class="pct">10.74%</td><td class="name"><a href="https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/overscroll-behavior-y" target="_blank" rel="noopener">overscroll-behavior-y</a></td></tr>
+    <tr><td class="pct">8.53%</td><td class="name"><a href="https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/text-decoration-skip-ink" target="_blank" rel="noopener">text-decoration-skip-ink</a></td></tr>
+    <tr><td class="pct">8.23%</td><td class="name"><a href="https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/contain-intrinsic-size" target="_blank" rel="noopener">contain-intrinsic-size</a></td></tr>
+    <tr><td class="pct">8.11%</td><td class="name"><a href="https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/overscroll-behavior-x" target="_blank" rel="noopener">overscroll-behavior-x</a></td></tr>
+    <tr><td class="pct">8.02%</td><td class="name"><a href="https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/interpolate-size" target="_blank" rel="noopener">interpolate-size</a></td></tr>
+    <tr><td class="pct">7.23%</td><td class="name"><a href="https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/font-variant-numeric" target="_blank" rel="noopener">font-variant-numeric</a></td></tr>
+    <tr><td class="pct">6.97%</td><td class="name"><a href="https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/text-underline-position" target="_blank" rel="noopener">text-underline-position</a></td></tr>
+    <tr><td class="pct">6.77%</td><td class="name"><a href="https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/r" target="_blank" rel="noopener">r</a></td></tr>
+    <tr><td class="pct">6.65%</td><td class="name"><a href="https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/webkit-box-ordinal-group" target="_blank" rel="noopener">webkit-box-ordinal-group</a></td></tr>
+    <tr><td class="pct">6.08%</td><td class="name"><a href="https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/cx" target="_blank" rel="noopener">cx</a></td></tr>
+    <tr><td class="pct">6.05%</td><td class="name"><a href="https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/cy" target="_blank" rel="noopener">cy</a></td></tr>
+    <tr><td class="pct">5.95%</td><td class="name"><a href="https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/line-break" target="_blank" rel="noopener">line-break</a></td></tr>
+    <tr><td class="pct">5.44%</td><td class="name"><a href="https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/page-break-inside" target="_blank" rel="noopener">page-break-inside</a></td></tr>
+    <tr><td class="pct">5.42%</td><td class="name"><a href="https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/scroll-margin-top" target="_blank" rel="noopener">scroll-margin-top</a></td></tr>
+    <tr><td class="pct">5.28%</td><td class="name"><a href="https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/webkit-writing-mode" target="_blank" rel="noopener">webkit-writing-mode</a></td></tr>
+    <tr><td class="pct">5.23%</td><td class="name"><a href="https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/list-style-image" target="_blank" rel="noopener">list-style-image</a></td></tr>
+    <tr><td class="pct">5.20%</td><td class="name"><a href="https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/stop-opacity" target="_blank" rel="noopener">stop-opacity</a></td></tr>
+    <tr><td class="pct">5.20%</td><td class="name"><a href="https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/container-name" target="_blank" rel="noopener">container-name</a></td></tr>
+    <tr><td class="pct">4.97%</td><td class="name"><a href="https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/stroke-linejoin" target="_blank" rel="noopener">stroke-linejoin</a></td></tr>
+    <tr><td class="pct">4.85%</td><td class="name"><a href="https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/grid-template" target="_blank" rel="noopener">grid-template</a></td></tr>
+    <tr><td class="pct">4.73%</td><td class="name"><a href="https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/webkit-text-stroke-width" target="_blank" rel="noopener">webkit-text-stroke-width</a></td></tr>
+    <tr><td class="pct">4.30%</td><td class="name"><a href="https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/place-self" target="_blank" rel="noopener">place-self</a></td></tr>
+    <tr><td class="pct">4.29%</td><td class="name"><a href="https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/offset-distance" target="_blank" rel="noopener">offset-distance</a></td></tr>
+    <tr><td class="pct">4.24%</td><td class="name"><a href="https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/fill-rule" target="_blank" rel="noopener">fill-rule</a></td></tr>
+    <tr><td class="pct">4.16%</td><td class="name"><a href="https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/scroll-padding-top" target="_blank" rel="noopener">scroll-padding-top</a></td></tr>
+    <tr><td class="pct">4.08%</td><td class="name"><a href="https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/scroll-snap-stop" target="_blank" rel="noopener">scroll-snap-stop</a></td></tr>
+    <tr><td class="pct">3.71%</td><td class="name"><a href="https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/page-break-after" target="_blank" rel="noopener">page-break-after</a></td></tr>
+    <tr><td class="pct">3.70%</td><td class="name"><a href="https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/mask-type" target="_blank" rel="noopener">mask-type</a></td></tr>
+    <tr><td class="pct">3.62%</td><td class="name"><a href="https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/perspective-origin" target="_blank" rel="noopener">perspective-origin</a></td></tr>
+    <tr><td class="pct">3.61%</td><td class="name"><a href="https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/timeline-scope" target="_blank" rel="noopener">timeline-scope</a></td></tr>
+    <tr><td class="pct">3.61%</td><td class="name"><a href="https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/empty-cells" target="_blank" rel="noopener">empty-cells</a></td></tr>
+    <tr><td class="pct">3.49%</td><td class="name"><a href="https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/font-optical-sizing" target="_blank" rel="noopener">font-optical-sizing</a></td></tr>
+    <tr><td class="pct">3.35%</td><td class="name"><a href="https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/view-timeline" target="_blank" rel="noopener">view-timeline</a></td></tr>
+    <tr><td class="pct">3.29%</td><td class="name"><a href="https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/print-color-adjust" target="_blank" rel="noopener">print-color-adjust</a></td></tr>
+    <tr><td class="pct">3.28%</td><td class="name"><a href="https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/columns" target="_blank" rel="noopener">columns</a></td></tr>
+    <tr><td class="pct">3.27%</td><td class="name"><a href="https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/box-decoration-break" target="_blank" rel="noopener">box-decoration-break</a></td></tr>
+    <tr><td class="pct">3.08%</td><td class="name"><a href="https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/text-align-last" target="_blank" rel="noopener">text-align-last</a></td></tr>
+    <tr><td class="pct">3.06%</td><td class="name"><a href="https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/webkit-box-decoration-break" target="_blank" rel="noopener">webkit-box-decoration-break</a></td></tr>
+    <tr><td class="pct">2.85%</td><td class="name"><a href="https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/accent-color" target="_blank" rel="noopener">accent-color</a></td></tr>
+    <tr><td class="pct">2.81%</td><td class="name"><a href="https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/stop-color" target="_blank" rel="noopener">stop-color</a></td></tr>
+    <tr><td class="pct">2.64%</td><td class="name"><a href="https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/scroll-margin" target="_blank" rel="noopener">scroll-margin</a></td></tr>
+    <tr><td class="pct">2.62%</td><td class="name"><a href="https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/orphans" target="_blank" rel="noopener">orphans</a></td></tr>
+    <tr><td class="pct">2.60%</td><td class="name"><a href="https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/border-image-slice" target="_blank" rel="noopener">border-image-slice</a></td></tr>
+    <tr><td class="pct">2.60%</td><td class="name"><a href="https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/widows" target="_blank" rel="noopener">widows</a></td></tr>
+    <tr><td class="pct">2.59%</td><td class="name"><a href="https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/flood-opacity" target="_blank" rel="noopener">flood-opacity</a></td></tr>
+    <tr><td class="pct">2.52%</td><td class="name"><a href="https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/border-image-source" target="_blank" rel="noopener">border-image-source</a></td></tr>
+    <tr><td class="pct">2.50%</td><td class="name"><a href="https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/animation-timeline" target="_blank" rel="noopener">animation-timeline</a></td></tr>
+    <tr><td class="pct">2.49%</td><td class="name"><a href="https://developer.mozilla.org/en-US/docs/Web/CSS/@font-face/size-adjust" target="_blank" rel="noopener">size-adjust</a></td></tr>
+    <tr><td class="pct">2.44%</td><td class="name"><a href="https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/font-kerning" target="_blank" rel="noopener">font-kerning</a></td></tr>
+    <tr><td class="pct">2.41%</td><td class="name"><a href="https://developer.mozilla.org/en-US/docs/Web/CSS/@font-face/ascent-override" target="_blank" rel="noopener">ascent-override</a></td></tr>
+    <tr><td class="pct">2.41%</td><td class="name"><a href="https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/font-size-adjust" target="_blank" rel="noopener">font-size-adjust</a></td></tr>
+    <tr><td class="pct">2.33%</td><td class="name"><a href="https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/webkit-text-stroke" target="_blank" rel="noopener">webkit-text-stroke</a></td></tr>
+    <tr><td class="pct">2.30%</td><td class="name"><a href="https://developer.mozilla.org/en-US/docs/Web/CSS/@font-face/descent-override" target="_blank" rel="noopener">descent-override</a></td></tr>
+    <tr><td class="pct">2.25%</td><td class="name"><a href="https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/transition-behavior" target="_blank" rel="noopener">transition-behavior</a></td></tr>
+    <tr><td class="pct">2.14%</td><td class="name"><a href="https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/overflow-clip-margin" target="_blank" rel="noopener">overflow-clip-margin</a></td></tr>
+    <tr><td class="pct">2.06%</td><td class="name"><a href="https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/text-anchor" target="_blank" rel="noopener">text-anchor</a></td></tr>
+    <tr><td class="pct">2.04%</td><td class="name"><a href="https://developer.mozilla.org/en-US/docs/Web/CSS/@font-face/line-gap-override" target="_blank" rel="noopener">line-gap-override</a></td></tr>
+    <tr><td class="pct">2.00%</td><td class="name"><a href="https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/font-synthesis" target="_blank" rel="noopener">font-synthesis</a></td></tr>
+    <tr><td class="pct">1.99%</td><td class="name"><a href="https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/border-image-width" target="_blank" rel="noopener">border-image-width</a></td></tr>
+    <tr><td class="pct">1.95%</td><td class="name"><a href="https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/column-rule" target="_blank" rel="noopener">column-rule</a></td></tr>
+    <tr><td class="pct">1.91%</td><td class="name"><a href="https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/scroll-padding-bottom" target="_blank" rel="noopener">scroll-padding-bottom</a></td></tr>
+    <tr><td class="pct">1.90%</td><td class="name"><a href="https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/column-fill" target="_blank" rel="noopener">column-fill</a></td></tr>
+    <tr><td class="pct">1.87%</td><td class="name"><a href="https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/page-break-before" target="_blank" rel="noopener">page-break-before</a></td></tr>
+    <tr><td class="pct">1.86%</td><td class="name"><a href="https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/border-image-repeat" target="_blank" rel="noopener">border-image-repeat</a></td></tr>
+    <tr><td class="pct">1.70%</td><td class="name"><a href="https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/field-sizing" target="_blank" rel="noopener">field-sizing</a></td></tr>
+    <tr><td class="pct">1.69%</td><td class="name"><a href="https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/paint-order" target="_blank" rel="noopener">paint-order</a></td></tr>
+    <tr><td class="pct">1.55%</td><td class="name"><a href="https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/border-image-outset" target="_blank" rel="noopener">border-image-outset</a></td></tr>
+    <tr><td class="pct">1.45%</td><td class="name"><a href="https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/webkit-text-stroke-color" target="_blank" rel="noopener">webkit-text-stroke-color</a></td></tr>
+    <tr><td class="pct">1.44%</td><td class="name"><a href="https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/text-orientation" target="_blank" rel="noopener">text-orientation</a></td></tr>
+    <tr><td class="pct">1.40%</td><td class="name"><a href="https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/scroll-padding-inline" target="_blank" rel="noopener">scroll-padding-inline</a></td></tr>
+    <tr><td class="pct">1.38%</td><td class="name"><a href="https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/column-rule-color" target="_blank" rel="noopener">column-rule-color</a></td></tr>
+    <tr><td class="pct">1.33%</td><td class="name"><a href="https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/clip-rule" target="_blank" rel="noopener">clip-rule</a></td></tr>
+    <tr><td class="pct">1.28%</td><td class="name"><a href="https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/column-rule-style" target="_blank" rel="noopener">column-rule-style</a></td></tr>
+    <tr><td class="pct">1.26%</td><td class="name"><a href="https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/webkit-mask-position-y" target="_blank" rel="noopener">webkit-mask-position-y</a></td></tr>
+    <tr><td class="pct">1.23%</td><td class="name"><a href="https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/vector-effect" target="_blank" rel="noopener">vector-effect</a></td></tr>
+    <tr><td class="pct">1.22%</td><td class="name"><a href="https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/scroll-margin-bottom" target="_blank" rel="noopener">scroll-margin-bottom</a></td></tr>
+    <tr><td class="pct">1.22%</td><td class="name"><a href="https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/webkit-border-image" target="_blank" rel="noopener">webkit-border-image</a></td></tr>
+    <tr><td class="pct">1.21%</td><td class="name"><a href="https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/webkit-user-modify" target="_blank" rel="noopener">webkit-user-modify</a></td></tr>
+    <tr><td class="pct">1.18%</td><td class="name"><a href="https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/shape-rendering" target="_blank" rel="noopener">shape-rendering</a></td></tr>
+    <tr><td class="pct">1.17%</td><td class="name"><a href="https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/scroll-padding-block" target="_blank" rel="noopener">scroll-padding-block</a></td></tr>
+    <tr><td class="pct">1.17%</td><td class="name"><a href="https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/scroll-padding-block-end" target="_blank" rel="noopener">scroll-padding-block-end</a></td></tr>
+    <tr><td class="pct">1.16%</td><td class="name"><a href="https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/contain-intrinsic-height" target="_blank" rel="noopener">contain-intrinsic-height</a></td></tr>
+    <tr><td class="pct">1.11%</td><td class="name"><a href="https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/text-justify" target="_blank" rel="noopener">text-justify</a></td></tr>
+    <tr><td class="pct">1.07%</td><td class="name"><a href="https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/font-language-override" target="_blank" rel="noopener">font-language-override</a></td></tr>
+    <tr><td class="pct">1.06%</td><td class="name"><a href="https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/webkit-mask-box-image" target="_blank" rel="noopener">webkit-mask-box-image</a></td></tr>
+    <tr><td class="pct">1.04%</td><td class="name"><a href="https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/font-variant-caps" target="_blank" rel="noopener">font-variant-caps</a></td></tr>
+    <tr><td class="pct">1.02%</td><td class="name"><a href="https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/text-decoration-skip (obsolete)" target="_blank" rel="noopener">text-decoration-skip (obsolete)</a></td></tr>
+    <tr><td class="pct">1.02%</td><td class="name"><a href="https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/dominant-baseline" target="_blank" rel="noopener">dominant-baseline</a></td></tr>
+  </tbody>
+</table>
+
+</body>
+</html>
