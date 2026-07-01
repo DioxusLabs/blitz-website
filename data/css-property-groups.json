@@ -145,9 +145,9 @@
       { "name": "font-weight", "status": "Yes" },
       { "name": "font-style", "status": "Yes" },
       { "name": "font-display", "status": "No" },
-      { "name": "font-variant", "status": "No" },
       { "name": "font-stretch", "status": "Yes" },
       { "name": "font-feature-settings", "status": "No", "issues": ["DioxusLabs/blitz#184"] },
+      { "name": "font-variant", "status": "No" },
       { "name": "font-variation-settings", "status": "Yes" },
       { "name": "font-variant-ligatures", "status": "No" },
       { "name": "font-variant-numeric", "status": "No" }
@@ -179,17 +179,17 @@
       { "name": "text-indent", "status": "Yes" },
       { "name": "text-wrap-style", "status": "No", "properties": ["text-wrap-style", "text-wrap"] },
       { "name": "text-decoration-line", "status": "No" },
-      { "name": "text-decoration-skip-ink", "status": "No" },
       { "name": "text-underline-offset", "status": "No" },
-      { "name": "text-underline-position", "status": "No" },
       { "name": "text-decoration-color", "status": "Yes" },
       { "name": "word-spacing", "status": "Yes" },
       { "name": "tab-size", "status": "No" },
       { "name": "text-decoration-thickness", "status": "No" },
-      { "name": "hyphens", "status": "No" },
-      { "name": "line-break", "status": "No" },
       { "name": "webkit-text-fill-color", "status": "No" },
-      { "name": "quotes", "status": "No" }
+      { "name": "hyphens", "status": "No" },
+      { "name": "text-decoration-skip-ink", "status": "No" },
+      { "name": "quotes", "status": "No" },
+      { "name": "text-underline-position", "status": "No" },
+      { "name": "line-break", "status": "No" }
     ]
   },
   {
@@ -379,11 +379,11 @@
     "name": "Miscellaneous / Other",
     "entries": [
       { "name": "scrollbar-width", "status": "No" },
-      { "name": "scrollbar-gutter", "status": "No" },
       { "name": "resize", "status": "No" },
+      { "name": "container-type", "status": "No" },
+      { "name": "scrollbar-gutter", "status": "No" },
       { "name": "speak", "status": "No" },
       { "name": "container", "status": "No" },
-      { "name": "container-type", "status": "No" },
       { "name": "field-sizing", "status": "No" }
     ]
   },
@@ -392,12 +392,12 @@
     "name": "Scroll Behaviour",
     "entries": [
       { "name": "scroll-behavior", "status": "No" },
+      { "name": "overscroll-behavior", "status": "No" },
       { "name": "scroll-snap-type", "status": "No" },
       { "name": "scroll-snap-align", "status": "No" },
       { "name": "scroll-padding", "status": "No" },
       { "name": "scroll-boundary-behavior", "status": "No" },
-      { "name": "scroll-boundary-behavior-y", "status": "No" },
-      { "name": "overscroll-behavior", "status": "No" }
+      { "name": "scroll-boundary-behavior-y", "status": "No" }
     ]
   },
   {
