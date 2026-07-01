@@ -115,7 +115,7 @@
       { "name": "border-radius", "status": "Yes" },
       { "name": "border-color", "status": "Yes" },
       { "name": "border-width", "status": "Yes" },
-      { "name": "border-style", "status": "No" },
+      { "name": "border-style", "status": "Yes", "notes": "All standard border styles are supported." },
       { "name": "border-image", "status": "No" }
     ]
   },
