@@ -4262,439 +4262,439 @@
     {
         "bucket_id": 299,
         "date": "2026-06-30",
-        "day_percentage": 9.842e-05,
+        "day_percentage": 0.00009842,
         "property_name": "alias-webkit-max-logical-height"
     },
     {
         "bucket_id": 916,
         "date": "2026-06-30",
-        "day_percentage": 9.8e-05,
+        "day_percentage": 0.000098,
         "property_name": "page-margin-safety"
     },
     {
         "bucket_id": 301,
         "date": "2026-06-30",
-        "day_percentage": 9.463e-05,
+        "day_percentage": 0.00009463,
         "property_name": "alias-webkit-min-logical-height"
     },
     {
         "bucket_id": 298,
         "date": "2026-06-30",
-        "day_percentage": 9.41e-05,
+        "day_percentage": 0.0000941,
         "property_name": "alias-webkit-max-logical-width"
     },
     {
         "bucket_id": 192,
         "date": "2026-06-30",
-        "day_percentage": 9.313e-05,
+        "day_percentage": 0.00009313,
         "property_name": "alias-webkit-border-end-style"
     },
     {
         "bucket_id": 841,
         "date": "2026-06-30",
-        "day_percentage": 8.877e-05,
+        "day_percentage": 0.00008877,
         "property_name": "row-rule-inset"
     },
     {
         "bucket_id": 866,
         "date": "2026-06-30",
-        "day_percentage": 8.646e-05,
+        "day_percentage": 0.00008646,
         "property_name": "corner-inline-start-shape"
     },
     {
         "bucket_id": 860,
         "date": "2026-06-30",
-        "day_percentage": 8.622e-05,
+        "day_percentage": 0.00008622,
         "property_name": "corner-top-shape"
     },
     {
         "bucket_id": 852,
         "date": "2026-06-30",
-        "day_percentage": 8.615e-05,
+        "day_percentage": 0.00008615,
         "property_name": "rule-width"
     },
     {
         "bucket_id": 862,
         "date": "2026-06-30",
-        "day_percentage": 8.614e-05,
+        "day_percentage": 0.00008614,
         "property_name": "corner-bottom-shape"
     },
     {
         "bucket_id": 861,
         "date": "2026-06-30",
-        "day_percentage": 8.613e-05,
+        "day_percentage": 0.00008613,
         "property_name": "corner-right-shape"
     },
     {
         "bucket_id": 863,
         "date": "2026-06-30",
-        "day_percentage": 8.612e-05,
+        "day_percentage": 0.00008612,
         "property_name": "corner-left-shape"
     },
     {
         "bucket_id": 853,
         "date": "2026-06-30",
-        "day_percentage": 8.608e-05,
+        "day_percentage": 0.00008608,
         "property_name": "rule-style"
     },
     {
         "bucket_id": 932,
         "date": "2026-06-30",
-        "day_percentage": 8.599e-05,
+        "day_percentage": 0.00008599,
         "property_name": "timeline-trigger-activation-range"
     },
     {
         "bucket_id": 867,
         "date": "2026-06-30",
-        "day_percentage": 8.598e-05,
+        "day_percentage": 0.00008598,
         "property_name": "corner-inline-end-shape"
     },
     {
         "bucket_id": 922,
         "date": "2026-06-30",
-        "day_percentage": 8.592e-05,
+        "day_percentage": 0.00008592,
         "property_name": "timeline-trigger-active-range"
     },
     {
         "bucket_id": 911,
         "date": "2026-06-30",
-        "day_percentage": 8.576e-05,
+        "day_percentage": 0.00008576,
         "property_name": "row-rule-inset-cap"
     },
     {
         "bucket_id": 910,
         "date": "2026-06-30",
-        "day_percentage": 8.572e-05,
+        "day_percentage": 0.00008572,
         "property_name": "column-rule-inset-cap"
     },
     {
         "bucket_id": 936,
         "date": "2026-06-30",
-        "day_percentage": 8.566e-05,
+        "day_percentage": 0.00008566,
         "property_name": "row-rule-inset-start"
     },
     {
         "bucket_id": 935,
         "date": "2026-06-30",
-        "day_percentage": 8.566e-05,
+        "day_percentage": 0.00008566,
         "property_name": "column-rule-inset-end"
     },
     {
         "bucket_id": 937,
         "date": "2026-06-30",
-        "day_percentage": 8.566e-05,
+        "day_percentage": 0.00008566,
         "property_name": "row-rule-inset-end"
     },
     {
         "bucket_id": 939,
         "date": "2026-06-30",
-        "day_percentage": 8.566e-05,
+        "day_percentage": 0.00008566,
         "property_name": "rule-inset-end"
     },
     {
         "bucket_id": 938,
         "date": "2026-06-30",
-        "day_percentage": 8.566e-05,
+        "day_percentage": 0.00008566,
         "property_name": "rule-inset-start"
     },
     {
         "bucket_id": 934,
         "date": "2026-06-30",
-        "day_percentage": 8.566e-05,
+        "day_percentage": 0.00008566,
         "property_name": "column-rule-inset-start"
     },
     {
         "bucket_id": 914,
         "date": "2026-06-30",
-        "day_percentage": 8.565e-05,
+        "day_percentage": 0.00008565,
         "property_name": "rule-inset-cap"
     },
     {
         "bucket_id": 915,
         "date": "2026-06-30",
-        "day_percentage": 8.565e-05,
+        "day_percentage": 0.00008565,
         "property_name": "rule-inset-junction"
     },
     {
         "bucket_id": 912,
         "date": "2026-06-30",
-        "day_percentage": 8.565e-05,
+        "day_percentage": 0.00008565,
         "property_name": "column-rule-inset-junction"
     },
     {
         "bucket_id": 913,
         "date": "2026-06-30",
-        "day_percentage": 8.565e-05,
+        "day_percentage": 0.00008565,
         "property_name": "row-rule-inset-junction"
     },
     {
         "bucket_id": 200,
         "date": "2026-06-30",
-        "day_percentage": 8.325e-05,
+        "day_percentage": 0.00008325,
         "property_name": "alias-webkit-border-start-style"
     },
     {
         "bucket_id": 497,
         "date": "2026-06-30",
-        "day_percentage": 8.314e-05,
+        "day_percentage": 0.00008314,
         "property_name": "alias-webkit-shape-margin"
     },
     {
         "bucket_id": 184,
         "date": "2026-06-30",
-        "day_percentage": 8.245e-05,
+        "day_percentage": 0.00008245,
         "property_name": "alias-webkit-border-after-style"
     },
     {
         "bucket_id": 496,
         "date": "2026-06-30",
-        "day_percentage": 8.133e-05,
+        "day_percentage": 0.00008133,
         "property_name": "alias-webkit-shape-image-threshold"
     },
     {
         "bucket_id": 267,
         "date": "2026-06-30",
-        "day_percentage": 7.4e-05,
+        "day_percentage": 0.000074,
         "property_name": "webkit-margin-bottom-collapse"
     },
     {
         "bucket_id": 683,
         "date": "2026-06-30",
-        "day_percentage": 5.083e-05,
+        "day_percentage": 0.00005083,
         "property_name": "prefix"
     },
     {
         "bucket_id": 241,
         "date": "2026-05-25",
-        "day_percentage": 5e-05,
+        "day_percentage": 0.00005,
         "property_name": "webkit-font-size-delta (obsolete)"
     },
     {
         "bucket_id": 710,
         "date": "2026-06-30",
-        "day_percentage": 4.052e-05,
+        "day_percentage": 0.00004052,
         "property_name": "base-palette"
     },
     {
         "bucket_id": 689,
         "date": "2026-06-30",
-        "day_percentage": 3.731e-05,
+        "day_percentage": 0.00003731,
         "property_name": "additive-symbols"
     },
     {
         "bucket_id": 330,
         "date": "2026-06-30",
-        "day_percentage": 2.949e-05,
+        "day_percentage": 0.00002949,
         "property_name": "webkit-transform-origin-z"
     },
     {
         "bucket_id": 685,
         "date": "2026-06-30",
-        "day_percentage": 2.403e-05,
+        "day_percentage": 0.00002403,
         "property_name": "range"
     },
     {
         "bucket_id": 929,
         "date": "2026-06-30",
-        "day_percentage": 1.955e-05,
+        "day_percentage": 0.00001955,
         "property_name": "margin-trim"
     },
     {
         "bucket_id": 687,
         "date": "2026-06-30",
-        "day_percentage": 1.894e-05,
+        "day_percentage": 0.00001894,
         "property_name": "fallback"
     },
     {
         "bucket_id": 460,
         "date": "2022-05-21",
-        "day_percentage": 8e-06,
+        "day_percentage": 0.000008,
         "property_name": "motion"
     },
     {
         "bucket_id": 686,
         "date": "2026-06-30",
-        "day_percentage": 6.18e-06,
+        "day_percentage": 0.00000618,
         "property_name": "pad"
     },
     {
         "bucket_id": 690,
         "date": "2026-06-30",
-        "day_percentage": 4.41e-06,
+        "day_percentage": 0.00000441,
         "property_name": "speak-as"
     },
     {
         "bucket_id": 408,
         "date": "2024-09-17",
-        "day_percentage": 4e-06,
+        "day_percentage": 0.000004,
         "property_name": "orientation"
     },
     {
         "bucket_id": 711,
         "date": "2026-06-30",
-        "day_percentage": 3.17e-06,
+        "day_percentage": 0.00000317,
         "property_name": "override-colors"
     },
     {
         "bucket_id": 476,
         "date": "2026-06-30",
-        "day_percentage": 2.75e-06,
+        "day_percentage": 0.00000275,
         "property_name": "alias-epub-word-break"
     },
     {
         "bucket_id": 816,
         "date": "2026-06-30",
-        "day_percentage": 2.1e-06,
+        "day_percentage": 0.0000021,
         "property_name": "result"
     },
     {
         "bucket_id": 720,
         "date": "2026-06-18",
-        "day_percentage": 2e-06,
+        "day_percentage": 0.000002,
         "property_name": "position-fallback"
     },
     {
         "bucket_id": 722,
         "date": "2026-06-18",
-        "day_percentage": 2e-06,
+        "day_percentage": 0.000002,
         "property_name": "popover-show-delay"
     },
     {
         "bucket_id": 745,
         "date": "2026-06-18",
-        "day_percentage": 2e-06,
+        "day_percentage": 0.000002,
         "property_name": "anchor-default (obsolete)"
     },
     {
         "bucket_id": 765,
         "date": "2026-06-18",
-        "day_percentage": 2e-06,
+        "day_percentage": 0.000002,
         "property_name": "position-fallback-bounds"
     },
     {
         "bucket_id": 477,
         "date": "2026-06-30",
-        "day_percentage": 1.6e-06,
+        "day_percentage": 0.0000016,
         "property_name": "alias-epub-writing-mode"
     },
     {
         "bucket_id": 475,
         "date": "2026-06-30",
-        "day_percentage": 1.18e-06,
+        "day_percentage": 0.00000118,
         "property_name": "alias-epub-text-transform"
     },
     {
         "bucket_id": 918,
         "date": "2026-06-30",
-        "day_percentage": 1e-06,
+        "day_percentage": 0.000001,
         "property_name": "timeline-trigger-entry-range-end (obsolete)"
     },
     {
         "bucket_id": 917,
         "date": "2026-06-30",
-        "day_percentage": 1e-06,
+        "day_percentage": 0.000001,
         "property_name": "timeline-trigger-entry-range-start (obsolete)"
     },
     {
         "bucket_id": 435,
         "date": "2025-09-05",
-        "day_percentage": 1e-06,
+        "day_percentage": 0.000001,
         "property_name": "mask-source-type"
     },
     {
         "bucket_id": 458,
         "date": "2022-08-08",
-        "day_percentage": 1e-06,
+        "day_percentage": 0.000001,
         "property_name": "motion-offset"
     },
     {
         "bucket_id": 714,
         "date": "2025-09-08",
-        "day_percentage": 1e-06,
+        "day_percentage": 0.000001,
         "property_name": "object-overflow"
     },
     {
         "bucket_id": 813,
         "date": "2026-06-30",
-        "day_percentage": 4.1e-07,
+        "day_percentage": 4.1E-7,
         "property_name": "grid-lanes-direction"
     },
     {
         "bucket_id": 808,
         "date": "2026-06-30",
-        "day_percentage": 4.1e-07,
+        "day_percentage": 4.1E-7,
         "property_name": "flow-tolerance"
     },
     {
         "bucket_id": 923,
         "date": "2026-06-30",
-        "day_percentage": 4.1e-07,
+        "day_percentage": 4.1E-7,
         "property_name": "grid-lanes-pack"
     },
     {
         "bucket_id": 940,
         "date": "2026-06-30",
-        "day_percentage": 4e-07,
+        "day_percentage": 4E-7,
         "property_name": "path-length"
     },
     {
         "bucket_id": 927,
         "date": "2026-06-30",
-        "day_percentage": 3.6e-07,
+        "day_percentage": 3.6E-7,
         "property_name": "frame-sizing"
     },
     {
         "bucket_id": 868,
         "date": "2026-06-30",
-        "day_percentage": 1.9e-07,
+        "day_percentage": 1.9E-7,
         "property_name": "corners (obsolete)"
     },
     {
         "bucket_id": 470,
         "date": "2026-06-30",
-        "day_percentage": 1e-07,
+        "day_percentage": 1E-7,
         "property_name": "alias-epub-text-combine"
     },
     {
         "bucket_id": 474,
         "date": "2026-06-30",
-        "day_percentage": 7e-08,
+        "day_percentage": 7E-8,
         "property_name": "alias-epub-text-orientation"
     },
     {
         "bucket_id": 473,
         "date": "2026-06-30",
-        "day_percentage": 6e-08,
+        "day_percentage": 6E-8,
         "property_name": "alias-epub-text-emphasis-style"
     },
     {
         "bucket_id": 472,
         "date": "2026-06-30",
-        "day_percentage": 5e-08,
+        "day_percentage": 5E-8,
         "property_name": "alias-epub-text-emphasis-color"
     },
     {
         "bucket_id": 879,
         "date": "2026-06-30",
-        "day_percentage": 2e-08,
+        "day_percentage": 2E-8,
         "property_name": "grid-lanes"
     },
     {
         "bucket_id": 682,
         "date": "2026-06-30",
-        "day_percentage": 2e-08,
+        "day_percentage": 2E-8,
         "property_name": "negative"
     },
     {
         "bucket_id": 471,
         "date": "2026-06-30",
-        "day_percentage": 1e-08,
+        "day_percentage": 1E-8,
         "property_name": "alias-epub-text-emphasis"
     },
     {
         "bucket_id": 229,
         "date": "2023-11-22",
-        "day_percentage": 1e-08,
+        "day_percentage": 1E-8,
         "property_name": "webkit-filter (obsolete)"
     },
     {
