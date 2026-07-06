@@ -147,15 +147,19 @@
       { "name": "font-display", "status": "No" },
       { "name": "font-stretch", "status": "Yes" },
       { "name": "font-feature-settings", "status": "Yes" },
-      { "name": "font-variant", "status": "Yes" },
-      { "name": "font-variation-settings", "status": "Yes" },
-      { "name": "font-variant-ligatures", "status": "Yes" },
-      { "name": "font-variant-numeric", "status": "Yes" },
-      { "name": "font-variant-caps", "status": "Yes" },
-      { "name": "font-variant-east-asian", "status": "Yes" },
-      { "name": "font-variant-position", "status": "Yes" },
-      { "name": "font-variant-alternates", "status": "No" },
-      { "name": "font-variant-emoji", "status": "No" }
+      { 
+        "name": "font-variant",
+        "values": [
+          { "value": "font-variant-ligatures", "status": "Yes" },
+          { "value": "font-variant-numeric", "status": "Yes" },
+          { "value": "font-variant-caps", "status": "Yes" },
+          { "value": "font-variant-east-asian", "status": "Yes" },
+          { "value": "font-variant-position", "status": "Yes" },
+          { "value": "font-variant-alternates", "status": "No" },
+          { "value": "font-variant-emoji", "status": "No" }
+        ]
+      },
+      { "name": "font-variation-settings", "status": "Yes" }
     ]
   },
   {
