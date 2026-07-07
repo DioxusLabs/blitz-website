@@ -38,7 +38,7 @@
       { "name": "pointerout", "status": "Yes" },
       { "name": "pointerenter", "status": "Yes" },
       { "name": "pointerleave", "status": "Yes" },
-      { "name": "pointercancel", "status": "No" },
+      { "name": "pointercancel", "status": "Yes" },
       { "name": "pointerrawupdate", "status": "No" },
     ]
   },
@@ -46,10 +46,10 @@
     "id": "touch",
     "name": "Touch",
     "entries": [
-      { "name": "touchstart", "status": "No" },
-      { "name": "touchend", "status": "No" },
-      { "name": "touchmove", "status": "No" },
-      { "name": "touchcancel", "status": "No" },
+      { "name": "touchstart", "status": "Yes" },
+      { "name": "touchend", "status": "Yes" },
+      { "name": "touchmove", "status": "Yes" },
+      { "name": "touchcancel", "status": "Yes" },
     ]
   },
   {
