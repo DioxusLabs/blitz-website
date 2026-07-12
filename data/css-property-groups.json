@@ -368,32 +368,12 @@
     ]
   },
   {
-    "id": "ua-hints",
-    "name": "User Agent Hints",
-    "entries": [
-      { "name": "webkit-font-smoothing", "status": "No" },
-      { "name": "appearance", "status": "No" },
-      { "name": "will-change", "status": "No" },
-      { "name": "text-rendering", "status": "No" },
-      { "name": "text-size-adjust", "status": "No" },
-      { "name": "color-scheme", "status": "No" },
-      { "name": "forced-color-adjust", "status": "No" },
-      { "name": "scrollbar-color", "status": "No" },
-      { "name": "overflow-anchor", "status": "No" },
-      { "name": "image-rendering", "status": "Yes" }
-    ]
-  },
-  {
-    "id": "misc",
-    "name": "Miscellaneous / Other",
+    "id": "scrollbar-presentation",
+    "name": "Scrollbar Presentation",
     "entries": [
       { "name": "scrollbar-width", "status": "No" },
-      { "name": "resize", "status": "No" },
-      { "name": "container-type", "status": "No" },
-      { "name": "scrollbar-gutter", "status": "No" },
-      { "name": "speak", "status": "No" },
-      { "name": "container", "status": "No" },
-      { "name": "field-sizing", "status": "No" }
+      { "name": "scrollbar-color", "status": "No" },
+      { "name": "scrollbar-gutter", "status": "No" }
     ]
   },
   {
@@ -409,6 +389,33 @@
       { "name": "scroll-boundary-behavior-y", "status": "No" }
     ]
   },
+  {
+    "id": "ua-hints",
+    "name": "User Agent Hints",
+    "entries": [
+      { "name": "webkit-font-smoothing", "status": "No" },
+      { "name": "appearance", "status": "No" },
+      { "name": "will-change", "status": "No" },
+      { "name": "text-rendering", "status": "No" },
+      { "name": "text-size-adjust", "status": "No" },
+      { "name": "color-scheme", "status": "No" },
+      { "name": "forced-color-adjust", "status": "No" },
+      { "name": "overflow-anchor", "status": "No" },
+      { "name": "image-rendering", "status": "Yes" }
+    ]
+  },
+  {
+    "id": "misc",
+    "name": "Miscellaneous / Other",
+    "entries": [
+      { "name": "resize", "status": "No" },
+      { "name": "container-type", "status": "No" },
+      { "name": "speak", "status": "No" },
+      { "name": "container", "status": "No" },
+      { "name": "field-sizing", "status": "No" }
+    ]
+  },
+
   {
     "id": "multi-column",
     "name": "Multi-column Layout",
