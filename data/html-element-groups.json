@@ -41,7 +41,7 @@
     "entries": [
       { "name": "<a>", "status": "Yes" },
       { "name": "<dialog>", "status": "No" },
-      { "name": "<details>/<summary>", "status": "No" },
+      { "name": "<details>/<summary>", "status": "Yes" },
     ]
   },
   {
