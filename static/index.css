@@ -117,6 +117,42 @@ nav > a.nav-icon img {
   height: 40px;
 }
 
+.mobile {
+  display: none;
+}
+
+.hamburger-menu .hamburger-toggle {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+.hamburger-menu .hamburger-label {
+  cursor: pointer;
+}
+.hamburger-menu .mobile-menu {
+  display: none;
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 96px;
+  flex-direction: column;
+  background-color: #f4e8d2;
+  border-top: 1px solid #cab89b;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+}
+.hamburger-menu .mobile-menu > a {
+  font-size: 1.4em;
+}
+.hamburger-menu .mobile-menu > a.external-link {
+  gap: 6px;
+}
+.hamburger-menu .hamburger-toggle:checked ~ .mobile-menu {
+  display: flex;
+}
+
 .hero {
   border-bottom: 1px solid #CCC;
   margin: 0 -24px;
@@ -213,17 +249,17 @@ a:hover {
   .logo {
     height: 70px;
   }
-  .logo-link {
-    margin: 0 auto;
-  }
   .page-heading {
     font-size: 2rem;
   }
   .page-subheading {
     font-size: 1rem;
   }
-  nav {
+  nav.desktop {
     display: none;
+  }
+  .mobile {
+    display: block;
   }
   h3 {
     margin-top: 14px;

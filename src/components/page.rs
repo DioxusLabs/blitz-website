@@ -87,10 +87,10 @@ pub fn Page(
                                 img { src: "/static/discord.svg" }
                             }
                         }
-                        // div {
-                        //     class: "mobile",
-                        //     HamburgerMenu {}
-                        // }
+                        div {
+                            class: "mobile",
+                            HamburgerMenu {}
+                        }
                     }
                     a {
                         display: "block",
@@ -145,50 +145,36 @@ pub fn MainContent(
 #[component]
 pub fn HamburgerMenu() -> Element {
     rsx!(
-
-        style {
-            r#type: "text/css",
-            {"
-                .mobile-menu {
-                    display: none;
-                    position: fixed;
-                    width: 100vw;
-                    height: 400px;
-                    background: red;
-                    left: 0;
-                    top: 96px;
-                }
-
-                #toggle:checked ~ .mobile-menu {
-                    display: block;
-                }
-
-                label {    
-                    padding: 0.5rem 1rem;
-                    border-radius: 0.5rem;
-                }
-
-                .visually-hidden {
-                    position: absolute;
-                    left: -100vw;
-                }
-            "}
-        }
-        div {
-            class: "hamburger-menu",
-            label {
-                r#for: "toggle",
-                class: "nav-icon",
-                HamburgerIcon {}
-            }
+        div { class: "hamburger-menu",
+            // The checkbox holds the open/closed state so the menu works without JS.
+            // Its sibling `.mobile-menu` is revealed via `:checked ~ .mobile-menu`.
             input {
                 r#type: "checkbox",
-                id: "toggle",
-                class: "visually-hidden"
+                id: "nav-toggle",
+                class: "hamburger-toggle",
             }
-
-            div {
-                class: "mobile-menu"
+            label {
+                r#for: "nav-toggle",
+                class: "nav-icon hamburger-label",
+                title: "Menu",
+                HamburgerIcon {}
+            }
+            nav { class: "mobile-menu",
+                a { href: "/status", "Status" }
+                a { href: "/downloads", "Downloads" }
+                a {
+                    class: "external-link",
+                    href: "https://github.com/dioxuslabs/blitz",
+                    "GitHub"
+                    ExternalLinkIcon {}
+                }
+                a {
+                    class: "external-link",
+                    target: "_blank",
+                    href: "https://discord.gg/AnNPqT95pu",
+                    "Discord"
+                    ExternalLinkIcon {}
+                }
             }
         }
     )
@@ -210,6 +196,26 @@ fn HamburgerIcon() -> Element {
             path { d:"M4 5h16" }
             path { d:"M4 12h16" }
             path { d:"M4 19h16" }
+        }
+    )
+}
+
+#[component]
+fn ExternalLinkIcon() -> Element {
+    rsx!(
+        svg {
+            width:"18",
+            height:"18",
+            view_box:"0 0 24 24",
+            fill:"none",
+            stroke:"currentColor",
+            stroke_width:"2",
+            stroke_linecap:"round",
+            stroke_linejoin:"round",
+            class:"lucide lucide-external-link-icon lucide-external-link",
+            path { d:"M15 3h6v6" }
+            path { d:"M10 14 21 3" }
+            path { d:"M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h6" }
         }
     )
 }

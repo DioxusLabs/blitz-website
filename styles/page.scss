@@ -109,6 +109,53 @@ nav {
 
 }
 
+// Mobile hamburger menu. Hidden on desktop; shown via the media query below.
+.mobile {
+    display: none;
+}
+
+.hamburger-menu {
+    // Visually hide the checkbox while keeping it accessible/toggleable via its label.
+    .hamburger-toggle {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip: rect(0 0 0 0);
+        white-space: nowrap;
+    }
+
+    .hamburger-label {
+        cursor: pointer;
+    }
+
+    // The dropdown is a `nav`, so its links inherit the shared `nav > a` styling.
+    .mobile-menu {
+        display: none;
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: 96px;
+        flex-direction: column;
+        background-color: #f4e8d2;
+        border-top: 1px solid #cab89b;
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+
+        > a {
+            font-size: 1.4em;
+
+            &.external-link {
+                gap: 6px;
+            }
+        }
+    }
+
+    // The "checkbox trick": toggling the checkbox reveals the menu, no JS required.
+    .hamburger-toggle:checked ~ .mobile-menu {
+        display: flex;
+    }
+}
+
 .hero {
     border-bottom: 1px solid #CCC;
     margin: 0 -24px;
@@ -197,10 +244,10 @@ a {
     #content { margin-left: 0; }
 
     .logo { height: 70px }
-    .logo-link { margin: 0 auto }
     .page-heading { font-size: 2rem }
     .page-subheading { font-size: 1rem }
-    nav { display: none; }
+    nav.desktop { display: none; }
+    .mobile { display: block; }
 
     h3 { margin-top: 14px }
 }
