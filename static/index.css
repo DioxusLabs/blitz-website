@@ -94,7 +94,7 @@ nav > a {
   display: flex;
   align-items: center;
   cursor: pointer;
-  font-family: "Jost*";
+  font-family: "Jost";
   font-weight: 500;
   font-size: 1.4em;
   line-height: 1;
@@ -163,7 +163,7 @@ section {
 
 h1, h2, h3, h4 {
   font-weight: 500;
-  font-family: "Jost*";
+  font-family: "Jost";
   margin-bottom: 0;
 }
 
