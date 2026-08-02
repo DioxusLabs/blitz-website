@@ -7,7 +7,7 @@ use std::{
 
 use tempfile::NamedTempFile;
 
-use crate::github::GithubClient;
+use crate::github::{CommitInfo, GithubClient};
 
 pub static DOWNLOAD_CACHE: DownloadCache = DownloadCache::new();
 
@@ -26,12 +26,18 @@ impl DownloadCache {
         self.0.lock().unwrap()
     }
 
-    pub fn update(&self, etag: Option<Arc<str>>, artifacts: Arc<[DownloadLink]>) {
+    pub fn update(
+        &self,
+        etag: Option<Arc<str>>,
+        artifacts: Arc<[DownloadLink]>,
+        commit_info: Option<CommitInfo>,
+    ) {
         let cached_at = Instant::now();
         *self.0.lock().unwrap() = Some(Arc::new(DownloadCacheEntry {
             etag,
             cached_at,
             artifacts,
+            commit_info,
         }));
     }
 
@@ -44,6 +50,7 @@ impl DownloadCache {
                 cached_at,
                 etag: entry.etag.clone(),
                 artifacts: entry.artifacts.clone(),
+                commit_info: entry.commit_info.clone(),
             }));
         }
     }
@@ -53,6 +60,7 @@ pub struct DownloadCacheEntry {
     pub etag: Option<Arc<str>>,
     pub cached_at: Instant,
     pub artifacts: Arc<[DownloadLink]>,
+    pub commit_info: Option<CommitInfo>,
 }
 
 pub struct DownloadLink {
@@ -79,7 +87,7 @@ pub async fn load_downloads(_etag: Option<Arc<str>>) {
 
     // Request latest WPT report (with etag)
     let token = std::env::var("GITHUB_TOKEN").expect("GITHUB_TOKEN environment variable not found");
-    let client = GithubClient::new(&token);
+    let client = GithubClient::new(Some(&token));
 
     // if let Some(etag) = etag.as_ref() {
     //     builder = builder.header("If-None-Match", &**etag);
@@ -177,7 +185,23 @@ pub async fn load_downloads(_etag: Option<Arc<str>>) {
             .then_with(|| a.arch.cmp(&b.arch))
     });
 
-    DOWNLOAD_CACHE.update(None, Arc::from(artifacts));
+    let commit_info = latest_build_workflow
+        .head_commit
+        .as_ref()
+        .map(|commit| CommitInfo {
+            sha: commit.id.clone(),
+            message: Some(commit.message.clone()),
+            timestamp: commit.timestamp.clone(),
+        })
+        .or_else(|| {
+            Some(CommitInfo {
+                sha: latest_build_workflow.head_sha.clone(),
+                message: None,
+                timestamp: None,
+            })
+        });
+
+    DOWNLOAD_CACHE.update(None, Arc::from(artifacts), commit_info);
 
     println!("New Browser build links processed and cached.");
 }

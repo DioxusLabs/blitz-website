@@ -4,25 +4,27 @@ use serde::{Deserialize, Serialize};
 
 pub struct GithubClient {
     client: Client,
-    auth_header: String,
+    auth_header: Option<String>,
 }
 
 impl GithubClient {
-    pub fn new(token: &str) -> Self {
+    pub fn new(token: Option<&str>) -> Self {
         Self {
             client: Client::new(),
-            auth_header: format!("Bearer {token}"),
+            auth_header: token.map(|token| format!("Bearer {token}")),
         }
     }
 
+    async fn try_get(&self, url: &str) -> Result<reqwest::Response, reqwest::Error> {
+        let mut request = self.client.get(url).header("user-agent", "Blitz website");
+        if let Some(auth_header) = &self.auth_header {
+            request = request.header("authorization", auth_header);
+        }
+        request.send().await
+    }
+
     pub async fn get(&self, url: &str) -> reqwest::Response {
-        self.client
-            .get(url)
-            .header("authorization", &self.auth_header)
-            .header("user-agent", "Blitz website")
-            .send()
-            .await
-            .unwrap()
+        self.try_get(url).await.unwrap()
     }
 
     pub async fn get_bytes(&self, url: &str) -> Bytes {
@@ -37,6 +39,24 @@ impl GithubClient {
             .unwrap()
     }
 
+    pub async fn commit_info(&self, sha: &str) -> Option<CommitInfo> {
+        let response = self
+            .try_get(&format!(
+                "https://api.github.com/repos/dioxuslabs/blitz/commits/{sha}"
+            ))
+            .await
+            .ok()?;
+        if !response.status().is_success() {
+            return None;
+        }
+        let commit: CommitResponse = response.json().await.ok()?;
+        Some(CommitInfo {
+            sha: sha.to_string(),
+            message: Some(commit.commit.message),
+            timestamp: commit.commit.committer.date,
+        })
+    }
+
     #[allow(dead_code)]
     pub async fn list_artifacts(&self, page: usize) -> ArtifactResponse {
         self.get_json::<ArtifactResponse>(&format!(
@@ -46,17 +66,17 @@ impl GithubClient {
     }
 
     pub async fn list_successful_workflows(&self) -> ListWorkflowsResponse {
-        self.get_json::<ListWorkflowsResponse>(&format!(
-            "/repos/dioxuslabs/blitz/actions/runs?per_page=100&status=success"
-        ))
+        self.get_json::<ListWorkflowsResponse>(
+            "/repos/dioxuslabs/blitz/actions/runs?per_page=100&status=success",
+        )
         .await
     }
 
     #[allow(dead_code)]
     pub async fn list_successful_workflows_raw(&self) -> Bytes {
-        self.get_bytes(&format!(
-            "https://api.github.com/repos/dioxuslabs/blitz/actions/runs?per_page=100&status=success"
-        ))
+        self.get_bytes(
+            "https://api.github.com/repos/dioxuslabs/blitz/actions/runs?per_page=100&status=success",
+        )
         .await
     }
 
@@ -115,6 +135,37 @@ pub struct WorkflowRun {
     pub name: String,
     pub head_branch: String,
     pub head_sha: String,
+    pub head_commit: Option<WorkflowCommit>,
     pub status: String,
     pub conclusion: Option<String>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct WorkflowCommit {
+    pub id: String,
+    pub message: String,
+    pub timestamp: Option<String>,
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub struct CommitInfo {
+    pub sha: String,
+    pub message: Option<String>,
+    pub timestamp: Option<String>,
+}
+
+#[derive(Debug, Deserialize)]
+struct CommitResponse {
+    commit: CommitDetails,
+}
+
+#[derive(Debug, Deserialize)]
+struct CommitDetails {
+    message: String,
+    committer: Committer,
+}
+
+#[derive(Debug, Deserialize)]
+struct Committer {
+    date: Option<String>,
 }

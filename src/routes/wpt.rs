@@ -4,7 +4,8 @@ use dioxus::prelude::*;
 use wptreport::{wpt_report::WptReport, AreaScores};
 
 use crate::{
-    components::Page,
+    components::{CommitInfoDisplay, Page},
+    github::CommitInfo,
     routes::{StatusHeader, StatusTabs},
 };
 
@@ -65,7 +66,11 @@ impl Deref for ArcWptScores {
 }
 
 #[component]
-pub fn WptResultsPage(report: ArcWptReport, scores: ArcWptScores) -> Element {
+pub fn WptResultsPage(
+    report: ArcWptReport,
+    scores: ArcWptScores,
+    commit_info: Option<CommitInfo>,
+) -> Element {
     rsx! {
         Page { title: "Status: WPT".into(),
             StatusHeader {}
@@ -80,6 +85,7 @@ pub fn WptResultsPage(report: ArcWptReport, scores: ArcWptScores) -> Element {
                 and percentages are relative to the number of tests run.
                 "
             }
+            CommitInfoDisplay { commit_info }
             WptResults { scores }
         }
     }

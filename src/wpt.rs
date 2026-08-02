@@ -10,6 +10,7 @@ use wptreport::{
     wpt_report::{TestStatus, WptReport},
 };
 
+use crate::github::{CommitInfo, GithubClient};
 use crate::routes::{ArcWptReport, ArcWptScores};
 
 pub static WPT_REPORT_CACHE: WptReportCache = WptReportCache::new();
@@ -29,13 +30,20 @@ impl WptReportCache {
         self.0.lock().unwrap()
     }
 
-    pub fn update(&self, etag: Option<Arc<str>>, report: ArcWptReport, scores: ArcWptScores) {
+    pub fn update(
+        &self,
+        etag: Option<Arc<str>>,
+        report: ArcWptReport,
+        scores: ArcWptScores,
+        commit_info: Option<CommitInfo>,
+    ) {
         let cached_at = Instant::now();
         *self.0.lock().unwrap() = Some(Arc::new(WptReportCacheEntry {
             etag,
             cached_at,
             report,
             scores,
+            commit_info,
         }));
     }
 
@@ -48,6 +56,7 @@ impl WptReportCache {
                 etag: entry.etag.clone(),
                 report: entry.report.clone(),
                 scores: entry.scores.clone(),
+                commit_info: entry.commit_info.clone(),
             }));
         }
     }
@@ -58,6 +67,7 @@ pub struct WptReportCacheEntry {
     pub cached_at: Instant,
     pub report: ArcWptReport,
     pub scores: ArcWptScores,
+    pub commit_info: Option<CommitInfo>,
 }
 
 pub async fn load_wpt_results(etag: Option<Arc<str>>) {
@@ -82,7 +92,7 @@ pub async fn load_wpt_results(etag: Option<Arc<str>>) {
         .headers()
         .get("etag")
         .and_then(|header| header.to_str().ok())
-        .map(|s| Arc::from(s));
+        .map(Arc::from);
 
     println!("New WPT results found. etag: {etag:?}");
 
@@ -90,6 +100,26 @@ pub async fn load_wpt_results(etag: Option<Arc<str>>) {
 
     let uncompressed_report = zstd::decode_all(Cursor::new(&compressed_report)).unwrap();
     let mut report: WptReport = serde_json::from_slice(&uncompressed_report).unwrap();
+    let commit_info = report
+        .run_info
+        .browser_version
+        .clone()
+        .map(|sha| CommitInfo {
+            sha: sha.clone(),
+            message: None,
+            timestamp: None,
+        });
+
+    let commit_info = if let Some(mut commit_info) = commit_info {
+        let github_client = GithubClient::new(None);
+        if let Some(github_commit) = github_client.commit_info(&commit_info.sha).await {
+            commit_info.message = github_commit.message;
+            commit_info.timestamp = github_commit.timestamp;
+        }
+        Some(commit_info)
+    } else {
+        None
+    };
 
     // Strip skipped tests
     report
@@ -101,7 +131,7 @@ pub async fn load_wpt_results(etag: Option<Arc<str>>) {
     let report = ArcWptReport(Arc::new(report));
     let scores = ArcWptScores(Arc::new(scores));
 
-    WPT_REPORT_CACHE.update(etag, report.clone(), scores.clone());
+    WPT_REPORT_CACHE.update(etag, report.clone(), scores.clone(), commit_info);
 
     println!("New WPT results processed and cached.");
 }
