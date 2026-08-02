@@ -111,7 +111,7 @@ pub async fn load_wpt_results(etag: Option<Arc<str>>) {
         });
 
     let commit_info = if let Some(mut commit_info) = commit_info {
-        let github_client = GithubClient::new(None);
+        let github_client = GithubClient::new(std::env::var("GITHUB_TOKEN").ok().as_deref());
         if let Some(github_commit) = github_client.commit_info(&commit_info.sha).await {
             commit_info.message = github_commit.message;
             commit_info.timestamp = github_commit.timestamp;

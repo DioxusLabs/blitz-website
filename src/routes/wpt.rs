@@ -85,6 +85,7 @@ pub fn WptResultsPage(
                 and percentages are relative to the number of tests run.
                 "
             }
+            hr {}
             CommitInfoDisplay { commit_info }
             WptResults { scores }
         }

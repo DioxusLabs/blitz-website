@@ -66,7 +66,7 @@ async fn main() {
                 let Some(cache_entry) = DOWNLOAD_CACHE.get_cloned() else {
                     return Err((
                         StatusCode::INTERNAL_SERVER_ERROR,
-                        "Downloads not available".to_string(),
+                        format!("Downloads not available"),
                     ));
                 };
 
@@ -82,7 +82,7 @@ async fn main() {
                 else {
                     return Err((
                         StatusCode::NOT_FOUND,
-                        "Matching artifact not found".to_string(),
+                        format!("Matching artifact not found"),
                     ));
                 };
 
@@ -236,7 +236,7 @@ async fn main() {
 }
 
 async fn dx_route_cached(render_fn: fn() -> Element) -> impl IntoResponse {
-    static CACHE: LazyLock<DashMap<usize, Bytes>> = LazyLock::new(DashMap::new);
+    static CACHE: LazyLock<DashMap<usize, Bytes>> = LazyLock::new(|| DashMap::new());
 
     let fn_key = render_fn as *const () as usize;
 

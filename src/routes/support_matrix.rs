@@ -11,7 +11,7 @@ static CSS_PROPERTIES: GlobalSignal<Vec<PropGroup>> = Signal::global(|| {
     // Load a hashmap of popularity data
     // Source: https://chromestatus.com/data/csspopularity
     let raw_css_popularity: &str = include_str!("../../data/css-popularity.json");
-    let css_popularity: Vec<PropPopularity> = serde_json::from_str(raw_css_popularity).unwrap();
+    let css_popularity: Vec<PropPopularity> = serde_json::from_str(&raw_css_popularity).unwrap();
     let css_popularity: HashMap<String, f64> = css_popularity
         .into_iter()
         .map(|prop| (prop.property_name, prop.day_percentage))
@@ -19,7 +19,7 @@ static CSS_PROPERTIES: GlobalSignal<Vec<PropGroup>> = Signal::global(|| {
 
     // Load crate data
     let raw_css_prop_groups: &str = include_str!("../../data/css-property-groups.json");
-    let mut css_prop_groups: Vec<PropGroup> = serde_json::from_str(raw_css_prop_groups).unwrap();
+    let mut css_prop_groups: Vec<PropGroup> = serde_json::from_str(&raw_css_prop_groups).unwrap();
 
     // Fill in percentages for each entry
     for group in &mut css_prop_groups {
@@ -28,7 +28,7 @@ static CSS_PROPERTIES: GlobalSignal<Vec<PropGroup>> = Signal::global(|| {
                 Some(props) => *props
                     .iter()
                     .filter_map(|prop_name| css_popularity.get(prop_name))
-                    .max_by(|a, b| a.total_cmp(b))
+                    .max_by(|a, b| a.total_cmp(&b))
                     .unwrap_or(&0.0),
                 None => *css_popularity.get(&entry.name).unwrap_or(&0.0),
             }
@@ -125,7 +125,7 @@ pub fn CssSupportPage() -> Element {
 static HTML_EVENTS: GlobalSignal<Vec<PropGroup>> = Signal::global(|| {
     // Load crate data
     let raw_html_event_groups: &str = include_str!("../../data/html-event-groups.json");
-    serde_json5::from_str(raw_html_event_groups).unwrap()
+    serde_json5::from_str(&raw_html_event_groups).unwrap()
 });
 
 #[component]
@@ -149,7 +149,7 @@ pub fn EventSupportPage() -> Element {
 static HTML_ELEMENTS: GlobalSignal<Vec<PropGroup>> = Signal::global(|| {
     // Load crate data
     let raw_html_event_groups: &str = include_str!("../../data/html-element-groups.json");
-    serde_json5::from_str(raw_html_event_groups).unwrap()
+    serde_json5::from_str(&raw_html_event_groups).unwrap()
 });
 
 #[component]
