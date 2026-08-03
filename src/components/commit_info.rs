@@ -23,7 +23,6 @@ pub fn CommitInfoDisplay(commit_info: Option<CommitInfo>) -> Element {
 
     rsx! {
         p {
-            // font_size: "smaller",
             span {
                 font_size: "smaller",
                 color: "#666",
