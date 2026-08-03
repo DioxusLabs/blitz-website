@@ -3,7 +3,11 @@ use std::{ops::Deref, sync::Arc};
 use dioxus::prelude::*;
 use humansize::{format_size, BINARY};
 
-use crate::{components::Page, downloads::DownloadLink};
+use crate::{
+    components::{CommitInfoDisplay, Page},
+    downloads::DownloadLink,
+    github::CommitInfo,
+};
 
 #[derive(Clone)]
 pub struct ArcDownloadLinks(pub Arc<[DownloadLink]>);
@@ -20,7 +24,7 @@ impl Deref for ArcDownloadLinks {
 }
 
 #[component]
-pub fn DownloadsPage(links: ArcDownloadLinks) -> Element {
+pub fn DownloadsPage(links: ArcDownloadLinks, commit_info: Option<CommitInfo>) -> Element {
     rsx! {
         Page { title: "Downloads".into(),
             h1 {
@@ -29,6 +33,7 @@ pub fn DownloadsPage(links: ArcDownloadLinks) -> Element {
             p {
                 dangerous_inner_html: r#"Downloads for the Blitz Browser"#
             }
+            CommitInfoDisplay { commit_info }
             DownloadsTable { links }
         }
     }

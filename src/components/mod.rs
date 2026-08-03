@@ -14,3 +14,6 @@ mod section;
 pub use section::*;
 mod toc;
 pub use toc::*;
+
+mod commit_info;
+pub use commit_info::*;

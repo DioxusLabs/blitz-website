@@ -66,7 +66,7 @@ async fn main() {
                 let Some(cache_entry) = DOWNLOAD_CACHE.get_cloned() else {
                     return Err((
                         StatusCode::INTERNAL_SERVER_ERROR,
-                        format!("Downloads not available"),
+                        "Downloads not available".to_string(),
                     ));
                 };
 
@@ -82,7 +82,7 @@ async fn main() {
                 else {
                     return Err((
                         StatusCode::NOT_FOUND,
-                        format!("Matching artifact not found"),
+                        "Matching artifact not found".to_string(),
                     ));
                 };
 
@@ -124,6 +124,7 @@ async fn main() {
                         let props = WptResultsPageProps {
                             report: entry.report.clone(),
                             scores: entry.scores.clone(),
+                            commit_info: entry.commit_info.clone(),
                         };
                         return dx_route_with_props(WptResultsPage, props).await;
                     } else if cache_age <= Duration::from_mins(30) {
@@ -141,6 +142,7 @@ async fn main() {
                 let props = WptResultsPageProps {
                     report: entry.report.clone(),
                     scores: entry.scores.clone(),
+                    commit_info: entry.commit_info.clone(),
                 };
 
                 dx_route_with_props(WptResultsPage, props).await
@@ -162,6 +164,7 @@ async fn main() {
                     if cache_age <= Duration::from_secs(30) {
                         let props = DownloadsPageProps {
                             links: ArcDownloadLinks(entry.artifacts.clone()),
+                            commit_info: entry.commit_info.clone(),
                         };
                         return dx_route_with_props(DownloadsPage, props).await;
                     } else if cache_age <= Duration::from_mins(30) {
@@ -178,6 +181,7 @@ async fn main() {
                 let entry = DOWNLOAD_CACHE.get_cloned().unwrap();
                 let props = DownloadsPageProps {
                     links: ArcDownloadLinks(entry.artifacts.clone()),
+                    commit_info: entry.commit_info.clone(),
                 };
 
                 dx_route_with_props(DownloadsPage, props).await
@@ -232,7 +236,7 @@ async fn main() {
 }
 
 async fn dx_route_cached(render_fn: fn() -> Element) -> impl IntoResponse {
-    static CACHE: LazyLock<DashMap<usize, Bytes>> = LazyLock::new(|| DashMap::new());
+    static CACHE: LazyLock<DashMap<usize, Bytes>> = LazyLock::new(DashMap::new);
 
     let fn_key = render_fn as *const () as usize;
 
