@@ -33,7 +33,7 @@ pub fn DownloadsPage(links: ArcDownloadLinks, commit_info: Option<CommitInfo>) -
             p {
                 dangerous_inner_html: r#"Downloads for the Blitz Browser"#
             }
-            CommitInfoDisplay { commit_info }
+            CommitInfoDisplay { commit_info, label: "Builds for commit:" }
             DownloadsTable { links }
         }
     }

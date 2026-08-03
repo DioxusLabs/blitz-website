@@ -11,7 +11,7 @@ fn format_commit_date(timestamp: &str) -> String {
 }
 
 #[component]
-pub fn CommitInfoDisplay(commit_info: Option<CommitInfo>) -> Element {
+pub fn CommitInfoDisplay(commit_info: Option<CommitInfo>, label: Option<&'static str>) -> Element {
     let Some(commit_info) = commit_info else {
         return rsx! {};
     };
@@ -23,12 +23,14 @@ pub fn CommitInfoDisplay(commit_info: Option<CommitInfo>) -> Element {
 
     rsx! {
         p {
-            span {
-                font_size: "smaller",
-                color: "#666",
-                "Data from:"
+            if let Some(label) = label {
+                span {
+                    font_size: "smaller",
+                    color: "#666",
+                    "{label}"
+                    br {}
+                }
             }
-            br {},
             a {
                 href: "https://github.com/DioxusLabs/blitz/commit/{commit_info.sha}",
                 target: "_blank",

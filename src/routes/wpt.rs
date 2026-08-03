@@ -86,7 +86,7 @@ pub fn WptResultsPage(
                 "
             }
             hr {}
-            CommitInfoDisplay { commit_info }
+            CommitInfoDisplay { commit_info, label: "Data from commit:" }
             WptResults { scores }
         }
     }
