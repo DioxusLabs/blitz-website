@@ -6,7 +6,7 @@ fn format_commit_date(timestamp: &str) -> String {
     timestamp
         .strip_suffix('Z')
         .and_then(|timestamp| timestamp.split_once('T'))
-        .map(|(date, _time)| format!("{date}"))
+        .map(|(date, _time)| date.to_string())
         .unwrap_or_else(|| timestamp.to_string())
 }
 
