@@ -1,8 +1,13 @@
-use std::{collections::BTreeMap, ops::Deref, sync::Arc};
+use std::{
+    collections::BTreeMap,
+    ops::Deref,
+    sync::{Arc, LazyLock},
+};
 
 use dioxus::prelude::*;
+use syntect::{highlighting::Theme, parsing::SyntaxSet};
 use wptreport::{
-    wpt_report::{TestResult, TestStatus, WptReport},
+    wpt_report::{SubtestStatus, TestResult, TestStatus, WptReport},
     AreaScores, SubtestCounts, TestResultIter,
 };
 
@@ -10,6 +15,7 @@ use crate::{
     components::{CommitInfoDisplay, Page},
     github::CommitInfo,
     routes::{StatusHeader, StatusTabs},
+    wpt_source::{RefLink, SourceResult},
 };
 
 struct Colors(&'static [[u8; 3]]);
@@ -266,8 +272,7 @@ fn TestScoreRow(name: String, status: TestStatus, counts: SubtestCounts) -> Elem
             td {
                 background_color: "white",
                 a {
-                    href: format!("https://wpt.live/{name}"),
-                    target: "_blank",
+                    href: format!("/status/wpt/{}", encode_test_path(&name)),
                     {file_name.to_string()}
                 }
             }
@@ -285,4 +290,246 @@ fn TestScoreRow(name: String, status: TestStatus, counts: SubtestCounts) -> Elem
             }
         }
     )
+}
+
+/// Encode a WPT test name (an absolute path, possibly containing a query-string
+/// variant) so that it can be used as the path portion of a URL.
+pub fn encode_test_path(name: &str) -> String {
+    name.replace('%', "%25")
+        .replace('?', "%3F")
+        .replace('#', "%23")
+}
+
+#[derive(Copy, Clone, PartialEq, Eq)]
+pub enum TestPageTab {
+    Summary,
+    Test,
+    TestSource,
+    Ref,
+    RefSource,
+}
+
+impl TestPageTab {
+    pub fn from_query(tab: Option<&str>) -> Self {
+        match tab {
+            Some("test") => Self::Test,
+            Some("test-source") => Self::TestSource,
+            Some("ref") => Self::Ref,
+            Some("ref-source") => Self::RefSource,
+            _ => Self::Summary,
+        }
+    }
+
+    fn query_value(self) -> &'static str {
+        match self {
+            Self::Summary => "summary",
+            Self::Test => "test",
+            Self::TestSource => "test-source",
+            Self::Ref => "ref",
+            Self::RefSource => "ref-source",
+        }
+    }
+}
+
+#[component]
+pub fn WptTestPage(
+    report: ArcWptReport,
+    commit_info: Option<CommitInfo>,
+    test_index: usize,
+    tab: TestPageTab,
+    source: SourceResult,
+    refs: Vec<RefLink>,
+    ref_source: Option<SourceResult>,
+) -> Element {
+    let test = &report.results[test_index];
+    let name = test.test.clone();
+
+    let file_name = name
+        .rsplit_once('/')
+        .map(|(_, file)| file)
+        .unwrap_or(&name)
+        .to_string();
+
+    // The path used to fetch the source (test name without any query-string variant)
+    let source_path = format!("/{}", name.split('?').next().unwrap_or(&name));
+    let first_ref = refs.first().cloned();
+
+    rsx! {
+        Page { title: format!("WPT: {file_name}").into(),
+            StatusHeader {}
+            StatusTabs { current_tab: "wpt" }
+            CommitInfoDisplay { commit_info, label: "Data from commit:" }
+            WptBreadcrumb { area: name.trim_start_matches('/').to_string() }
+            TestPageTabs { name: name.clone(), current_tab: tab, ref_link: first_ref.clone() }
+            match tab {
+                TestPageTab::Summary => rsx! {
+                    TestSummary { report: report.clone(), test_index }
+                },
+                TestPageTab::Test => rsx! {
+                    TestIframe { path: format!("/{name}") }
+                },
+                TestPageTab::TestSource => rsx! {
+                    SourceView { path: source_path.clone(), source: source.clone() }
+                },
+                TestPageTab::Ref => rsx! {
+                    if let Some(ref_link) = &first_ref {
+                        TestIframe { path: ref_link.href.clone() }
+                    }
+                },
+                TestPageTab::RefSource => rsx! {
+                    if let (Some(ref_link), Some(ref_source)) = (&first_ref, &ref_source) {
+                        SourceView { path: ref_link.href.clone(), source: ref_source.clone() }
+                    }
+                },
+            }
+        }
+    }
+}
+
+#[component]
+fn TestPageTabs(name: String, current_tab: TestPageTab, ref_link: Option<RefLink>) -> Element {
+    let base = format!("/status/wpt/{}", encode_test_path(&name));
+
+    let mut tabs: Vec<(TestPageTab, String)> = vec![
+        (TestPageTab::Summary, "Results".to_string()),
+        (TestPageTab::Test, "Test".to_string()),
+        (TestPageTab::TestSource, "Test Source".to_string()),
+    ];
+    if let Some(ref_link) = &ref_link {
+        let label = if ref_link.rel == "mismatch" {
+            "Ref (mismatch)"
+        } else {
+            "Ref"
+        };
+        tabs.push((TestPageTab::Ref, label.to_string()));
+        tabs.push((TestPageTab::RefSource, "Ref Source".to_string()));
+    }
+
+    rsx! {
+        div {
+            class: "tab-container",
+            for (tab, label) in tabs {
+                a {
+                    class: if tab == current_tab { "tab tab--selected" } else { "tab" },
+                    href: format!("{base}?tab={}", tab.query_value()),
+                    {label}
+                }
+            }
+        }
+    }
+}
+
+#[component]
+fn TestSummary(report: ArcWptReport, test_index: usize) -> Element {
+    let test = &report.results[test_index];
+    let counts = test.subtest_counts();
+
+    rsx! {
+        table {
+            tr {
+                th { "Status" }
+                th { "Duration" }
+                th { "Subtests Passed" }
+            }
+            tr {
+                td { {format!("{:?}", test.status).to_uppercase()} }
+                td { {format!("{}ms", test.duration)} }
+                td { {format!("{}/{}", counts.pass, counts.total)} }
+            }
+        }
+        if let Some(message) = &test.message {
+            p { b { "Message: " } {message.clone()} }
+        }
+        if !test.subtests.is_empty() {
+            table {
+                width: "100%",
+                margin_top: "24px",
+                tr {
+                    th { "Subtest" }
+                    th { "Status" }
+                    th { "Message" }
+                }
+                for subtest in &test.subtests {
+                    tr {
+                        td { {subtest.name.clone()} }
+                        td {
+                            background_color: subtest_status_color(subtest.status),
+                            {format!("{:?}", subtest.status).to_uppercase()}
+                        }
+                        td { {subtest.message.clone().unwrap_or_default()} }
+                    }
+                }
+            }
+        }
+    }
+}
+
+fn subtest_status_color(status: SubtestStatus) -> &'static str {
+    match status {
+        SubtestStatus::Pass => "rgb(129,199,132)",
+        SubtestStatus::Fail | SubtestStatus::Error => "rgb(229,115,115)",
+        _ => "rgb(255,213,79)",
+    }
+}
+
+#[component]
+fn TestIframe(path: String) -> Element {
+    let url = format!("https://wpt.live{path}");
+    rsx! {
+        p {
+            a { href: url.clone(), target: "_blank", "Open on wpt.live" }
+        }
+        iframe {
+            class: "wpt-test-iframe",
+            src: url,
+        }
+    }
+}
+
+#[component]
+fn SourceView(path: String, source: SourceResult) -> Element {
+    rsx! {
+        p {
+            a {
+                href: format!("https://wpt.live{path}"),
+                target: "_blank",
+                {path.clone()}
+            }
+        }
+        match &source {
+            Ok(source) => rsx! {
+                div {
+                    class: "wpt-source",
+                    dangerous_inner_html: highlight_source(source, &path),
+                }
+            },
+            Err(err) => rsx! {
+                p { color: "#8c3037", "Failed to load source: {err}" }
+            },
+        }
+    }
+}
+
+static SYNTAX_SET: LazyLock<SyntaxSet> = LazyLock::new(SyntaxSet::load_defaults_newlines);
+static THEME: LazyLock<Theme> = LazyLock::new(|| {
+    syntect::highlighting::ThemeSet::load_defaults()
+        .themes
+        .remove("InspiredGitHub")
+        .unwrap()
+});
+
+fn highlight_source(source: &str, path: &str) -> String {
+    let extension = path.rsplit('.').next().unwrap_or("html");
+    let syntax = SYNTAX_SET
+        .find_syntax_by_extension(extension)
+        .unwrap_or_else(|| SYNTAX_SET.find_syntax_plain_text());
+
+    syntect::html::highlighted_html_for_string(source, &SYNTAX_SET, syntax, &THEME)
+        .unwrap_or_else(|_| format!("<pre>{}</pre>", html_escape(source)))
+}
+
+fn html_escape(text: &str) -> String {
+    text.replace('&', "&amp;")
+        .replace('<', "&lt;")
+        .replace('>', "&gt;")
 }
