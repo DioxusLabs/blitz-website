@@ -366,29 +366,58 @@ pub fn WptTestPage(
                 }
                 div {
                     class: "wpt-test-page__content",
-                    match tab {
-                        TestPageTab::Summary => rsx! {
-                            TestSummary { report: report.clone(), test_index }
-                        },
-                        TestPageTab::Test => rsx! {
-                            TestIframe { path: format!("/{name}") }
-                        },
-                        TestPageTab::TestSource => rsx! {
-                            SourceView { path: source_path.clone(), source: source.clone() }
-                        },
-                        TestPageTab::Ref => rsx! {
-                            if let Some(ref_link) = &first_ref {
-                                TestIframe { path: ref_link.href.clone() }
-                            }
-                        },
-                        TestPageTab::RefSource => rsx! {
-                            if let (Some(ref_link), Some(ref_source)) = (&first_ref, &ref_source) {
+                    TabPanel { tab: TestPageTab::Summary, current_tab: tab,
+                        TestSummary { report: report.clone(), test_index }
+                    }
+                    TabPanel { tab: TestPageTab::Test, current_tab: tab,
+                        TestIframe { path: format!("/{name}") }
+                    }
+                    TabPanel { tab: TestPageTab::TestSource, current_tab: tab,
+                        SourceView { path: source_path.clone(), source: source.clone() }
+                    }
+                    if let Some(ref_link) = &first_ref {
+                        TabPanel { tab: TestPageTab::Ref, current_tab: tab,
+                            TestIframe { path: ref_link.href.clone() }
+                        }
+                        TabPanel { tab: TestPageTab::RefSource, current_tab: tab,
+                            if let Some(ref_source) = &ref_source {
                                 SourceView { path: ref_link.href.clone(), source: ref_source.clone() }
                             }
-                        },
+                        }
                     }
                 }
+                script { dangerous_inner_html: TAB_SCRIPT }
             }
+        }
+    }
+}
+
+/// Client-side tab switching. Panels for all tabs are rendered up front
+/// (so iframes keep their state when switching); this toggles which panel is
+/// visible and updates the URL. The `?tab=` links still work without JS.
+const TAB_SCRIPT: &str = r#"
+document.querySelectorAll('.tab-container a[data-tab]').forEach(function (link) {
+    link.addEventListener('click', function (event) {
+        event.preventDefault();
+        var tab = link.getAttribute('data-tab');
+        document.querySelectorAll('.tab-container a[data-tab]').forEach(function (l) {
+            l.classList.toggle('tab--selected', l === link);
+        });
+        document.querySelectorAll('.wpt-tab-panel').forEach(function (panel) {
+            panel.classList.toggle('wpt-tab-panel--active', panel.getAttribute('data-tab') === tab);
+        });
+        history.replaceState(null, '', link.getAttribute('href'));
+    });
+});
+"#;
+
+#[component]
+fn TabPanel(tab: TestPageTab, current_tab: TestPageTab, children: Element) -> Element {
+    rsx! {
+        div {
+            class: if tab == current_tab { "wpt-tab-panel wpt-tab-panel--active" } else { "wpt-tab-panel" },
+            "data-tab": tab.query_value(),
+            {children}
         }
     }
 }
@@ -419,6 +448,7 @@ fn TestPageTabs(name: String, current_tab: TestPageTab, ref_link: Option<RefLink
                 a {
                     class: if tab == current_tab { "tab tab--selected" } else { "tab" },
                     href: format!("{base}?tab={}", tab.query_value()),
+                    "data-tab": tab.query_value(),
                     {label}
                 }
             }

@@ -46,6 +46,14 @@
   padding-top: 16px;
 }
 
+.wpt-tab-panel {
+  display: none;
+
+  &.wpt-tab-panel--active {
+    display: block;
+  }
+}
+
 .wpt-test-iframe {
   width: 800px;
   max-width: 100%;

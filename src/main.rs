@@ -160,13 +160,9 @@ async fn main() {
                             .map(|source| wpt_source::parse_ref_links(source, &source_path))
                             .unwrap_or_default();
 
-                        let ref_source = if tab == TestPageTab::RefSource {
-                            if let Some(ref_link) = refs.first() {
-                                let ref_path = ref_link.href.split('?').next().unwrap();
-                                Some(wpt_source::fetch_test_source(&revision, ref_path).await)
-                            } else {
-                                None
-                            }
+                        let ref_source = if let Some(ref_link) = refs.first() {
+                            let ref_path = ref_link.href.split('?').next().unwrap();
+                            Some(wpt_source::fetch_test_source(&revision, ref_path).await)
                         } else {
                             None
                         };
