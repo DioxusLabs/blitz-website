@@ -370,12 +370,6 @@ pub fn WptTestPage(
                             target: "_blank",
                             "Open test on wpt.live"
                         }
-                        " | "
-                        a {
-                            href: format!("https://wpt.fyi/results/{name}"),
-                            target: "_blank",
-                            "Open test on wpt.fyi"
-                        }
                         if let Some(ref_link) = &first_ref {
                             " | "
                             a {
@@ -383,6 +377,12 @@ pub fn WptTestPage(
                                 target: "_blank",
                                 "Open ref on wpt.live"
                             }
+                        }
+                        " | "
+                        a {
+                            href: format!("https://wpt.fyi/results/{name}"),
+                            target: "_blank",
+                            "wpt.fyi"
                         }
                     }
                     TestPageTabs {
