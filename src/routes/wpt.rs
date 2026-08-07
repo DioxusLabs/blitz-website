@@ -270,12 +270,15 @@ fn TestScoreRow(name: String, status: TestStatus, counts: SubtestCounts) -> Elem
                     target: "_blank",
                     {file_name.to_string()}
                 }
-                " "
-                a {
-                    href: format!("view-source:https://wpt.live/{name}"),
-                    target: "_blank",
+                span {
                     font_size: "smaller",
-                    "(source)"
+                    " ("
+                    a {
+                        href: format!("view-source:https://wpt.live/{name}"),
+                        target: "_blank",
+                        "source"
+                    }
+                    ")"
                 }
             }
             td {
