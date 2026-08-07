@@ -361,7 +361,12 @@ pub fn WptTestPage(
                 div {
                     class: "wpt-test-page__header",
                     WptBreadcrumb { area: name.trim_start_matches('/').to_string() }
-                    TestPageTabs { name: name.clone(), current_tab: tab, ref_link: first_ref.clone() }
+                    TestPageTabs {
+                        name: name.clone(),
+                        current_tab: tab,
+                        ref_link: first_ref.clone(),
+                        counts: test.subtest_counts(),
+                    }
                 }
                 div {
                     class: "wpt-test-page__content",
@@ -423,11 +428,19 @@ fn TabPanel(tab: TestPageTab, current_tab: TestPageTab, children: Element) -> El
 }
 
 #[component]
-fn TestPageTabs(name: String, current_tab: TestPageTab, ref_link: Option<RefLink>) -> Element {
+fn TestPageTabs(
+    name: String,
+    current_tab: TestPageTab,
+    ref_link: Option<RefLink>,
+    counts: SubtestCounts,
+) -> Element {
     let base = format!("/status/wpt/{}", encode_test_path(&name));
 
     let mut tabs: Vec<(TestPageTab, String)> = vec![
-        (TestPageTab::Summary, "Results".to_string()),
+        (
+            TestPageTab::Summary,
+            format!("Results ({}/{})", counts.pass, counts.total),
+        ),
         (TestPageTab::Test, "Test".to_string()),
         (TestPageTab::TestSource, "Test Source".to_string()),
     ];
