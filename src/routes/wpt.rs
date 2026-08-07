@@ -12,7 +12,7 @@ use wptreport::{
 };
 
 use crate::{
-    components::{CommitInfoDisplay, Page},
+    components::{BarePage, CommitInfoDisplay, Page},
     github::CommitInfo,
     routes::{StatusHeader, StatusTabs},
     wpt_source::{RefLink, SourceResult},
@@ -355,32 +355,39 @@ pub fn WptTestPage(
     let first_ref = refs.first().cloned();
 
     rsx! {
-        Page { title: format!("WPT: {file_name}").into(),
-            StatusHeader {}
-            StatusTabs { current_tab: "wpt" }
-            CommitInfoDisplay { commit_info, label: "Data from commit:" }
-            WptBreadcrumb { area: name.trim_start_matches('/').to_string() }
-            TestPageTabs { name: name.clone(), current_tab: tab, ref_link: first_ref.clone() }
-            match tab {
-                TestPageTab::Summary => rsx! {
-                    TestSummary { report: report.clone(), test_index }
-                },
-                TestPageTab::Test => rsx! {
-                    TestIframe { path: format!("/{name}") }
-                },
-                TestPageTab::TestSource => rsx! {
-                    SourceView { path: source_path.clone(), source: source.clone() }
-                },
-                TestPageTab::Ref => rsx! {
-                    if let Some(ref_link) = &first_ref {
-                        TestIframe { path: ref_link.href.clone() }
+        BarePage { title: format!("WPT: {file_name}").into(),
+            div {
+                class: "wpt-test-page",
+                div {
+                    class: "wpt-test-page__header",
+                    WptBreadcrumb { area: name.trim_start_matches('/').to_string() }
+                    CommitInfoDisplay { commit_info, label: "Data from commit:" }
+                    TestPageTabs { name: name.clone(), current_tab: tab, ref_link: first_ref.clone() }
+                }
+                div {
+                    class: "wpt-test-page__content",
+                    match tab {
+                        TestPageTab::Summary => rsx! {
+                            TestSummary { report: report.clone(), test_index }
+                        },
+                        TestPageTab::Test => rsx! {
+                            TestIframe { path: format!("/{name}") }
+                        },
+                        TestPageTab::TestSource => rsx! {
+                            SourceView { path: source_path.clone(), source: source.clone() }
+                        },
+                        TestPageTab::Ref => rsx! {
+                            if let Some(ref_link) = &first_ref {
+                                TestIframe { path: ref_link.href.clone() }
+                            }
+                        },
+                        TestPageTab::RefSource => rsx! {
+                            if let (Some(ref_link), Some(ref_source)) = (&first_ref, &ref_source) {
+                                SourceView { path: ref_link.href.clone(), source: ref_source.clone() }
+                            }
+                        },
                     }
-                },
-                TestPageTab::RefSource => rsx! {
-                    if let (Some(ref_link), Some(ref_source)) = (&first_ref, &ref_source) {
-                        SourceView { path: ref_link.href.clone(), source: ref_source.clone() }
-                    }
-                },
+                }
             }
         }
     }
