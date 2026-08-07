@@ -202,9 +202,9 @@ pub fn WptAreaResults(report: ArcWptReport, scores: ArcWptScores, area: String) 
                 margin_top: "24px",
                 tr {
                     th { width: "min-content", "Test",  }
-                    th { "Status", }
                     th { "Subtests" }
                     th { "Subtest %" }
+                    th { "Status", }
                 }
                 for test in tests {
                     TestScoreRow { name: test.test.clone(), status: test.status, counts: test.subtest_counts() }
@@ -269,15 +269,15 @@ fn TestScoreRow(name: String, status: TestStatus, counts: SubtestCounts) -> Elem
             }
             td {
                 text_align: "right",
-                {format!("{status:?}").to_uppercase()}
-            }
-            td {
-                text_align: "right",
                 {format!("({}/{})", counts.pass, counts.total)}
             }
             td {
                 text_align: "right",
                 {format!("{:.2}%", counts.pass_fraction() * 100.0)}
+            }
+            td {
+                text_align: "right",
+                {format!("{status:?}").to_uppercase()}
             }
         }
     )
