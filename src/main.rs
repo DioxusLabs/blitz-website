@@ -1,6 +1,6 @@
 use axum::{
     body::{Body, Bytes},
-    extract::Query,
+    extract::{Path, Query},
     http::{header, StatusCode},
     response::{AppendHeaders, Html, IntoResponse, Redirect},
     routing::{get, get_service},
@@ -112,40 +112,35 @@ async fn main() {
         .route(
             "/status/wpt",
             get(async || {
-                let now = Instant::now();
-                let cache_entry = WPT_REPORT_CACHE.get_cloned();
-                let etag = cache_entry.as_ref().and_then(|entry| entry.etag.clone());
-
-                // Cache with 30s validity
-                let mut await_revalidation = true;
-                if let Some(entry) = &cache_entry {
-                    let cache_age = now.duration_since(entry.cached_at);
-                    if cache_age <= Duration::from_secs(30) {
-                        let props = WptResultsPageProps {
-                            report: entry.report.clone(),
-                            scores: entry.scores.clone(),
-                            commit_info: entry.commit_info.clone(),
-                        };
-                        return dx_route_with_props(WptResultsPage, props).await;
-                    } else if cache_age <= Duration::from_mins(30) {
-                        await_revalidation = false
-                    }
-                }
-
-                let handle = tokio::spawn(async move { load_wpt_results(etag).await });
-
-                if await_revalidation {
-                    handle.await.unwrap();
-                }
-
-                let entry = WPT_REPORT_CACHE.get_cloned().unwrap();
+                let entry = fresh_wpt_cache_entry().await;
                 let props = WptResultsPageProps {
                     report: entry.report.clone(),
                     scores: entry.scores.clone(),
                     commit_info: entry.commit_info.clone(),
+                    area: None,
                 };
 
                 dx_route_with_props(WptResultsPage, props).await
+            }),
+        )
+        .route(
+            "/status/wpt/{*area}",
+            get(async |Path(area): Path<String>| {
+                let area = area.trim_matches('/').to_string();
+                let entry = fresh_wpt_cache_entry().await;
+
+                if !entry.scores.contains_key(&area) {
+                    return Err((StatusCode::NOT_FOUND, format!("Unknown WPT area: {area}")));
+                }
+
+                let props = WptResultsPageProps {
+                    report: entry.report.clone(),
+                    scores: entry.scores.clone(),
+                    commit_info: entry.commit_info.clone(),
+                    area: Some(area),
+                };
+
+                Ok(dx_route_with_props(WptResultsPage, props).await)
             }),
         )
         .route(
@@ -233,6 +228,34 @@ async fn main() {
     axum::serve(listener, app.into_make_service())
         .await
         .unwrap();
+}
+
+/// Get the cached WPT report, revalidating it if it is stale.
+/// Revalidation is awaited if the cache is more than 30 minutes old,
+/// and performed in the background if it is between 30 seconds and 30 minutes old.
+async fn fresh_wpt_cache_entry() -> std::sync::Arc<wpt::WptReportCacheEntry> {
+    let now = Instant::now();
+    let cache_entry = WPT_REPORT_CACHE.get_cloned();
+    let etag = cache_entry.as_ref().and_then(|entry| entry.etag.clone());
+
+    // Cache with 30s validity
+    let mut await_revalidation = true;
+    if let Some(entry) = cache_entry {
+        let cache_age = now.duration_since(entry.cached_at);
+        if cache_age <= Duration::from_secs(30) {
+            return entry;
+        } else if cache_age <= Duration::from_mins(30) {
+            await_revalidation = false
+        }
+    }
+
+    let handle = tokio::spawn(async move { load_wpt_results(etag).await });
+
+    if await_revalidation {
+        handle.await.unwrap();
+    }
+
+    WPT_REPORT_CACHE.get_cloned().unwrap()
 }
 
 async fn dx_route_cached(render_fn: fn() -> Element) -> impl IntoResponse {

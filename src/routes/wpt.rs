@@ -1,7 +1,10 @@
 use std::{collections::BTreeMap, ops::Deref, sync::Arc};
 
 use dioxus::prelude::*;
-use wptreport::{wpt_report::WptReport, AreaScores};
+use wptreport::{
+    wpt_report::{TestResult, TestStatus, WptReport},
+    AreaScores, SubtestCounts, TestResultIter,
+};
 
 use crate::{
     components::{CommitInfoDisplay, Page},
@@ -70,6 +73,7 @@ pub fn WptResultsPage(
     report: ArcWptReport,
     scores: ArcWptScores,
     commit_info: Option<CommitInfo>,
+    area: Option<String>,
 ) -> Element {
     rsx! {
         Page { title: "Status: WPT".into(),
@@ -87,14 +91,19 @@ pub fn WptResultsPage(
             }
             hr {}
             CommitInfoDisplay { commit_info, label: "Data from commit:" }
-            WptResults { scores }
+            if let Some(area) = area {
+                WptBreadcrumb { area: area.clone() }
+                WptAreaResults { report, scores, area }
+            } else {
+                WptResults { scores }
+            }
         }
     }
 }
 
 fn is_focus_area(area: &str) -> bool {
     let slash_count = area.chars().filter(|c| *c == '/').count();
-    slash_count < 2 || (slash_count == 2 && area.starts_with("css/CSS2"))
+    slash_count < 2
 }
 
 #[component]
@@ -112,42 +121,167 @@ pub fn WptResults(scores: ArcWptScores) -> Element {
             }
             {
                 scores.iter().filter(|(area, _)| is_focus_area(area)).map(|(area, scores)| {
-
-                    let tests = scores.tests;
-                    let subtests = scores.subtests;
-
-                    let color = COLORS.get(subtests.pass_fraction() as f32);
-
-                    rsx!(
-                        tr {
-                            background_color: format!("rgb({},{},{})", color[0], color[1], color[2]),
-                            td {
-                                background_color: "white",
-                                {area.clone()}
-                            }
-                            td {
-                                text_align: "right",
-                                {format!("{:.2}%", (scores.interop_score() as f32 / 1000.0) * 100.0)}
-                            }
-                            td {
-                                text_align: "right",
-                                {format!("({}/{})", tests.pass, tests.total)}
-                            }
-                            td {
-                                text_align: "right",
-                                {format!("{:.2}%", tests.pass_fraction() * 100.0)}
-                            }
-                            td {
-                                text_align: "right",
-                                {format!("({}/{})", subtests.pass, subtests.total)}
-                            }
-                            td {
-                                text_align: "right",
-                                {format!("{:.2}%", subtests.pass_fraction() * 100.0)}
-                            }
-                        }
-                    )
+                    area_score_row(area.clone(), Some(format!("/status/wpt/{area}")), *scores)
                 })
+            }
+        }
+    )
+}
+
+#[component]
+pub fn WptBreadcrumb(area: String) -> Element {
+    let mut prefix = String::new();
+    let segments: Vec<(String, String)> = area
+        .split('/')
+        .map(|segment| {
+            if !prefix.is_empty() {
+                prefix.push('/');
+            }
+            prefix.push_str(segment);
+            (segment.to_string(), format!("/status/wpt/{prefix}"))
+        })
+        .collect();
+
+    rsx!(
+        p {
+            a { href: "/status/wpt", "wpt" }
+            for (segment, href) in segments {
+                " / "
+                a { href, {segment} }
+            }
+        }
+    )
+}
+
+#[component]
+pub fn WptAreaResults(report: ArcWptReport, scores: ArcWptScores, area: String) -> Element {
+    let child_prefix = format!("{area}/");
+    let child_areas: Vec<(&String, &AreaScores)> = scores
+        .iter()
+        .filter(|(key, _)| {
+            key.starts_with(&child_prefix) && !key[child_prefix.len()..].contains('/')
+        })
+        .collect();
+
+    let tests: Vec<&TestResult> = report
+        .results
+        .iter()
+        .filter(|test| {
+            test.test
+                .rsplit_once('/')
+                .map(|(dir, _)| dir == area)
+                .unwrap_or(false)
+        })
+        .collect();
+
+    let area_scores = scores.get(&area).copied().unwrap_or_default();
+
+    rsx!(
+        table {
+            width: "100%",
+            tr {
+                th { width: "min-content", "Area",  }
+                th { "Interop Score", }
+                th { "Tests", }
+                th { "Test %", }
+                th { "Subtests" }
+                th { "Subtest %" }
+            }
+            {area_score_row("Total".to_string(), None, area_scores)}
+            for (key, scores) in child_areas {
+                {area_score_row(
+                    key[child_prefix.len()..].to_string(),
+                    Some(format!("/status/wpt/{key}")),
+                    *scores,
+                )}
+            }
+        }
+        if !tests.is_empty() {
+            table {
+                width: "100%",
+                margin_top: "24px",
+                tr {
+                    th { width: "min-content", "Test",  }
+                    th { "Subtests" }
+                    th { "Subtest %" }
+                    th { "Status", }
+                }
+                for test in tests {
+                    TestScoreRow { name: test.test.clone(), status: test.status, counts: test.subtest_counts() }
+                }
+            }
+        }
+    )
+}
+
+fn area_score_row(label: String, href: Option<String>, scores: AreaScores) -> Element {
+    let tests = scores.tests;
+    let subtests = scores.subtests;
+
+    let color = COLORS.get(subtests.pass_fraction() as f32);
+
+    rsx!(
+        tr {
+            background_color: format!("rgb({},{},{})", color[0], color[1], color[2]),
+            td {
+                background_color: "white",
+                if let Some(href) = href {
+                    a { href, {label} }
+                } else {
+                    {label}
+                }
+            }
+            td {
+                text_align: "right",
+                {format!("{:.2}%", (scores.interop_score() as f32 / 1000.0) * 100.0)}
+            }
+            td {
+                text_align: "right",
+                {format!("({}/{})", tests.pass, tests.total)}
+            }
+            td {
+                text_align: "right",
+                {format!("{:.2}%", tests.pass_fraction() * 100.0)}
+            }
+            td {
+                text_align: "right",
+                {format!("({}/{})", subtests.pass, subtests.total)}
+            }
+            td {
+                text_align: "right",
+                {format!("{:.2}%", subtests.pass_fraction() * 100.0)}
+            }
+        }
+    )
+}
+
+#[component]
+fn TestScoreRow(name: String, status: TestStatus, counts: SubtestCounts) -> Element {
+    let color = COLORS.get(counts.pass_fraction() as f32);
+    let file_name = name.rsplit_once('/').map(|(_, file)| file).unwrap_or(&name);
+
+    rsx!(
+        tr {
+            background_color: format!("rgb({},{},{})", color[0], color[1], color[2]),
+            td {
+                background_color: "white",
+                a {
+                    href: format!("https://wpt.live/{name}"),
+                    target: "_blank",
+                    {file_name.to_string()}
+                }
+            }
+            td {
+                text_align: "right",
+                {format!("({}/{})", counts.pass, counts.total)}
+            }
+            td {
+                text_align: "right",
+                {format!("{:.2}%", counts.pass_fraction() * 100.0)}
+            }
+            td {
+                text_align: "right",
+                {format!("{status:?}").to_uppercase()}
             }
         }
     )
