@@ -361,6 +361,21 @@ pub fn WptTestPage(
                 div {
                     class: "wpt-test-page__header",
                     WptBreadcrumb { area: name.trim_start_matches('/').to_string() }
+                    p {
+                        a {
+                            href: format!("https://wpt.live/{name}"),
+                            target: "_blank",
+                            "Open test on wpt.live"
+                        }
+                        if let Some(ref_link) = &first_ref {
+                            " | "
+                            a {
+                                href: format!("https://wpt.live{}", ref_link.href),
+                                target: "_blank",
+                                "Open ref on wpt.live"
+                            }
+                        }
+                    }
                     TestPageTabs {
                         name: name.clone(),
                         current_tab: tab,
@@ -524,14 +539,10 @@ fn subtest_status_color(status: SubtestStatus) -> &'static str {
 
 #[component]
 fn TestIframe(path: String) -> Element {
-    let url = format!("https://wpt.live{path}");
     rsx! {
-        p {
-            a { href: url.clone(), target: "_blank", "Open on wpt.live" }
-        }
         iframe {
             class: "wpt-test-iframe",
-            src: url,
+            src: format!("https://wpt.live{path}"),
         }
     }
 }
