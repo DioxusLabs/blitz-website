@@ -392,11 +392,20 @@ table td {
   display: flex;
   flex-direction: column;
   height: 100vh;
-  padding: 12px 24px;
+}
+
+.wpt-test-page__breadcrumbs {
+  background-color: #f0f0f0;
+  border-bottom: 1px solid #CCC;
+  padding: 8px 24px;
+}
+.wpt-test-page__breadcrumbs p {
+  margin: 0;
 }
 
 .wpt-test-page__header {
   flex-shrink: 0;
+  padding: 12px 24px 0;
 }
 .wpt-test-page__header p {
   margin: 4px 0;

@@ -359,8 +359,11 @@ pub fn WptTestPage(
             div {
                 class: "wpt-test-page",
                 div {
-                    class: "wpt-test-page__header",
+                    class: "wpt-test-page__breadcrumbs",
                     WptBreadcrumb { area: name.trim_start_matches('/').to_string() }
+                }
+                div {
+                    class: "wpt-test-page__header",
                     p {
                         a {
                             href: format!("https://wpt.live/{name}"),
