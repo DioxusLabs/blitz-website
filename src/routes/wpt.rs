@@ -361,12 +361,12 @@ pub fn WptTestPage(
                 div {
                     class: "wpt-test-page__header",
                     WptBreadcrumb { area: name.trim_start_matches('/').to_string() }
-                    CommitInfoDisplay { commit_info, label: "Data from commit:" }
                     TestPageTabs { name: name.clone(), current_tab: tab, ref_link: first_ref.clone() }
                 }
                 div {
                     class: "wpt-test-page__content",
                     TabPanel { tab: TestPageTab::Summary, current_tab: tab,
+                        CommitInfoDisplay { commit_info, label: "Data from commit:" }
                         TestSummary { report: report.clone(), test_index }
                     }
                     TabPanel { tab: TestPageTab::Test, current_tab: tab,
