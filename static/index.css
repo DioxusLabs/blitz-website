@@ -419,7 +419,7 @@ table td {
   flex-grow: 1;
   min-height: 0;
   overflow-y: auto;
-  padding-top: 16px;
+  padding: 16px 24px;
 }
 
 .wpt-tab-panel {
