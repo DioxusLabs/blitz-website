@@ -265,7 +265,11 @@ fn TestScoreRow(name: String, status: TestStatus, counts: SubtestCounts) -> Elem
             background_color: format!("rgb({},{},{})", color[0], color[1], color[2]),
             td {
                 background_color: "white",
-                {file_name.to_string()}
+                a {
+                    href: format!("https://wpt.live/{name}"),
+                    target: "_blank",
+                    {file_name.to_string()}
+                }
             }
             td {
                 text_align: "right",
