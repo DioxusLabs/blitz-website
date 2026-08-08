@@ -366,6 +366,15 @@ pub fn WptTestPage(
                 div {
                     class: "wpt-test-page__header",
                     p {
+                        b { "Status: " }
+                        {format!("{:?}", test.status).to_uppercase()}
+                        " | "
+                        b { "Duration: " }
+                        {format!("{}ms", test.duration)}
+                        " | "
+                        b { "Subtests: " }
+                        {format!("{}/{}", counts.pass, counts.total)}
+                        " | "
                         a {
                             href: format!("https://wpt.live/{name}"),
                             target: "_blank",
@@ -385,16 +394,6 @@ pub fn WptTestPage(
                             target: "_blank",
                             "wpt.fyi"
                         }
-                    }
-                    p {
-                        b { "Status: " }
-                        {format!("{:?}", test.status).to_uppercase()}
-                        " | "
-                        b { "Duration: " }
-                        {format!("{}ms", test.duration)}
-                        " | "
-                        b { "Subtests: " }
-                        {format!("{}/{}", counts.pass, counts.total)}
                     }
                     TestPageTabs {
                         name: name.clone(),
