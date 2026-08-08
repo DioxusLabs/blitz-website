@@ -405,20 +405,24 @@ pub fn WptTestPage(
                                 label {
                                     input {
                                         r#type: "checkbox",
-                                        id: "disable-js-toggle",
+                                        id: "enable-js-toggle",
                                     }
-                                    " Disable JavaScript in test iframe"
+                                    " Enable JavaScript in test iframe"
                                 }
                             }
                         }
-                        TestIframe { path: format!("/{name}"), fixed_size: first_ref.is_some() }
+                        TestIframe {
+                            path: format!("/{name}"),
+                            fixed_size: first_ref.is_some(),
+                            sandboxed: first_ref.is_none(),
+                        }
                     }
                     TabPanel { tab: TestPageTab::TestSource, current_tab: tab,
                         SourceView { path: source_path.clone(), source: source.clone() }
                     }
                     if let Some(ref_link) = &first_ref {
                         TabPanel { tab: TestPageTab::Ref, current_tab: tab,
-                            TestIframe { path: ref_link.href.clone(), fixed_size: true }
+                            TestIframe { path: ref_link.href.clone(), fixed_size: true, sandboxed: false }
                         }
                         TabPanel { tab: TestPageTab::RefSource, current_tab: tab,
                             if let Some(ref_source) = &ref_source {
@@ -436,8 +440,9 @@ pub fn WptTestPage(
 /// Client-side tab switching. Panels for all tabs are rendered up front
 /// (so iframes keep their state when switching); this toggles which panel is
 /// visible and updates the URL. The `?tab=` links still work without JS.
-/// Also wires up the "disable JavaScript" toggle, which reloads the test
-/// iframe with a `sandbox` attribute that omits `allow-scripts`.
+/// Also wires up the "enable JavaScript" toggle: the test iframe is sandboxed
+/// without `allow-scripts` by default, and the toggle lifts the sandbox and
+/// reloads the iframe.
 const TAB_SCRIPT: &str = r#"
 document.querySelectorAll('.tab-container a[data-tab]').forEach(function (link) {
     link.addEventListener('click', function (event) {
@@ -453,15 +458,15 @@ document.querySelectorAll('.tab-container a[data-tab]').forEach(function (link) 
     });
 });
 
-var jsToggle = document.getElementById('disable-js-toggle');
+var jsToggle = document.getElementById('enable-js-toggle');
 if (jsToggle) {
     jsToggle.addEventListener('change', function () {
         var iframe = document.querySelector('.wpt-tab-panel[data-tab=\"test\"] iframe');
         if (!iframe) return;
         if (jsToggle.checked) {
-            iframe.setAttribute('sandbox', 'allow-same-origin');
-        } else {
             iframe.removeAttribute('sandbox');
+        } else {
+            iframe.setAttribute('sandbox', 'allow-same-origin');
         }
         iframe.src = iframe.src;
     });
@@ -575,11 +580,12 @@ fn subtest_status_color(status: SubtestStatus) -> &'static str {
 }
 
 #[component]
-fn TestIframe(path: String, fixed_size: bool) -> Element {
+fn TestIframe(path: String, fixed_size: bool, sandboxed: bool) -> Element {
     rsx! {
         iframe {
             class: if fixed_size { "wpt-test-iframe wpt-test-iframe--fixed" } else { "wpt-test-iframe" },
             src: format!("https://wpt.live{path}"),
+            sandbox: if sandboxed { "allow-same-origin" },
         }
     }
 }
