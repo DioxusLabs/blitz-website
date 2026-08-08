@@ -88,7 +88,7 @@
         "status": "Yes",
         "notes": "A proprietary API to render a raw WGPU texture is supported"
       },
-      { "name": "<iframe>", "status": "No" },
+      { "name": "<iframe>", "status": "Yes" },
       { "name": "<fencedframe>", "status": "No" },
       { "name": "<video>", "status": "No" },
       { "name": "<audio>", "status": "No" },
