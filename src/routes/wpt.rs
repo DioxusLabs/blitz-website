@@ -312,11 +312,11 @@ pub enum TestPageTab {
 impl TestPageTab {
     pub fn from_query(tab: Option<&str>) -> Self {
         match tab {
-            Some("test") => Self::Test,
+            Some("summary") => Self::Summary,
             Some("test-source") => Self::TestSource,
             Some("ref") => Self::Ref,
             Some("ref-source") => Self::RefSource,
-            _ => Self::Summary,
+            _ => Self::Test,
         }
     }
 
@@ -353,6 +353,7 @@ pub fn WptTestPage(
     // The path used to fetch the source (test name without any query-string variant)
     let source_path = format!("/{}", name.split('?').next().unwrap_or(&name));
     let first_ref = refs.first().cloned();
+    let counts = test.subtest_counts();
 
     rsx! {
         BarePage { title: format!("WPT: {file_name}").into(),
@@ -385,11 +386,21 @@ pub fn WptTestPage(
                             "wpt.fyi"
                         }
                     }
+                    p {
+                        b { "Status: " }
+                        {format!("{:?}", test.status).to_uppercase()}
+                        " | "
+                        b { "Duration: " }
+                        {format!("{}ms", test.duration)}
+                        " | "
+                        b { "Subtests: " }
+                        {format!("{}/{}", counts.pass, counts.total)}
+                    }
                     TestPageTabs {
                         name: name.clone(),
                         current_tab: tab,
                         ref_link: first_ref.clone(),
-                        counts: test.subtest_counts(),
+                        counts,
                     }
                 }
                 div {
@@ -494,10 +505,6 @@ fn TestPageTabs(
     let base = format!("/status/wpt/{}", encode_test_path(&name));
 
     let mut tabs: Vec<(TestPageTab, String)> = vec![
-        (
-            TestPageTab::Summary,
-            format!("Results ({}/{})", counts.pass, counts.total),
-        ),
         (TestPageTab::Test, "Test".to_string()),
         (TestPageTab::TestSource, "Test Source".to_string()),
     ];
@@ -510,6 +517,10 @@ fn TestPageTabs(
         tabs.push((TestPageTab::Ref, label.to_string()));
         tabs.push((TestPageTab::RefSource, "Ref Source".to_string()));
     }
+    tabs.push((
+        TestPageTab::Summary,
+        format!("Results ({}/{})", counts.pass, counts.total),
+    ));
 
     rsx! {
         div {
@@ -585,7 +596,7 @@ fn TestIframe(path: String, fixed_size: bool, sandboxed: bool) -> Element {
         iframe {
             class: if fixed_size { "wpt-test-iframe wpt-test-iframe--fixed" } else { "wpt-test-iframe" },
             src: format!("https://wpt.live{path}"),
-            sandbox: if sandboxed { "allow-same-origin" },
+            "sandbox": if sandboxed { "allow-same-origin" },
         }
     }
 }
