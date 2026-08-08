@@ -399,6 +399,18 @@ pub fn WptTestPage(
                         TestSummary { report: report.clone(), test_index }
                     }
                     TabPanel { tab: TestPageTab::Test, current_tab: tab,
+                        if first_ref.is_none() {
+                            p {
+                                class: "wpt-js-toggle",
+                                label {
+                                    input {
+                                        r#type: "checkbox",
+                                        id: "disable-js-toggle",
+                                    }
+                                    " Disable JavaScript in test iframe"
+                                }
+                            }
+                        }
                         TestIframe { path: format!("/{name}"), fixed_size: first_ref.is_some() }
                     }
                     TabPanel { tab: TestPageTab::TestSource, current_tab: tab,
@@ -424,6 +436,8 @@ pub fn WptTestPage(
 /// Client-side tab switching. Panels for all tabs are rendered up front
 /// (so iframes keep their state when switching); this toggles which panel is
 /// visible and updates the URL. The `?tab=` links still work without JS.
+/// Also wires up the "disable JavaScript" toggle, which reloads the test
+/// iframe with a `sandbox` attribute that omits `allow-scripts`.
 const TAB_SCRIPT: &str = r#"
 document.querySelectorAll('.tab-container a[data-tab]').forEach(function (link) {
     link.addEventListener('click', function (event) {
@@ -438,6 +452,20 @@ document.querySelectorAll('.tab-container a[data-tab]').forEach(function (link) 
         history.replaceState(null, '', link.getAttribute('href'));
     });
 });
+
+var jsToggle = document.getElementById('disable-js-toggle');
+if (jsToggle) {
+    jsToggle.addEventListener('change', function () {
+        var iframe = document.querySelector('.wpt-tab-panel[data-tab=\"test\"] iframe');
+        if (!iframe) return;
+        if (jsToggle.checked) {
+            iframe.setAttribute('sandbox', 'allow-same-origin');
+        } else {
+            iframe.removeAttribute('sandbox');
+        }
+        iframe.src = iframe.src;
+    });
+}
 "#;
 
 #[component]
