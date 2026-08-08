@@ -477,12 +477,15 @@ if (jsToggle) {
     jsToggle.addEventListener('change', function () {
         var iframe = document.querySelector('.wpt-tab-panel[data-tab=\"test\"] iframe');
         if (!iframe) return;
+        // Replace the iframe node rather than resetting src, which would
+        // add a browser history entry.
+        var replacement = iframe.cloneNode();
         if (jsToggle.checked) {
-            iframe.removeAttribute('sandbox');
+            replacement.removeAttribute('sandbox');
         } else {
-            iframe.setAttribute('sandbox', 'allow-same-origin');
+            replacement.setAttribute('sandbox', 'allow-same-origin');
         }
-        iframe.src = iframe.src;
+        iframe.replaceWith(replacement);
     });
 }
 "#;
