@@ -518,7 +518,7 @@ fn TestPageTabs(
     }
     tabs.push((
         TestPageTab::Summary,
-        format!("Results ({}/{})", counts.pass, counts.total),
+        format!("Subtests ({}/{})", counts.pass, counts.total),
     ));
 
     rsx! {
