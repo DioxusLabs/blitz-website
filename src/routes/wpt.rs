@@ -399,14 +399,14 @@ pub fn WptTestPage(
                         TestSummary { report: report.clone(), test_index }
                     }
                     TabPanel { tab: TestPageTab::Test, current_tab: tab,
-                        TestIframe { path: format!("/{name}") }
+                        TestIframe { path: format!("/{name}"), fixed_size: first_ref.is_some() }
                     }
                     TabPanel { tab: TestPageTab::TestSource, current_tab: tab,
                         SourceView { path: source_path.clone(), source: source.clone() }
                     }
                     if let Some(ref_link) = &first_ref {
                         TabPanel { tab: TestPageTab::Ref, current_tab: tab,
-                            TestIframe { path: ref_link.href.clone() }
+                            TestIframe { path: ref_link.href.clone(), fixed_size: true }
                         }
                         TabPanel { tab: TestPageTab::RefSource, current_tab: tab,
                             if let Some(ref_source) = &ref_source {
@@ -547,10 +547,10 @@ fn subtest_status_color(status: SubtestStatus) -> &'static str {
 }
 
 #[component]
-fn TestIframe(path: String) -> Element {
+fn TestIframe(path: String, fixed_size: bool) -> Element {
     rsx! {
         iframe {
-            class: "wpt-test-iframe",
+            class: if fixed_size { "wpt-test-iframe wpt-test-iframe--fixed" } else { "wpt-test-iframe" },
             src: format!("https://wpt.live{path}"),
         }
     }

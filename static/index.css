@@ -424,17 +424,22 @@ table td {
 
 .wpt-tab-panel {
   display: none;
+  height: 100%;
 }
 .wpt-tab-panel.wpt-tab-panel--active {
   display: block;
 }
 
 .wpt-test-iframe {
+  width: 100%;
+  height: 100%;
+  border: 1px solid #CCC;
+  background-color: white;
+}
+.wpt-test-iframe.wpt-test-iframe--fixed {
   width: 800px;
   max-width: 100%;
   height: 600px;
-  border: 1px solid #CCC;
-  background-color: white;
 }
 
 .wpt-source pre {
