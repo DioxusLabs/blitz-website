@@ -630,7 +630,10 @@ static THEME: LazyLock<Theme> = LazyLock::new(|| {
 });
 
 fn highlight_source(source: &str, path: &str) -> String {
-    let extension = path.rsplit('.').next().unwrap_or("html");
+    let extension = match path.rsplit('.').next().unwrap_or("html") {
+        "xht" => "xhtml",
+        ext => ext,
+    };
     let syntax = SYNTAX_SET
         .find_syntax_by_extension(extension)
         .unwrap_or_else(|| SYNTAX_SET.find_syntax_plain_text());
