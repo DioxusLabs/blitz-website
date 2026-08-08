@@ -354,6 +354,7 @@ pub fn WptTestPage(
     let source_path = format!("/{}", name.split('?').next().unwrap_or(&name));
     let first_ref = refs.first().cloned();
     let counts = test.subtest_counts();
+    let show_subtests = test.subtests.len() > 1;
 
     rsx! {
         BarePage { title: format!("WPT: {file_name}").into(),
@@ -400,13 +401,16 @@ pub fn WptTestPage(
                         current_tab: tab,
                         ref_link: first_ref.clone(),
                         counts,
+                        show_subtests,
                     }
                 }
                 div {
                     class: "wpt-test-page__content",
-                    TabPanel { tab: TestPageTab::Summary, current_tab: tab,
-                        CommitInfoDisplay { commit_info, label: "Data from commit:" }
-                        TestSummary { report: report.clone(), test_index }
+                    if show_subtests {
+                        TabPanel { tab: TestPageTab::Summary, current_tab: tab,
+                            CommitInfoDisplay { commit_info, label: "Data from commit:" }
+                            TestSummary { report: report.clone(), test_index }
+                        }
                     }
                     TabPanel { tab: TestPageTab::Test, current_tab: tab,
                         if first_ref.is_none() {
@@ -500,6 +504,7 @@ fn TestPageTabs(
     current_tab: TestPageTab,
     ref_link: Option<RefLink>,
     counts: SubtestCounts,
+    show_subtests: bool,
 ) -> Element {
     let base = format!("/status/wpt/{}", encode_test_path(&name));
 
@@ -516,10 +521,12 @@ fn TestPageTabs(
         tabs.push((TestPageTab::Ref, label.to_string()));
         tabs.push((TestPageTab::RefSource, "Ref Source".to_string()));
     }
-    tabs.push((
-        TestPageTab::Summary,
-        format!("Subtests ({}/{})", counts.pass, counts.total),
-    ));
+    if show_subtests {
+        tabs.push((
+            TestPageTab::Summary,
+            format!("Subtests ({}/{})", counts.pass, counts.total),
+        ));
+    }
 
     rsx! {
         div {
