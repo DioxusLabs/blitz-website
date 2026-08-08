@@ -416,18 +416,20 @@ table td {
 }
 
 .wpt-test-page__content {
+  position: relative;
   flex-grow: 1;
   min-height: 0;
-  overflow-y: auto;
-  padding: 16px 24px;
 }
 
 .wpt-tab-panel {
-  display: none;
-  height: 100%;
+  position: absolute;
+  inset: 0;
+  visibility: hidden;
+  overflow-y: auto;
+  padding: 16px 24px;
 }
 .wpt-tab-panel.wpt-tab-panel--active {
-  display: block;
+  visibility: visible;
 }
 
 .wpt-test-iframe {

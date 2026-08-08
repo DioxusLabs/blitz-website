@@ -48,18 +48,22 @@
 }
 
 .wpt-test-page__content {
+  position: relative;
   flex-grow: 1;
   min-height: 0;
-  overflow-y: auto;
-  padding: 16px 24px;
 }
 
+// Inactive panels stay rendered (hidden with visibility rather than
+// display:none) so that iframes keep their state and scroll position.
 .wpt-tab-panel {
-  display: none;
-  height: 100%;
+  position: absolute;
+  inset: 0;
+  visibility: hidden;
+  overflow-y: auto;
+  padding: 16px 24px;
 
   &.wpt-tab-panel--active {
-    display: block;
+    visibility: visible;
   }
 }
 
