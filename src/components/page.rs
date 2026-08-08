@@ -6,14 +6,7 @@ use fxhash::hash32;
 use super::{TableOfContents, TocSection};
 
 #[component]
-pub fn Page(
-    title: Cow<'static, str>,
-    head: Option<Element>,
-    footer: Option<Element>,
-    children: Element,
-    #[props(default)] transparent_header: bool,
-    #[props(default)] noframe: bool,
-) -> Element {
+fn PageHead(title: Cow<'static, str>, head: Option<Element>) -> Element {
     // Register function to get hash of CSS file. Hash doesn't need to be secure as it is
     // purely to prevent the old version of the file being cached when the file it updated
     let cwd = current_dir().unwrap();
@@ -26,24 +19,51 @@ pub fn Page(
     let index_css_hash = hash32(&index_css_contents);
 
     rsx! {
-        div { lang: "en",
-            head {
-                Fragment {
-                    meta { charset: "UTF-8" }
-                    meta {
-                        name: "viewport",
-                        content: "width=device-width, initial-scale=1.0",
-                    }
-                    title { "Blitz - {title}" }
-                    link { href: "/static/normalize.css", rel: "stylesheet" }
-                    link {
-                        rel: "stylesheet",
-                        href: "/static/index.css?{index_css_hash}",
-                    }
-                    link { rel: "icon", href: "/static/blitz-logo.svg" }
-                    {head}
+        head {
+            Fragment {
+                meta { charset: "UTF-8" }
+                meta {
+                    name: "viewport",
+                    content: "width=device-width, initial-scale=1.0",
                 }
+                title { "Blitz - {title}" }
+                link { href: "/static/normalize.css", rel: "stylesheet" }
+                link {
+                    rel: "stylesheet",
+                    href: "/static/index.css?{index_css_hash}",
+                }
+                link { rel: "icon", href: "/static/blitz-logo.svg" }
+                {head}
             }
+        }
+    }
+}
+
+/// A page without the regular site frame (header, download banner, main container).
+#[component]
+pub fn BarePage(title: Cow<'static, str>, head: Option<Element>, children: Element) -> Element {
+    rsx! {
+        div { lang: "en",
+            PageHead { title, head }
+            body {
+                {children}
+            }
+        }
+    }
+}
+
+#[component]
+pub fn Page(
+    title: Cow<'static, str>,
+    head: Option<Element>,
+    footer: Option<Element>,
+    children: Element,
+    #[props(default)] transparent_header: bool,
+    #[props(default)] noframe: bool,
+) -> Element {
+    rsx! {
+        div { lang: "en",
+            PageHead { title, head }
             body {
                 Fragment {
                     div {

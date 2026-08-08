@@ -387,3 +387,76 @@ table td {
 .tab.tab--selected, .tab:hover {
   color: inherit;
 }
+
+.wpt-test-page {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+.wpt-test-page__breadcrumbs {
+  background-color: #f0f0f0;
+  border-bottom: 1px solid #CCC;
+  padding: 8px 24px;
+}
+.wpt-test-page__breadcrumbs p {
+  margin: 0;
+}
+
+.wpt-test-page__header {
+  flex-shrink: 0;
+  padding: 12px 24px 0;
+}
+.wpt-test-page__header p {
+  margin: 4px 0;
+}
+.wpt-test-page__header .tab-container {
+  margin-top: 12px;
+  margin-bottom: 0;
+}
+
+.wpt-test-page__content {
+  position: relative;
+  flex-grow: 1;
+  min-height: 0;
+}
+
+.wpt-tab-panel {
+  position: absolute;
+  inset: 0;
+  visibility: hidden;
+  overflow-y: auto;
+  padding: 0 24px 16px;
+  display: flex;
+  flex-direction: column;
+}
+.wpt-tab-panel > * {
+  flex-shrink: 0;
+}
+.wpt-tab-panel.wpt-tab-panel--active {
+  visibility: visible;
+}
+
+.wpt-test-iframe {
+  width: 100%;
+  flex-grow: 1;
+  flex-shrink: 1;
+  min-height: 0;
+  border: 1px solid #CCC;
+  background-color: white;
+}
+.wpt-test-iframe.wpt-test-iframe--fixed {
+  width: 800px;
+  max-width: 100%;
+  height: 600px;
+  flex-grow: 0;
+}
+
+.wpt-source pre {
+  padding: 12px;
+  border: 1px solid #CCC;
+  border-radius: 4px;
+  overflow-x: auto;
+  font-size: 13px;
+  line-height: 1.4;
+}

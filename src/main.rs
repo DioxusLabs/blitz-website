@@ -21,7 +21,7 @@ use downloads::{load_downloads, DOWNLOAD_CACHE};
 use routes::{
     AboutPage, ArcDownloadLinks, CssSupportPage, DownloadsPage, DownloadsPageProps,
     ElementSupportPage, EventSupportPage, GettingStartedPage, HomePage, NLNetInstructionsPage,
-    WptResultsPage, WptResultsPageProps,
+    TestPageTab, WptResultsPage, WptResultsPageProps, WptTestPage, WptTestPageProps,
 };
 use serde::Deserialize;
 use std::{
@@ -38,6 +38,12 @@ mod downloads;
 mod github;
 mod routes;
 mod wpt;
+mod wpt_source;
+
+#[derive(Deserialize)]
+struct WptTestPageQuery {
+    tab: Option<String>,
+}
 
 #[derive(Deserialize)]
 struct DownloadLinkKey {
@@ -125,23 +131,58 @@ async fn main() {
         )
         .route(
             "/status/wpt/{*area}",
-            get(async |Path(area): Path<String>| {
-                let area = area.trim_matches('/').to_string();
-                let entry = fresh_wpt_cache_entry().await;
+            get(
+                async |Path(area): Path<String>, Query(query): Query<WptTestPageQuery>| {
+                    let area = area.trim_matches('/').to_string();
+                    let entry = fresh_wpt_cache_entry().await;
 
-                if !entry.scores.contains_key(&area) {
-                    return Err((StatusCode::NOT_FOUND, format!("Unknown WPT area: {area}")));
-                }
+                    if entry.scores.contains_key(&area) {
+                        let props = WptResultsPageProps {
+                            report: entry.report.clone(),
+                            scores: entry.scores.clone(),
+                            commit_info: entry.commit_info.clone(),
+                            area: Some(area),
+                        };
 
-                let props = WptResultsPageProps {
-                    report: entry.report.clone(),
-                    scores: entry.scores.clone(),
-                    commit_info: entry.commit_info.clone(),
-                    area: Some(area),
-                };
+                        return Ok(dx_route_with_props(WptResultsPage, props).await);
+                    }
 
-                Ok(dx_route_with_props(WptResultsPage, props).await)
-            }),
+                    if let Some(&test_index) = entry.test_index.get(&area) {
+                        let tab = TestPageTab::from_query(query.tab.as_deref());
+                        let revision = entry.report.run_info.revision.clone();
+
+                        // Fetch the test source (needed to detect ref tests even when
+                        // the source itself is not being displayed)
+                        let source_path = format!("/{}", area.split('?').next().unwrap());
+                        let source = wpt_source::fetch_test_source(&revision, &source_path).await;
+                        let refs = source
+                            .as_deref()
+                            .map(|source| wpt_source::parse_ref_links(source, &source_path))
+                            .unwrap_or_default();
+
+                        let ref_source = if let Some(ref_link) = refs.first() {
+                            let ref_path = ref_link.href.split('?').next().unwrap();
+                            Some(wpt_source::fetch_test_source(&revision, ref_path).await)
+                        } else {
+                            None
+                        };
+
+                        let props = WptTestPageProps {
+                            report: entry.report.clone(),
+                            commit_info: entry.commit_info.clone(),
+                            test_index,
+                            tab,
+                            source,
+                            refs,
+                            ref_source,
+                        };
+
+                        return Ok(dx_route_with_props(WptTestPage, props).await);
+                    }
+
+                    Err((StatusCode::NOT_FOUND, format!("Unknown WPT area: {area}")))
+                },
+            ),
         )
         .route(
             "/downloads",
@@ -289,7 +330,7 @@ async fn dx_route(render_fn: fn() -> Element) -> impl IntoResponse {
 async fn dx_route_with_props<P: Clone + 'static, M: 'static>(
     render_fn: impl ComponentFunction<P, M>,
     props: P,
-) -> impl IntoResponse {
+) -> (StatusCode, Html<String>) {
     let (html, duration) = render_component(render_fn, props);
 
     let duration_millis = duration.as_micros() as f64 / 1000.0;
