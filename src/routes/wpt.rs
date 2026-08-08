@@ -539,21 +539,8 @@ fn TestPageTabs(
 #[component]
 fn TestSummary(report: ArcWptReport, test_index: usize) -> Element {
     let test = &report.results[test_index];
-    let counts = test.subtest_counts();
 
     rsx! {
-        table {
-            tr {
-                th { "Status" }
-                th { "Duration" }
-                th { "Subtests Passed" }
-            }
-            tr {
-                td { {format!("{:?}", test.status).to_uppercase()} }
-                td { {format!("{}ms", test.duration)} }
-                td { {format!("{}/{}", counts.pass, counts.total)} }
-            }
-        }
         if let Some(message) = &test.message {
             p { b { "Message: " } {message.clone()} }
         }
