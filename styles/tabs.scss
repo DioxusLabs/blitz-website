@@ -61,6 +61,10 @@
   visibility: hidden;
   overflow-y: auto;
   padding: 0 24px 16px;
+  display: flex;
+  flex-direction: column;
+
+  > * { flex-shrink: 0; }
 
   &.wpt-tab-panel--active {
     visibility: visible;
@@ -69,7 +73,9 @@
 
 .wpt-test-iframe {
   width: 100%;
-  height: 100%;
+  flex-grow: 1;
+  flex-shrink: 1;
+  min-height: 0;
   border: 1px solid #CCC;
   background-color: white;
 
@@ -77,6 +83,7 @@
     width: 800px;
     max-width: 100%;
     height: 600px;
+    flex-grow: 0;
   }
 }
 
