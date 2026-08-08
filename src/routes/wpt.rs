@@ -508,10 +508,7 @@ fn TestPageTabs(
 ) -> Element {
     let base = format!("/status/wpt/{}", encode_test_path(&name));
 
-    let mut tabs: Vec<(TestPageTab, String)> = vec![
-        (TestPageTab::Test, "Test".to_string()),
-        (TestPageTab::TestSource, "Test Source".to_string()),
-    ];
+    let mut tabs: Vec<(TestPageTab, String)> = vec![(TestPageTab::Test, "Test".to_string())];
     if let Some(ref_link) = &ref_link {
         let label = if ref_link.rel == "mismatch" {
             "Ref (mismatch)"
@@ -519,6 +516,9 @@ fn TestPageTabs(
             "Ref"
         };
         tabs.push((TestPageTab::Ref, label.to_string()));
+    }
+    tabs.push((TestPageTab::TestSource, "Test Source".to_string()));
+    if ref_link.is_some() {
         tabs.push((TestPageTab::RefSource, "Ref Source".to_string()));
     }
     if show_subtests {
