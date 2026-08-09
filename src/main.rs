@@ -21,7 +21,7 @@ use downloads::{load_downloads, DOWNLOAD_CACHE};
 use routes::{
     AboutPage, ArcDownloadLinks, CssSupportPage, DownloadsPage, DownloadsPageProps,
     ElementSupportPage, EventSupportPage, GettingStartedPage, HomePage, NLNetInstructionsPage,
-    WptResultsPage, WptResultsPageProps,
+    WptHistoryPage, WptHistoryPageProps, WptResultsPage, WptResultsPageProps,
 };
 use serde::Deserialize;
 use std::{
@@ -32,12 +32,14 @@ use std::{
 use tokio::net::TcpListener;
 use tower_http::{services::ServeDir, trace::TraceLayer};
 use wpt::{load_wpt_results, WPT_REPORT_CACHE};
+use wpt_history::{load_wpt_history, WPT_HISTORY_CACHE};
 
 mod components;
 mod downloads;
 mod github;
 mod routes;
 mod wpt;
+mod wpt_history;
 
 #[derive(Deserialize)]
 struct DownloadLinkKey {
@@ -146,6 +148,41 @@ async fn main() {
                 };
 
                 dx_route_with_props(WptResultsPage, props).await
+            }),
+        )
+        .route(
+            "/status/wpt/history",
+            get(async || {
+                let now = Instant::now();
+                let cache_entry = WPT_HISTORY_CACHE.get_cloned();
+                let etag = cache_entry.as_ref().and_then(|entry| entry.etag.clone());
+
+                // Cache with 30s validity
+                let mut await_revalidation = true;
+                if let Some(entry) = &cache_entry {
+                    let cache_age = now.duration_since(entry.cached_at);
+                    if cache_age <= Duration::from_secs(30) {
+                        let props = WptHistoryPageProps {
+                            summary: entry.summary.clone(),
+                        };
+                        return dx_route_with_props(WptHistoryPage, props).await;
+                    } else if cache_age <= Duration::from_mins(30) {
+                        await_revalidation = false
+                    }
+                }
+
+                let handle = tokio::spawn(async move { load_wpt_history(etag).await });
+
+                if await_revalidation {
+                    handle.await.unwrap();
+                }
+
+                let entry = WPT_HISTORY_CACHE.get_cloned().unwrap();
+                let props = WptHistoryPageProps {
+                    summary: entry.summary.clone(),
+                };
+
+                dx_route_with_props(WptHistoryPage, props).await
             }),
         )
         .route(
