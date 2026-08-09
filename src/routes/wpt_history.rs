@@ -354,15 +354,31 @@ const TOOLTIP_JS: &str = r##"
         guide.style.display = "none";
     }
 
+    // Only show the series whose line is within this vertical distance
+    // (in viewBox units) of the cursor
+    var Y_THRESHOLD = 12;
+
     svg.addEventListener("mousemove", function (ev) {
         var rect = svg.getBoundingClientRect();
         var scale = data.width / rect.width;
         var vx = (ev.clientX - rect.left) * scale;
-        var px = data.plot[0], pw = data.plot[2];
+        var vy = (ev.clientY - rect.top) * scale;
+        var px = data.plot[0], py = data.plot[1], pw = data.plot[2], ph = data.plot[3];
         if (vx < px || vx > px + pw) { hide(); return; }
 
         var xRange = data.xMax - data.xMin;
         var run = data.runs[nearest(data.xMin + ((vx - px) / pw) * xRange)];
+
+        // Pick the single series whose line is vertically nearest the cursor
+        var best = -1, bestDist = Y_THRESHOLD;
+        for (var i = 0; i < data.series.length; i++) {
+            if (run.v[i] == null) continue;
+            var sy = py + (1 - (run.v[i][0] / run.v[i][1])) * ph;
+            var dist = Math.abs(sy - vy);
+            if (dist < bestDist) { best = i; bestDist = dist; }
+        }
+        if (best < 0) { hide(); return; }
+
         var runVx = px + ((run.x - data.xMin) / xRange) * pw;
         guide.setAttribute("x1", runVx);
         guide.setAttribute("x2", runVx);
@@ -373,13 +389,10 @@ const TOOLTIP_JS: &str = r##"
             html += "<div style='margin-bottom:4px;white-space:nowrap;overflow:hidden;" +
                 "text-overflow:ellipsis'>" + esc(run.msg) + "</div>";
         }
-        for (var i = 0; i < data.series.length; i++) {
-            if (run.v[i] == null) continue;
-            var pass = run.v[i][0], total = run.v[i][1];
-            html += "<div><span style='color:" + data.series[i].color + "'>\u25CF</span> " +
-                esc(data.series[i].name) + ": " + (100 * pass / total).toFixed(1) + "% (" +
-                pass.toLocaleString() + "/" + total.toLocaleString() + ")</div>";
-        }
+        var pass = run.v[best][0], total = run.v[best][1];
+        html += "<div><span style='color:" + data.series[best].color + "'>\u25CF</span> " +
+            esc(data.series[best].name) + ": " + (100 * pass / total).toFixed(1) + "% (" +
+            pass.toLocaleString() + "/" + total.toLocaleString() + ")</div>";
         tip.innerHTML = html;
         tip.style.display = "block";
 
