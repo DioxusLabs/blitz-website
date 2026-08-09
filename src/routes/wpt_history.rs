@@ -75,19 +75,6 @@ struct Series {
     points: Vec<(f64, f64)>,
 }
 
-/// Runs before this date are excluded from the charts: WPT runs for the
-/// entire prior commit history of Blitz were bulk-executed on 2026-04-13/14,
-/// so those runs' dates don't reflect real progress over time and include a
-/// number of broken runs.
-const CHART_START_DATE: &str = "2026-04-15";
-
-fn chart_runs(summary: &ScoreSummaryReport) -> impl Iterator<Item = &RunSummary> {
-    summary
-        .runs
-        .iter()
-        .filter(|run| run.date.as_str() >= CHART_START_DATE)
-}
-
 fn subtest_pass_percent(run: &RunSummary, area_idx: usize) -> Option<f64> {
     let scores = run.scores.get(area_idx)?;
     if scores.total_subtests == 0 {
@@ -102,7 +89,9 @@ fn area_series(
     color: &'static str,
 ) -> Option<Series> {
     let area_idx = summary.focus_areas.iter().position(|a| a == area)?;
-    let points: Vec<(f64, f64)> = chart_runs(summary)
+    let points: Vec<(f64, f64)> = summary
+        .runs
+        .iter()
         .filter_map(|run| Some((parse_date(&run.date)?, subtest_pass_percent(run, area_idx)?)))
         .collect();
     if points.is_empty() {
@@ -317,11 +306,13 @@ pub fn WptHistorySparklines(summary: ArcWptSummary) -> Element {
     const HEIGHT: f64 = 60.0;
     const PLOT: (f64, f64, f64, f64) = (0.0, 2.0, WIDTH, HEIGHT - 4.0);
 
-    let x_min = chart_runs(&summary)
-        .next()
+    let x_min = summary
+        .runs
+        .first()
         .and_then(|run| parse_date(&run.date))
         .unwrap_or(0.0);
-    let x_max = chart_runs(&summary)
+    let x_max = summary
+        .runs
         .last()
         .and_then(|run| parse_date(&run.date))
         .unwrap_or(1.0);
@@ -334,7 +325,9 @@ pub fn WptHistorySparklines(summary: ArcWptSummary) -> Element {
 
             for (area_idx, area) in summary.focus_areas.iter().enumerate() {
                 {
-                    let points: Vec<(f64, f64)> = chart_runs(&summary)
+                    let points: Vec<(f64, f64)> = summary
+                        .runs
+                        .iter()
                         .filter_map(|run| {
                             Some((parse_date(&run.date)?, subtest_pass_percent(run, area_idx)?))
                         })
