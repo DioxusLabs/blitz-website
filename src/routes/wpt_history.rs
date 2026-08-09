@@ -375,8 +375,10 @@ const TOOLTIP_JS: &str = r##"
         }
         for (var i = 0; i < data.series.length; i++) {
             if (run.v[i] == null) continue;
+            var pass = run.v[i][0], total = run.v[i][1];
             html += "<div><span style='color:" + data.series[i].color + "'>\u25CF</span> " +
-                esc(data.series[i].name) + ": " + run.v[i].toFixed(1) + "%</div>";
+                esc(data.series[i].name) + ": " + (100 * pass / total).toFixed(1) + "% (" +
+                pass.toLocaleString() + "/" + total.toLocaleString() + ")</div>";
         }
         tip.innerHTML = html;
         tip.style.display = "block";
@@ -441,8 +443,14 @@ pub fn WptHistoryChart(
             let values: Vec<serde_json::Value> = area_indices
                 .iter()
                 .map(|idx| {
-                    idx.and_then(|idx| subtest_pass_percent(run, idx))
-                        .map(|pct| serde_json::json!((pct * 10.0).round() / 10.0))
+                    idx.and_then(|idx| run.scores.get(idx))
+                        .filter(|scores| scores.total_subtests != 0)
+                        .map(|scores| {
+                            serde_json::json!([
+                                scores.total_subtests_passed,
+                                scores.total_subtests
+                            ])
+                        })
                         .unwrap_or(serde_json::Value::Null)
                 })
                 .collect();
