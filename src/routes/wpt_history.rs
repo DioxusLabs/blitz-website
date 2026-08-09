@@ -85,6 +85,7 @@ const MONTH_NAMES: [&str; 12] = [
 
 #[derive(Copy, Clone, PartialEq, Debug, Default)]
 pub enum ChartRange {
+    Month1,
     Months3,
     Months6,
     Year1,
@@ -93,7 +94,8 @@ pub enum ChartRange {
 }
 
 impl ChartRange {
-    pub const ALL: [ChartRange; 4] = [
+    pub const ALL: [ChartRange; 5] = [
+        ChartRange::Month1,
         ChartRange::Months3,
         ChartRange::Months6,
         ChartRange::Year1,
@@ -102,6 +104,7 @@ impl ChartRange {
 
     pub fn from_query(value: Option<&str>) -> Self {
         match value {
+            Some("1m") => ChartRange::Month1,
             Some("3m") => ChartRange::Months3,
             Some("6m") => ChartRange::Months6,
             Some("1y") => ChartRange::Year1,
@@ -111,6 +114,7 @@ impl ChartRange {
 
     fn query_value(self) -> &'static str {
         match self {
+            ChartRange::Month1 => "1m",
             ChartRange::Months3 => "3m",
             ChartRange::Months6 => "6m",
             ChartRange::Year1 => "1y",
@@ -120,6 +124,7 @@ impl ChartRange {
 
     fn label(self) -> &'static str {
         match self {
+            ChartRange::Month1 => "1 month",
             ChartRange::Months3 => "3 months",
             ChartRange::Months6 => "6 months",
             ChartRange::Year1 => "1 year",
@@ -129,6 +134,7 @@ impl ChartRange {
 
     fn days(self) -> Option<f64> {
         match self {
+            ChartRange::Month1 => Some(30.0),
             ChartRange::Months3 => Some(91.0),
             ChartRange::Months6 => Some(183.0),
             ChartRange::Year1 => Some(365.0),
@@ -339,13 +345,14 @@ const TOOLTIP_JS: &str = r##"
         return s.replace(/&/g, "&amp;").replace(/</g, "&lt;");
     }
 
+    // Nearest hoverable run (runs before data.first only serve as deltas)
     function nearest(x) {
-        var runs = data.runs, lo = 0, hi = runs.length - 1;
+        var runs = data.runs, lo = data.first, hi = runs.length - 1;
         while (lo < hi) {
             var mid = (lo + hi) >> 1;
             if (runs[mid].x < x) lo = mid + 1; else hi = mid;
         }
-        if (lo > 0 && Math.abs(runs[lo - 1].x - x) < Math.abs(runs[lo].x - x)) lo--;
+        if (lo > data.first && Math.abs(runs[lo - 1].x - x) < Math.abs(runs[lo].x - x)) lo--;
         return lo;
     }
 
@@ -367,7 +374,9 @@ const TOOLTIP_JS: &str = r##"
         if (vx < px || vx > px + pw) { hide(); return; }
 
         var xRange = data.xMax - data.xMin;
-        var run = data.runs[nearest(data.xMin + ((vx - px) / pw) * xRange)];
+        var runIdx = nearest(data.xMin + ((vx - px) / pw) * xRange);
+        var run = data.runs[runIdx];
+        var prev = runIdx > 0 ? data.runs[runIdx - 1] : null;
 
         // Pick the single series whose line is vertically nearest the cursor
         var best = -1, bestDist = Y_THRESHOLD;
@@ -393,6 +402,16 @@ const TOOLTIP_JS: &str = r##"
         html += "<div><span style='color:" + data.series[best].color + "'>\u25CF</span> " +
             esc(data.series[best].name) + ": " + (100 * pass / total).toFixed(1) + "% (" +
             pass.toLocaleString() + "/" + total.toLocaleString() + ")</div>";
+
+        // Change relative to the previous run
+        if (prev && prev.v[best] != null) {
+            var dPass = pass - prev.v[best][0];
+            var dPct = 100 * (pass / total - prev.v[best][0] / prev.v[best][1]);
+            var sign = dPass > 0 ? "+" : "";
+            var color = dPass > 0 ? "#2e7d32" : (dPass < 0 ? "#c62828" : "#666");
+            html += "<div style='color:" + color + "'>\u0394 vs prev: " + sign +
+                dPass.toLocaleString() + " (" + sign + dPct.toFixed(2) + "pp)</div>";
+        }
         tip.innerHTML = html;
         tip.style.display = "block";
 
@@ -445,14 +464,18 @@ pub fn WptHistoryChart(
         .iter()
         .map(|(area, _)| summary.focus_areas.iter().position(|a| a == area))
         .collect();
-    let runs_json: Vec<serde_json::Value> = summary
+    // Include the run immediately before the visible range (if any) so the
+    // first visible run's tooltip can show a delta against it
+    let first_visible = summary
         .runs
+        .iter()
+        .position(|run| parse_date(&run.date).is_some_and(|x| x >= min_x))
+        .unwrap_or(0);
+    let start = first_visible.saturating_sub(1);
+    let runs_json: Vec<serde_json::Value> = summary.runs[start..]
         .iter()
         .filter_map(|run| {
             let x = parse_date(&run.date)?;
-            if x < min_x {
-                return None;
-            }
             let values: Vec<serde_json::Value> = area_indices
                 .iter()
                 .map(|idx| {
@@ -477,6 +500,7 @@ pub fn WptHistoryChart(
         })
         .collect();
     let tooltip_data = serde_json::json!({
+        "first": first_visible - start,
         "width": WIDTH,
         "plot": [px, py, pw, ph],
         "xMin": x_min,
