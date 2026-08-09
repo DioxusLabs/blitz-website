@@ -5,7 +5,8 @@ use std::{
 };
 
 use reqwest::Client;
-use wptreport::score_summary::ScoreSummaryReport;
+use serde::Deserialize;
+use wptreport::score_summary::{RunScores, RunSummary, ScoreSummaryReport};
 
 use crate::routes::{ArcCommitMessages, ArcWptSummary};
 
@@ -13,6 +14,54 @@ const SUMMARY_URL: &str =
     "https://raw.githubusercontent.com/DioxusLabs/blitz-wpt-results/main/summary.json";
 const COMMIT_MESSAGES_URL: &str =
     "https://raw.githubusercontent.com/DioxusLabs/blitz-wpt-results/main/commit-messages.json";
+
+/// The compact on-disk format of summary.json: per-area scores are stored as
+/// `[total_tests, total_score, total_subtests, total_subtests_passed]` arrays
+/// (parallel to `focus_areas`)
+#[derive(Deserialize)]
+struct CompactSummary {
+    focus_areas: Vec<String>,
+    runs: Vec<CompactRun>,
+}
+
+#[derive(Deserialize)]
+struct CompactRun {
+    date: String,
+    wpt_revision: String,
+    product_revision: String,
+    scores: Vec<(u32, f64, u32, u32)>,
+}
+
+impl From<CompactSummary> for ScoreSummaryReport {
+    fn from(compact: CompactSummary) -> Self {
+        ScoreSummaryReport {
+            focus_areas: compact.focus_areas,
+            runs: compact
+                .runs
+                .into_iter()
+                .map(|run| RunSummary {
+                    date: run.date,
+                    wpt_revision: run.wpt_revision,
+                    product_revision: run.product_revision,
+                    scores: run
+                        .scores
+                        .into_iter()
+                        .map(
+                            |(total_tests, total_score, total_subtests, total_subtests_passed)| {
+                                RunScores {
+                                    total_tests,
+                                    total_score,
+                                    total_subtests,
+                                    total_subtests_passed,
+                                }
+                            },
+                        )
+                        .collect(),
+                })
+                .collect(),
+        }
+    }
+}
 
 pub static WPT_HISTORY_CACHE: WptHistoryCache = WptHistoryCache::new();
 
@@ -88,7 +137,8 @@ pub async fn load_wpt_history(etag: Option<Arc<str>>) {
     println!("New WPT history summary found. etag: {etag:?}");
 
     let body = result.bytes().await.unwrap();
-    let summary: ScoreSummaryReport = serde_json::from_slice(&body).unwrap();
+    let compact: CompactSummary = serde_json::from_slice(&body).unwrap();
+    let summary = ScoreSummaryReport::from(compact);
 
     // Commit messages are optional: tooltips degrade gracefully without them
     let commit_messages: HashMap<String, String> = match client
