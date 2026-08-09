@@ -7,6 +7,20 @@ use crate::routes::{StatusHeader, StatusTabs};
 use crate::components::Page;
 
 #[derive(Clone)]
+pub struct ArcCommitMessages(pub Arc<std::collections::HashMap<String, String>>);
+impl PartialEq for ArcCommitMessages {
+    fn eq(&self, other: &Self) -> bool {
+        Arc::ptr_eq(&self.0, &other.0)
+    }
+}
+impl Deref for ArcCommitMessages {
+    type Target = std::collections::HashMap<String, String>;
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+#[derive(Clone)]
 pub struct ArcWptSummary(pub Arc<ScoreSummaryReport>);
 impl PartialEq for ArcWptSummary {
     fn eq(&self, other: &Self) -> bool {
@@ -237,7 +251,11 @@ fn month_ticks(x_min: f64, x_max: f64) -> Vec<(f64, String)> {
 }
 
 #[component]
-pub fn WptHistoryPage(summary: ArcWptSummary, range: ChartRange) -> Element {
+pub fn WptHistoryPage(
+    summary: ArcWptSummary,
+    range: ChartRange,
+    commit_messages: ArcCommitMessages,
+) -> Element {
     rsx! {
         Page { title: "Status: WPT History".into(),
             StatusHeader {}
@@ -249,7 +267,7 @@ pub fn WptHistoryPage(summary: ArcWptSummary, range: ChartRange) -> Element {
             }
             hr {}
             ChartRangeSelector { current_range: range }
-            WptHistoryChart { summary: summary.clone(), range }
+            WptHistoryChart { summary: summary.clone(), range, commit_messages }
             h2 { "Per-area history" }
             WptHistorySparklines { summary, range }
         }
@@ -290,8 +308,93 @@ const HIGHLIGHT_AREAS: &[(&str, &str)] = &[
     ("css/css-position", "#ba68c8"),
 ];
 
+/// Inline script implementing the hover tooltip as a progressive enhancement.
+/// Reads run data from the `#wpt-history-data` JSON blob and shows the nearest
+/// run's commit id, commit message, and per-area pass percentages.
+const TOOLTIP_JS: &str = r##"
+(function () {
+    var container = document.getElementById("wpt-history-chart");
+    var dataEl = document.getElementById("wpt-history-data");
+    if (!container || !dataEl) return;
+    var svg = container.querySelector("svg");
+    var data = JSON.parse(dataEl.textContent);
+    if (!svg || !data.runs.length) return;
+
+    var tip = document.createElement("div");
+    tip.style.cssText =
+        "position:absolute;pointer-events:none;display:none;background:rgba(255,255,255,0.96);" +
+        "border:1px solid #999;border-radius:4px;padding:6px 8px;font:12px sans-serif;" +
+        "box-shadow:0 1px 4px rgba(0,0,0,0.25);z-index:10;max-width:340px";
+    container.appendChild(tip);
+
+    var guide = document.createElementNS("http://www.w3.org/2000/svg", "line");
+    guide.setAttribute("stroke", "#888");
+    guide.setAttribute("stroke-dasharray", "3,3");
+    guide.setAttribute("y1", data.plot[1]);
+    guide.setAttribute("y2", data.plot[1] + data.plot[3]);
+    guide.style.display = "none";
+    svg.appendChild(guide);
+
+    function esc(s) {
+        return s.replace(/&/g, "&amp;").replace(/</g, "&lt;");
+    }
+
+    function nearest(x) {
+        var runs = data.runs, lo = 0, hi = runs.length - 1;
+        while (lo < hi) {
+            var mid = (lo + hi) >> 1;
+            if (runs[mid].x < x) lo = mid + 1; else hi = mid;
+        }
+        if (lo > 0 && Math.abs(runs[lo - 1].x - x) < Math.abs(runs[lo].x - x)) lo--;
+        return lo;
+    }
+
+    function hide() {
+        tip.style.display = "none";
+        guide.style.display = "none";
+    }
+
+    svg.addEventListener("mousemove", function (ev) {
+        var rect = svg.getBoundingClientRect();
+        var scale = data.width / rect.width;
+        var vx = (ev.clientX - rect.left) * scale;
+        var px = data.plot[0], pw = data.plot[2];
+        if (vx < px || vx > px + pw) { hide(); return; }
+
+        var xRange = data.xMax - data.xMin;
+        var run = data.runs[nearest(data.xMin + ((vx - px) / pw) * xRange)];
+        var runVx = px + ((run.x - data.xMin) / xRange) * pw;
+        guide.setAttribute("x1", runVx);
+        guide.setAttribute("x2", runVx);
+        guide.style.display = "";
+
+        var html = "<div style='font-weight:bold'>" + esc(run.sha.slice(0, 9)) + " (" + esc(run.d) + ")</div>";
+        if (run.msg) html += "<div style='margin-bottom:4px'>" + esc(run.msg) + "</div>";
+        for (var i = 0; i < data.series.length; i++) {
+            if (run.v[i] == null) continue;
+            html += "<div><span style='color:" + data.series[i].color + "'>\u25CF</span> " +
+                esc(data.series[i].name) + ": " + run.v[i].toFixed(1) + "%</div>";
+        }
+        tip.innerHTML = html;
+        tip.style.display = "block";
+
+        var crect = container.getBoundingClientRect();
+        var cx = ev.clientX - crect.left, cy = ev.clientY - crect.top;
+        var left = cx + 14;
+        if (left + tip.offsetWidth > container.clientWidth) left = cx - tip.offsetWidth - 14;
+        tip.style.left = left + "px";
+        tip.style.top = (cy + 14) + "px";
+    });
+    svg.addEventListener("mouseleave", hide);
+})();
+"##;
+
 #[component]
-pub fn WptHistoryChart(summary: ArcWptSummary, range: ChartRange) -> Element {
+pub fn WptHistoryChart(
+    summary: ArcWptSummary,
+    range: ChartRange,
+    commit_messages: ArcCommitMessages,
+) -> Element {
     const WIDTH: f64 = 900.0;
     const HEIGHT: f64 = 440.0;
     const PLOT: (f64, f64, f64, f64) = (50.0, 15.0, WIDTH - 65.0, HEIGHT - 55.0);
@@ -319,7 +422,59 @@ pub fn WptHistoryChart(summary: ArcWptSummary, range: ChartRange) -> Element {
     let ticks = month_ticks(x_min, x_max);
     let x_range = (x_max - x_min).max(f64::EPSILON);
 
+    // Per-run data for the hover tooltip (a JS progressive enhancement)
+    let area_indices: Vec<Option<usize>> = HIGHLIGHT_AREAS
+        .iter()
+        .map(|(area, _)| summary.focus_areas.iter().position(|a| a == area))
+        .collect();
+    let runs_json: Vec<serde_json::Value> = summary
+        .runs
+        .iter()
+        .filter_map(|run| {
+            let x = parse_date(&run.date)?;
+            if x < min_x {
+                return None;
+            }
+            let values: Vec<serde_json::Value> = area_indices
+                .iter()
+                .map(|idx| {
+                    idx.and_then(|idx| subtest_pass_percent(run, idx))
+                        .map(|pct| serde_json::json!((pct * 10.0).round() / 10.0))
+                        .unwrap_or(serde_json::Value::Null)
+                })
+                .collect();
+            Some(serde_json::json!({
+                "x": x,
+                "d": run.date.split('T').next().unwrap_or(&run.date),
+                "sha": run.product_revision,
+                "msg": commit_messages.get(&run.product_revision),
+                "v": values,
+            }))
+        })
+        .collect();
+    let tooltip_data = serde_json::json!({
+        "width": WIDTH,
+        "plot": [px, py, pw, ph],
+        "xMin": x_min,
+        "xMax": x_max,
+        "series": series
+            .iter()
+            .map(|s| serde_json::json!({
+                "name": s.name.strip_prefix("css/").unwrap_or("all css"),
+                "color": s.color,
+            }))
+            .collect::<Vec<_>>(),
+        "runs": runs_json,
+    })
+    .to_string()
+    // Prevent "</script>" in commit messages from terminating the data block
+    .replace('<', "\\u003c");
+
     rsx! {
+        div {
+            id: "wpt-history-chart",
+            position: "relative",
+
         svg {
             view_box: "0 0 {WIDTH} {HEIGHT}",
             width: "100%",
@@ -393,6 +548,14 @@ pub fn WptHistoryChart(summary: ArcWptSummary, range: ChartRange) -> Element {
                     {s.name.strip_prefix("css/").unwrap_or("all css")}
                 }
             }
+        }
+
+        script {
+            id: "wpt-history-data",
+            r#type: "application/json",
+            dangerous_inner_html: tooltip_data,
+        }
+        script { dangerous_inner_html: TOOLTIP_JS }
         }
     }
 }

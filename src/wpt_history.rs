@@ -1,4 +1,5 @@
 use std::{
+    collections::HashMap,
     sync::{Arc, Mutex},
     time::Instant,
 };
@@ -6,10 +7,12 @@ use std::{
 use reqwest::Client;
 use wptreport::score_summary::ScoreSummaryReport;
 
-use crate::routes::ArcWptSummary;
+use crate::routes::{ArcCommitMessages, ArcWptSummary};
 
 const SUMMARY_URL: &str =
     "https://raw.githubusercontent.com/DioxusLabs/blitz-wpt-results/main/summary.json";
+const COMMIT_MESSAGES_URL: &str =
+    "https://raw.githubusercontent.com/DioxusLabs/blitz-wpt-results/main/commit-messages.json";
 
 pub static WPT_HISTORY_CACHE: WptHistoryCache = WptHistoryCache::new();
 
@@ -23,12 +26,18 @@ impl WptHistoryCache {
         (*self.0.lock().unwrap()).clone()
     }
 
-    pub fn update(&self, etag: Option<Arc<str>>, summary: ArcWptSummary) {
+    pub fn update(
+        &self,
+        etag: Option<Arc<str>>,
+        summary: ArcWptSummary,
+        commit_messages: ArcCommitMessages,
+    ) {
         let cached_at = Instant::now();
         *self.0.lock().unwrap() = Some(Arc::new(WptHistoryCacheEntry {
             etag,
             cached_at,
             summary,
+            commit_messages,
         }));
     }
 
@@ -40,6 +49,7 @@ impl WptHistoryCache {
                 cached_at,
                 etag: entry.etag.clone(),
                 summary: entry.summary.clone(),
+                commit_messages: entry.commit_messages.clone(),
             }));
         }
     }
@@ -49,6 +59,7 @@ pub struct WptHistoryCacheEntry {
     pub etag: Option<Arc<str>>,
     pub cached_at: Instant,
     pub summary: ArcWptSummary,
+    pub commit_messages: ArcCommitMessages,
 }
 
 pub async fn load_wpt_history(etag: Option<Arc<str>>) {
@@ -79,7 +90,25 @@ pub async fn load_wpt_history(etag: Option<Arc<str>>) {
     let body = result.bytes().await.unwrap();
     let summary: ScoreSummaryReport = serde_json::from_slice(&body).unwrap();
 
-    WPT_HISTORY_CACHE.update(etag, ArcWptSummary(Arc::new(summary)));
+    // Commit messages are optional: tooltips degrade gracefully without them
+    let commit_messages: HashMap<String, String> = match client
+        .get(COMMIT_MESSAGES_URL)
+        .send()
+        .await
+        .and_then(|res| res.error_for_status())
+    {
+        Ok(res) => serde_json::from_slice(&res.bytes().await.unwrap()).unwrap_or_default(),
+        Err(err) => {
+            println!("Failed to fetch commit messages: {err}");
+            HashMap::new()
+        }
+    };
+
+    WPT_HISTORY_CACHE.update(
+        etag,
+        ArcWptSummary(Arc::new(summary)),
+        ArcCommitMessages(Arc::new(commit_messages)),
+    );
 
     println!("New WPT history summary processed and cached.");
 }

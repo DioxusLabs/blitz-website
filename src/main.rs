@@ -171,6 +171,7 @@ async fn main() {
                         let props = WptHistoryPageProps {
                             summary: entry.summary.clone(),
                             range,
+                            commit_messages: entry.commit_messages.clone(),
                         };
                         return dx_route_with_props(WptHistoryPage, props).await;
                     } else if cache_age <= Duration::from_mins(30) {
@@ -188,6 +189,7 @@ async fn main() {
                 let props = WptHistoryPageProps {
                     summary: entry.summary.clone(),
                     range,
+                    commit_messages: entry.commit_messages.clone(),
                 };
 
                 dx_route_with_props(WptHistoryPage, props).await
