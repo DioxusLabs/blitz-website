@@ -19,7 +19,7 @@ use dioxus::{core::ComponentFunction, prelude::*};
 use dioxus_html_macro::html;
 use downloads::{load_downloads, DOWNLOAD_CACHE};
 use routes::{
-    AboutPage, ArcDownloadLinks, CssSupportPage, DownloadsPage, DownloadsPageProps,
+    AboutPage, ArcDownloadLinks, ChartRange, CssSupportPage, DownloadsPage, DownloadsPageProps,
     ElementSupportPage, EventSupportPage, GettingStartedPage, HomePage, NLNetInstructionsPage,
     WptHistoryPage, WptHistoryPageProps, WptResultsPage, WptResultsPageProps,
 };
@@ -40,6 +40,11 @@ mod github;
 mod routes;
 mod wpt;
 mod wpt_history;
+
+#[derive(Deserialize)]
+struct WptHistoryQuery {
+    range: Option<String>,
+}
 
 #[derive(Deserialize)]
 struct DownloadLinkKey {
@@ -152,7 +157,8 @@ async fn main() {
         )
         .route(
             "/status/wpt/history",
-            get(async || {
+            get(async |query: Query<WptHistoryQuery>| {
+                let range = ChartRange::from_query(query.range.as_deref());
                 let now = Instant::now();
                 let cache_entry = WPT_HISTORY_CACHE.get_cloned();
                 let etag = cache_entry.as_ref().and_then(|entry| entry.etag.clone());
@@ -164,6 +170,7 @@ async fn main() {
                     if cache_age <= Duration::from_secs(30) {
                         let props = WptHistoryPageProps {
                             summary: entry.summary.clone(),
+                            range,
                         };
                         return dx_route_with_props(WptHistoryPage, props).await;
                     } else if cache_age <= Duration::from_mins(30) {
@@ -180,6 +187,7 @@ async fn main() {
                 let entry = WPT_HISTORY_CACHE.get_cloned().unwrap();
                 let props = WptHistoryPageProps {
                     summary: entry.summary.clone(),
+                    range,
                 };
 
                 dx_route_with_props(WptHistoryPage, props).await

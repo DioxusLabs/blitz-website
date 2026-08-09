@@ -69,6 +69,74 @@ const MONTH_NAMES: [&str; 12] = [
     "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
 ];
 
+#[derive(Copy, Clone, PartialEq, Debug, Default)]
+pub enum ChartRange {
+    Months3,
+    Months6,
+    Year1,
+    #[default]
+    All,
+}
+
+impl ChartRange {
+    pub const ALL: [ChartRange; 4] = [
+        ChartRange::Months3,
+        ChartRange::Months6,
+        ChartRange::Year1,
+        ChartRange::All,
+    ];
+
+    pub fn from_query(value: Option<&str>) -> Self {
+        match value {
+            Some("3m") => ChartRange::Months3,
+            Some("6m") => ChartRange::Months6,
+            Some("1y") => ChartRange::Year1,
+            _ => ChartRange::All,
+        }
+    }
+
+    fn query_value(self) -> &'static str {
+        match self {
+            ChartRange::Months3 => "3m",
+            ChartRange::Months6 => "6m",
+            ChartRange::Year1 => "1y",
+            ChartRange::All => "all",
+        }
+    }
+
+    fn label(self) -> &'static str {
+        match self {
+            ChartRange::Months3 => "3 months",
+            ChartRange::Months6 => "6 months",
+            ChartRange::Year1 => "1 year",
+            ChartRange::All => "All time",
+        }
+    }
+
+    fn days(self) -> Option<f64> {
+        match self {
+            ChartRange::Months3 => Some(91.0),
+            ChartRange::Months6 => Some(183.0),
+            ChartRange::Year1 => Some(365.0),
+            ChartRange::All => None,
+        }
+    }
+
+    /// The earliest date (in fractional epoch-days) included in the range,
+    /// measured back from the date of the latest run
+    fn min_x(self, summary: &ScoreSummaryReport) -> f64 {
+        let latest = summary
+            .runs
+            .last()
+            .and_then(|run| parse_date(&run.date))
+            .unwrap_or(0.0);
+        match self.days() {
+            Some(days) => latest - days,
+            None => f64::NEG_INFINITY,
+        }
+    }
+}
+
 struct Series {
     name: &'static str,
     color: &'static str,
@@ -85,6 +153,7 @@ fn subtest_pass_percent(run: &RunSummary, area_idx: usize) -> Option<f64> {
 
 fn area_series(
     summary: &ScoreSummaryReport,
+    min_x: f64,
     area: &'static str,
     color: &'static str,
 ) -> Option<Series> {
@@ -93,6 +162,7 @@ fn area_series(
         .runs
         .iter()
         .filter_map(|run| Some((parse_date(&run.date)?, subtest_pass_percent(run, area_idx)?)))
+        .filter(|(x, _)| *x >= min_x)
         .collect();
     if points.is_empty() {
         return None;
@@ -167,7 +237,7 @@ fn month_ticks(x_min: f64, x_max: f64) -> Vec<(f64, String)> {
 }
 
 #[component]
-pub fn WptHistoryPage(summary: ArcWptSummary) -> Element {
+pub fn WptHistoryPage(summary: ArcWptSummary, range: ChartRange) -> Element {
     rsx! {
         Page { title: "Status: WPT History".into(),
             StatusHeader {}
@@ -178,9 +248,35 @@ pub fn WptHistoryPage(summary: ArcWptSummary) -> Element {
                 Scores are the percentage of subtests passing (of those that Blitz can run). Data is recorded for every commit to the main branch."#
             }
             hr {}
-            WptHistoryChart { summary: summary.clone() }
+            ChartRangeSelector { current_range: range }
+            WptHistoryChart { summary: summary.clone(), range }
             h2 { "Per-area history" }
-            WptHistorySparklines { summary }
+            WptHistorySparklines { summary, range }
+        }
+    }
+}
+
+#[component]
+pub fn ChartRangeSelector(current_range: ChartRange) -> Element {
+    rsx! {
+        div {
+            display: "flex",
+            gap: "8px",
+            justify_content: "flex-end",
+            font_size: "14px",
+            margin_bottom: "8px",
+
+            for range in ChartRange::ALL {
+                a {
+                    href: "/status/wpt/history?range={range.query_value()}",
+                    padding: "2px 10px",
+                    border_radius: "12px",
+                    text_decoration: "none",
+                    color: if range == current_range { "white" } else { "inherit" },
+                    background_color: if range == current_range { "#2b6e6c" } else { "#eee" },
+                    {range.label()}
+                }
+            }
         }
     }
 }
@@ -195,15 +291,16 @@ const HIGHLIGHT_AREAS: &[(&str, &str)] = &[
 ];
 
 #[component]
-pub fn WptHistoryChart(summary: ArcWptSummary) -> Element {
+pub fn WptHistoryChart(summary: ArcWptSummary, range: ChartRange) -> Element {
     const WIDTH: f64 = 900.0;
     const HEIGHT: f64 = 440.0;
     const PLOT: (f64, f64, f64, f64) = (50.0, 15.0, WIDTH - 65.0, HEIGHT - 55.0);
     let (px, py, pw, ph) = PLOT;
 
+    let min_x = range.min_x(&summary);
     let series: Vec<Series> = HIGHLIGHT_AREAS
         .iter()
-        .filter_map(|(area, color)| area_series(&summary, area, color))
+        .filter_map(|(area, color)| area_series(&summary, min_x, area, color))
         .collect();
 
     let x_min = series
@@ -301,16 +398,18 @@ pub fn WptHistoryChart(summary: ArcWptSummary) -> Element {
 }
 
 #[component]
-pub fn WptHistorySparklines(summary: ArcWptSummary) -> Element {
+pub fn WptHistorySparklines(summary: ArcWptSummary, range: ChartRange) -> Element {
     const WIDTH: f64 = 260.0;
     const HEIGHT: f64 = 60.0;
     const PLOT: (f64, f64, f64, f64) = (0.0, 2.0, WIDTH, HEIGHT - 4.0);
 
+    let range_min_x = range.min_x(&summary);
     let x_min = summary
         .runs
         .first()
         .and_then(|run| parse_date(&run.date))
-        .unwrap_or(0.0);
+        .unwrap_or(0.0)
+        .max(range_min_x);
     let x_max = summary
         .runs
         .last()
@@ -331,6 +430,7 @@ pub fn WptHistorySparklines(summary: ArcWptSummary) -> Element {
                         .filter_map(|run| {
                             Some((parse_date(&run.date)?, subtest_pass_percent(run, area_idx)?))
                         })
+                        .filter(|(x, _)| *x >= range_min_x)
                         .collect();
 
                     let latest = points.last().map(|p| p.1).unwrap_or(0.0);
