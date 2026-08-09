@@ -324,7 +324,7 @@ const TOOLTIP_JS: &str = r##"
     tip.style.cssText =
         "position:absolute;pointer-events:none;display:none;background:rgba(255,255,255,0.96);" +
         "border:1px solid #999;border-radius:4px;padding:6px 8px;font:12px sans-serif;" +
-        "box-shadow:0 1px 4px rgba(0,0,0,0.25);z-index:10;max-width:340px";
+        "box-shadow:0 1px 4px rgba(0,0,0,0.25);z-index:10;width:260px;box-sizing:border-box";
     container.appendChild(tip);
 
     var guide = document.createElementNS("http://www.w3.org/2000/svg", "line");
@@ -369,7 +369,10 @@ const TOOLTIP_JS: &str = r##"
         guide.style.display = "";
 
         var html = "<div style='font-weight:bold'>" + esc(run.sha.slice(0, 9)) + " (" + esc(run.d) + ")</div>";
-        if (run.msg) html += "<div style='margin-bottom:4px'>" + esc(run.msg) + "</div>";
+        if (run.msg) {
+            html += "<div style='margin-bottom:4px;white-space:nowrap;overflow:hidden;" +
+                "text-overflow:ellipsis'>" + esc(run.msg) + "</div>";
+        }
         for (var i = 0; i < data.series.length; i++) {
             if (run.v[i] == null) continue;
             html += "<div><span style='color:" + data.series[i].color + "'>\u25CF</span> " +
