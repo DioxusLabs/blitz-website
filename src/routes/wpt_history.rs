@@ -409,8 +409,8 @@ const TOOLTIP_JS: &str = r##"
             var dPct = 100 * (pass / total - prev.v[best][0] / prev.v[best][1]);
             var sign = dPass > 0 ? "+" : "";
             var color = dPass > 0 ? "#2e7d32" : (dPass < 0 ? "#c62828" : "#666");
-            html += "<div style='color:" + color + "'>\u0394 vs prev: " + sign +
-                dPass.toLocaleString() + " (" + sign + dPct.toFixed(2) + "pp)</div>";
+            html += "<div style='color:" + color + "'>Change: " + sign +
+                dPass.toLocaleString() + " (" + sign + dPct.toFixed(2) + "%)</div>";
         }
         tip.innerHTML = html;
         tip.style.display = "block";
