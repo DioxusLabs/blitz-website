@@ -69,34 +69,40 @@ document.querySelectorAll("script[data-wpt-history-data]").forEach(function (dat
         var run = data.runs[runIdx];
         var prev = runIdx > 0 ? data.runs[runIdx - 1] : null;
 
-        // Pick the single series whose line is vertically nearest the cursor.
-        // Distance is measured to the line as drawn (interpolated between the
-        // runs bracketing the cursor) so steep jumps stay hoverable anywhere
-        // along their length. Percentages use the latest run's subtest total
-        // as the denominator, matching the plotted lines.
-        function lineYAtCursor(i) {
+        // Pick the single series whose drawn line is nearest the cursor.
+        // Distance is measured to the polyline's segments (2D point-to-segment
+        // distance) so steep, near-vertical jumps are hoverable anywhere along
+        // their length, not just near their endpoints.
+        function distToSegment(x, y, x1, y1, x2, y2) {
+            var dx = x2 - x1, dy = y2 - y1;
+            var len2 = dx * dx + dy * dy;
+            var t = len2 ? ((x - x1) * dx + (y - y1) * dy) / len2 : 0;
+            t = Math.max(0, Math.min(1, t));
+            return Math.hypot(x - (x1 + t * dx), y - (y1 + t * dy));
+        }
+        function seriesDist(i) {
             var runs = data.runs, latest = data.series[i].latest;
-            var before = -1, after = -1;
-            for (var j = data.first; j < runs.length; j++) {
-                if (runs[j].v[i] == null) continue;
-                if (runs[j].x <= data.xMin + ((vx - px) / pw) * xRange) before = j;
-                else { after = j; break; }
-            }
-            if (before < 0 && after < 0) return null;
-            if (before < 0) before = after;
-            if (after < 0) after = before;
             function yOf(j) { return py + (1 - runs[j].v[i][0] / latest) * ph; }
             function xOf(j) { return px + ((runs[j].x - data.xMin) / xRange) * pw; }
-            if (xOf(after) === xOf(before)) return yOf(before);
-            var t = (vx - xOf(before)) / (xOf(after) - xOf(before));
-            return yOf(before) + t * (yOf(after) - yOf(before));
+            // Consider only segments within a horizontal window of the cursor
+            var windowPx = Y_THRESHOLD;
+            var dist = Infinity, prevJ = -1;
+            for (var j = data.first; j < runs.length; j++) {
+                if (runs[j].v[i] == null) continue;
+                if (prevJ >= 0 && xOf(j) >= vx - windowPx && xOf(prevJ) <= vx + windowPx) {
+                    dist = Math.min(dist, distToSegment(vx, vy, xOf(prevJ), yOf(prevJ), xOf(j), yOf(j)));
+                } else if (prevJ < 0 && Math.abs(xOf(j) - vx) <= windowPx) {
+                    dist = Math.min(dist, Math.hypot(xOf(j) - vx, yOf(j) - vy));
+                }
+                if (xOf(j) > vx + windowPx) break;
+                prevJ = j;
+            }
+            return dist;
         }
         var best = -1, bestDist = Y_THRESHOLD;
         for (var i = 0; i < data.series.length; i++) {
             if (!data.series[i].latest) continue;
-            var sy = lineYAtCursor(i);
-            if (sy == null) continue;
-            var dist = Math.abs(sy - vy);
+            var dist = seriesDist(i);
             if (dist < bestDist) { best = i; bestDist = dist; }
         }
         if (best < 0 || run.v[best] == null) { hide(); return; }
