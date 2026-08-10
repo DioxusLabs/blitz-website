@@ -145,8 +145,21 @@ pub fn WptFolderPage(
     }
 }
 
+/// The areas charted on a folder's full-size history chart: the folder
+/// itself plus its largest direct children (one per available line color)
+pub fn folder_chart_areas(scores: &WptScores, folder: &str) -> Vec<String> {
+    std::iter::once(folder.to_string())
+        .chain(
+            child_areas(scores, folder)
+                .into_iter()
+                .take(SERIES_COLORS.len() - 1)
+                .map(|(area, _)| area),
+        )
+        .collect()
+}
+
 /// The direct child areas of a folder, largest (by subtest count) first
-fn child_areas(scores: &WptScores, folder: &str) -> Vec<(String, AreaScores)> {
+pub fn child_areas(scores: &WptScores, folder: &str) -> Vec<(String, AreaScores)> {
     let prefix = format!("{folder}/");
     let mut children: Vec<(String, AreaScores)> = scores
         .iter()

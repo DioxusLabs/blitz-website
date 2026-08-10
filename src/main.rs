@@ -18,6 +18,7 @@ use dashmap::DashMap;
 use dioxus::{core::ComponentFunction, prelude::*};
 use dioxus_html_macro::html;
 use downloads::{load_downloads, DOWNLOAD_CACHE};
+use routes::{child_areas, folder_chart_areas};
 use routes::{
     AboutPage, ArcDownloadLinks, ArcWptHistory, ChartRange, CssSupportPage, DownloadsPage,
     DownloadsPageProps, ElementSupportPage, EventSupportPage, GettingStartedPage, HomePage,
@@ -33,7 +34,7 @@ use std::{
 use tokio::net::TcpListener;
 use tower_http::{services::ServeDir, trace::TraceLayer};
 use wpt::{load_wpt_results, WPT_REPORT_CACHE};
-use wpt_history::{history_group, load_wpt_history, WPT_HISTORY_CACHE};
+use wpt_history::{load_wpt_history, WPT_HISTORY_CACHE};
 
 mod components;
 mod downloads;
@@ -121,8 +122,9 @@ async fn main() {
             "/status/wpt",
             get(async |query: Query<WptHistoryQuery>| {
                 let range = ChartRange::from_query(query.range.as_deref());
-                let (report_entry, history) =
-                    tokio::join!(fresh_wpt_report(), fresh_wpt_history("css/css"));
+                let report_entry = fresh_wpt_report().await;
+                let areas = folder_chart_areas(&report_entry.scores.0, "css");
+                let history = fresh_wpt_history(areas).await;
                 let props = WptResultsPageProps {
                     report: report_entry.report.clone(),
                     scores: report_entry.scores.clone(),
@@ -139,7 +141,17 @@ async fn main() {
             "/status/wpt/history",
             get(async |query: Query<WptHistoryQuery>| {
                 let range = ChartRange::from_query(query.range.as_deref());
-                let Some(history) = fresh_wpt_history("css/css").await else {
+                // The history page charts "css" plus every one of its
+                // direct children (sparklines show them all)
+                let report_entry = fresh_wpt_report().await;
+                let mut areas = vec!["css".to_string()];
+                areas.extend(
+                    child_areas(&report_entry.scores.0, "css")
+                        .into_iter()
+                        .map(|(area, _)| area),
+                );
+                areas[1..].sort();
+                let Some(history) = fresh_wpt_history(areas).await else {
                     return (
                         StatusCode::INTERNAL_SERVER_ERROR,
                         Html("History data not available".to_string()),
@@ -158,9 +170,9 @@ async fn main() {
                 async |Path(folder): Path<String>, query: Query<WptHistoryQuery>| {
                     let range = ChartRange::from_query(query.range.as_deref());
                     let folder = folder.trim_matches('/').to_string();
-                    let group = history_group(&folder);
-                    let (report_entry, history) =
-                        tokio::join!(fresh_wpt_report(), fresh_wpt_history(&group));
+                    let report_entry = fresh_wpt_report().await;
+                    // Folder pages chart a single line for the folder itself
+                    let history = fresh_wpt_history(vec![folder.clone()]).await;
 
                     if !report_entry.scores.contains_key(&folder) {
                         return (
@@ -257,7 +269,7 @@ async fn main() {
 
     // Prime WPT result and download caches
     tokio::spawn(async move { load_wpt_results(None).await });
-    tokio::spawn(async move { load_wpt_history("css".to_string()).await });
+    tokio::spawn(async move { load_wpt_history(vec!["css".to_string()]).await });
 
     if std::env::var("PRECACHE_DOWNLOADS").is_ok() {
         tokio::spawn(async move { load_downloads(None).await });
@@ -296,32 +308,34 @@ async fn fresh_wpt_report() -> Arc<wpt::WptReportCacheEntry> {
     WPT_REPORT_CACHE.get_cloned().unwrap()
 }
 
-/// Get the latest WPT history data for a group, refreshing it if it is stale
-/// (serve directly for 30s; serve stale-while-revalidate for 30min)
-async fn fresh_wpt_history(group: &str) -> Option<ArcWptHistory> {
+/// Get the latest WPT history data for a set of areas, refreshing it if it
+/// is stale (serve directly for 30s; serve stale-while-revalidate for 30min).
+/// A refresh only revalidates runs.json (all summary files change together),
+/// so cached areas are reused and only missing area files are fetched.
+async fn fresh_wpt_history(areas: Vec<String>) -> Option<ArcWptHistory> {
     let now = Instant::now();
-    let cache_entry = WPT_HISTORY_CACHE.get_cloned(group);
 
     let mut await_revalidation = true;
-    if let Some(entry) = cache_entry {
-        let cache_age = now.duration_since(entry.cached_at);
-        if cache_age <= Duration::from_secs(30) {
-            return Some(entry.history.clone());
-        } else if cache_age <= Duration::from_mins(30) {
-            await_revalidation = false
+    if let Some(entry) = WPT_HISTORY_CACHE.get_cloned() {
+        if entry.contains_areas(&areas) {
+            let cache_age = now.duration_since(entry.cached_at);
+            if cache_age <= Duration::from_secs(30) {
+                return Some(entry.merged(&areas));
+            } else if cache_age <= Duration::from_mins(30) {
+                await_revalidation = false
+            }
         }
     }
 
-    let group = group.to_string();
     let handle = {
-        let group = group.clone();
-        tokio::spawn(async move { load_wpt_history(group).await })
+        let areas = areas.clone();
+        tokio::spawn(async move { load_wpt_history(areas).await })
     };
     if await_revalidation {
         let _ = handle.await;
     }
 
-    Some(WPT_HISTORY_CACHE.get_cloned(&group)?.history.clone())
+    Some(WPT_HISTORY_CACHE.get_cloned()?.merged(&areas))
 }
 
 async fn dx_route_cached(render_fn: fn() -> Element) -> impl IntoResponse {
