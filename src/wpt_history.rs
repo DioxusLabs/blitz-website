@@ -52,13 +52,16 @@ pub struct HistoryRun {
     pub scores: Vec<Option<ScoreTuple>>,
 }
 
-/// The group (data file) that holds history for a given WPT folder path:
-/// "css" itself and its direct children are in the "css" group; deeper
-/// folders are in the group named for their top-level folder.
-pub fn history_group(area: &str) -> &str {
-    match area.split('/').nth(1) {
-        Some(second) => second,
-        None => "css",
+/// The group (data file, nested under the root suite's directory) that holds
+/// history for a given WPT folder path: the root suite itself and its direct
+/// children are in the root group (e.g. "css/css"); deeper folders are in
+/// the group named for their top-level folder (e.g. "css/css-flexbox").
+pub fn history_group(area: &str) -> String {
+    let mut components = area.split('/');
+    let root = components.next().unwrap_or("css");
+    match components.next() {
+        Some(second) => format!("{root}/{second}"),
+        None => format!("{root}/{root}"),
     }
 }
 

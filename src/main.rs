@@ -122,7 +122,7 @@ async fn main() {
             get(async |query: Query<WptHistoryQuery>| {
                 let range = ChartRange::from_query(query.range.as_deref());
                 let (report_entry, history) =
-                    tokio::join!(fresh_wpt_report(), fresh_wpt_history("css"));
+                    tokio::join!(fresh_wpt_report(), fresh_wpt_history("css/css"));
                 let props = WptResultsPageProps {
                     report: report_entry.report.clone(),
                     scores: report_entry.scores.clone(),
@@ -139,7 +139,7 @@ async fn main() {
             "/status/wpt/history",
             get(async |query: Query<WptHistoryQuery>| {
                 let range = ChartRange::from_query(query.range.as_deref());
-                let Some(history) = fresh_wpt_history("css").await else {
+                let Some(history) = fresh_wpt_history("css/css").await else {
                     return (
                         StatusCode::INTERNAL_SERVER_ERROR,
                         Html("History data not available".to_string()),
@@ -158,7 +158,7 @@ async fn main() {
                 async |Path(folder): Path<String>, query: Query<WptHistoryQuery>| {
                     let range = ChartRange::from_query(query.range.as_deref());
                     let folder = folder.trim_matches('/').to_string();
-                    let group = history_group(&folder).to_string();
+                    let group = history_group(&folder);
                     let (report_entry, history) =
                         tokio::join!(fresh_wpt_report(), fresh_wpt_history(&group));
 
