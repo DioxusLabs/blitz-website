@@ -18,7 +18,7 @@ use dashmap::DashMap;
 use dioxus::{core::ComponentFunction, prelude::*};
 use dioxus_html_macro::html;
 use downloads::{load_downloads, DOWNLOAD_CACHE};
-use routes::{child_areas, folder_chart_areas};
+use routes::child_areas;
 use routes::{
     AboutPage, ArcDownloadLinks, ArcWptHistory, ChartRange, CssSupportPage, DownloadsPage,
     DownloadsPageProps, ElementSupportPage, EventSupportPage, GettingStartedPage, HomePage,
@@ -160,15 +160,9 @@ async fn main() {
 
                     if entry.scores.contains_key(&area) {
                         let range = ChartRange::from_query(query.range.as_deref());
-                        // Top-level suite pages chart the suite plus its
-                        // largest children; deeper folder pages chart a
-                        // single line for the folder itself
-                        let history_areas = if area.contains('/') {
-                            vec![area.clone()]
-                        } else {
-                            folder_chart_areas(&entry.scores.0, &area)
-                        };
-                        let history = fresh_wpt_history(history_areas).await;
+                        // Folder pages chart a single line for the folder
+                        // itself
+                        let history = fresh_wpt_history(vec![area.clone()]).await;
                         let props = WptResultsPageProps {
                             report: entry.report.clone(),
                             scores: entry.scores.clone(),

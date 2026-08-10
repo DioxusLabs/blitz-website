@@ -86,9 +86,6 @@ pub fn WptResultsPage(
     history: Option<ArcWptHistory>,
     range: ChartRange,
 ) -> Element {
-    // Top-level suite pages (e.g. "css") get the full-size multi-series
-    // chart; deeper folder pages get the compact single-line chart
-    let compact = area.contains('/');
     rsx! {
         Page { title: "Status: WPT".into(),
             StatusHeader {}
@@ -107,29 +104,14 @@ pub fn WptResultsPage(
             WptBreadcrumb { area: area.clone() }
             FolderHistoryChart {
                 folder: area.clone(),
-                scores: scores.clone(),
                 history,
                 range,
                 base_path: "/status/wpt/{area}",
-                compact,
             }
             CommitInfoDisplay { commit_info, label: "Data from commit:" }
             WptAreaResults { report, scores, area }
         }
     }
-}
-
-/// The areas charted on a folder's full-size history chart: the folder
-/// itself plus its largest direct children (one per available line color)
-pub fn folder_chart_areas(scores: &WptScores, folder: &str) -> Vec<String> {
-    std::iter::once(folder.to_string())
-        .chain(
-            child_areas(scores, folder)
-                .into_iter()
-                .take(SERIES_COLORS.len() - 1)
-                .map(|(area, _)| area),
-        )
-        .collect()
 }
 
 /// The direct child areas of a folder, largest (by subtest count) first
@@ -147,23 +129,20 @@ pub fn child_areas(scores: &WptScores, folder: &str) -> Vec<(String, AreaScores)
     children
 }
 
-/// A history chart for a folder. Compact charts show a single short line for
-/// the folder's total; full-size charts also show a line for each of the
-/// folder's largest direct children.
+/// A short history chart for a folder, showing a single line for the
+/// folder's total
 #[component]
 fn FolderHistoryChart(
     folder: String,
-    scores: ArcWptScores,
     history: Option<ArcWptHistory>,
     range: ChartRange,
     base_path: String,
-    #[props(default = false)] compact: bool,
 ) -> Element {
     let Some(history) = history else {
         return rsx!( p { "No history data available" } );
     };
 
-    let mut series_spec = vec![ChartSeries {
+    let series_spec = vec![ChartSeries {
         area: folder.clone(),
         label: if folder == "css" {
             "all css".to_string()
@@ -172,25 +151,10 @@ fn FolderHistoryChart(
         },
         color: SERIES_COLORS[0],
     }];
-    if !compact {
-        let prefix = format!("{folder}/");
-        for (child, _) in child_areas(&scores, &folder)
-            .into_iter()
-            .take(SERIES_COLORS.len() - 1)
-        {
-            series_spec.push(ChartSeries {
-                label: child.strip_prefix(&prefix).unwrap_or(&child).to_string(),
-                area: child,
-                color: SERIES_COLORS[series_spec.len()],
-            });
-        }
-    }
-
-    let height = if compact { 240.0 } else { 440.0 };
 
     rsx! {
         ChartRangeSelector { current_range: range, base_path }
-        WptHistoryChart { history, series_spec, range, height }
+        WptHistoryChart { history, series_spec, range, height: 240.0 }
     }
 }
 
