@@ -457,11 +457,11 @@ pub fn WptHistoryChart(
     history: ArcWptHistory,
     series_spec: Vec<ChartSeries>,
     range: ChartRange,
+    #[props(default = 440.0)] height: f64,
 ) -> Element {
     const WIDTH: f64 = 900.0;
-    const HEIGHT: f64 = 440.0;
-    const PLOT: (f64, f64, f64, f64) = (50.0, 15.0, WIDTH - 65.0, HEIGHT - 55.0);
-    let (px, py, pw, ph) = PLOT;
+    let plot: (f64, f64, f64, f64) = (50.0, 15.0, WIDTH - 65.0, height - 55.0);
+    let (px, py, pw, ph) = plot;
 
     let min_x = range.min_x(&history);
     let series: Vec<Series> = series_spec
@@ -543,11 +543,12 @@ pub fn WptHistoryChart(
             position: "relative",
 
         svg {
-            view_box: "0 0 {WIDTH} {HEIGHT}",
+            view_box: "0 0 {WIDTH} {height}",
             width: "100%",
             font_family: "sans-serif",
 
-            // Horizontal gridlines + y-axis labels (every 10%)
+            // Horizontal gridlines + y-axis labels (every 10%; label every
+            // 20% when the chart is short)
             for i in 0..=10u32 {
                 line {
                     x1: "{px}",
@@ -557,13 +558,15 @@ pub fn WptHistoryChart(
                     stroke: if i % 5 == 0 { "#bbb" } else { "#e5e5e5" },
                     stroke_width: "1",
                 }
-                text {
-                    x: "{px - 6.0}",
-                    y: "{py + ph * (1.0 - (i as f64) / 10.0) + 4.0}",
-                    text_anchor: "end",
-                    font_size: "12",
-                    fill: "#666",
-                    "{i * 10}%"
+                if ph >= 300.0 || i % 2 == 0 {
+                    text {
+                        x: "{px - 6.0}",
+                        y: "{py + ph * (1.0 - (i as f64) / 10.0) + 4.0}",
+                        text_anchor: "end",
+                        font_size: "12",
+                        fill: "#666",
+                        "{i * 10}%"
+                    }
                 }
             }
 
@@ -590,7 +593,7 @@ pub fn WptHistoryChart(
             // Data series
             for (i, s) in series.iter().enumerate() {
                 polyline {
-                    points: polyline_points(&s.points, x_min, x_max, PLOT),
+                    points: polyline_points(&s.points, x_min, x_max, plot),
                     fill: "none",
                     stroke: s.color,
                     stroke_width: if i == 0 { "2.5" } else { "1.5" },
@@ -602,14 +605,14 @@ pub fn WptHistoryChart(
                 line {
                     x1: "{px + 10.0 + (i as f64) * 140.0}",
                     x2: "{px + 34.0 + (i as f64) * 140.0}",
-                    y1: "{HEIGHT - 10.0}",
-                    y2: "{HEIGHT - 10.0}",
+                    y1: "{height - 10.0}",
+                    y2: "{height - 10.0}",
                     stroke: s.color,
                     stroke_width: "3",
                 }
                 text {
                     x: "{px + 40.0 + (i as f64) * 140.0}",
-                    y: "{HEIGHT - 6.0}",
+                    y: "{height - 6.0}",
                     font_size: "12",
                     fill: "#333",
                     {s.label.clone()}

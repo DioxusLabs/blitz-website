@@ -137,6 +137,7 @@ pub fn WptFolderPage(
                 history,
                 range,
                 base_path: "/status/wpt/{folder}",
+                compact: true,
             }
             CommitInfoDisplay { commit_info, label: "Data from commit:" }
             WptFolderResults { folder, scores }
@@ -159,8 +160,9 @@ fn child_areas(scores: &WptScores, folder: &str) -> Vec<(String, AreaScores)> {
     children
 }
 
-/// A history chart for a folder: one line for the folder itself plus one for
-/// each of its largest direct children
+/// A history chart for a folder. Compact charts show a single short line for
+/// the folder's total; full-size charts also show a line for each of the
+/// folder's largest direct children.
 #[component]
 fn FolderHistoryChart(
     folder: String,
@@ -168,6 +170,7 @@ fn FolderHistoryChart(
     history: Option<ArcWptHistory>,
     range: ChartRange,
     base_path: String,
+    #[props(default = false)] compact: bool,
 ) -> Element {
     let Some(history) = history else {
         return rsx!( p { "No history data available" } );
@@ -182,21 +185,25 @@ fn FolderHistoryChart(
         },
         color: SERIES_COLORS[0],
     }];
-    let prefix = format!("{folder}/");
-    for (child, _) in child_areas(&scores, &folder)
-        .into_iter()
-        .take(SERIES_COLORS.len() - 1)
-    {
-        series_spec.push(ChartSeries {
-            label: child.strip_prefix(&prefix).unwrap_or(&child).to_string(),
-            area: child,
-            color: SERIES_COLORS[series_spec.len()],
-        });
+    if !compact {
+        let prefix = format!("{folder}/");
+        for (child, _) in child_areas(&scores, &folder)
+            .into_iter()
+            .take(SERIES_COLORS.len() - 1)
+        {
+            series_spec.push(ChartSeries {
+                label: child.strip_prefix(&prefix).unwrap_or(&child).to_string(),
+                area: child,
+                color: SERIES_COLORS[series_spec.len()],
+            });
+        }
     }
+
+    let height = if compact { 240.0 } else { 440.0 };
 
     rsx! {
         ChartRangeSelector { current_range: range, base_path }
-        WptHistoryChart { history, series_spec, range }
+        WptHistoryChart { history, series_spec, range, height }
     }
 }
 
