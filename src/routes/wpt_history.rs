@@ -341,6 +341,13 @@ const TOOLTIP_JS: &str = r##"
     guide.style.display = "none";
     svg.appendChild(guide);
 
+    var dot = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+    dot.setAttribute("r", 4);
+    dot.setAttribute("stroke", "white");
+    dot.setAttribute("stroke-width", 1.5);
+    dot.style.display = "none";
+    svg.appendChild(dot);
+
     function esc(s) {
         return s.replace(/&/g, "&amp;").replace(/</g, "&lt;");
     }
@@ -359,6 +366,7 @@ const TOOLTIP_JS: &str = r##"
     function hide() {
         tip.style.display = "none";
         guide.style.display = "none";
+        dot.style.display = "none";
     }
 
     // Only show the series whose line is within this vertical distance
@@ -392,6 +400,11 @@ const TOOLTIP_JS: &str = r##"
         guide.setAttribute("x1", runVx);
         guide.setAttribute("x2", runVx);
         guide.style.display = "";
+
+        dot.setAttribute("cx", runVx);
+        dot.setAttribute("cy", py + (1 - (run.v[best][0] / run.v[best][1])) * ph);
+        dot.setAttribute("fill", data.series[best].color);
+        dot.style.display = "";
 
         var html = "<div style='font-weight:bold'>" + esc(run.sha.slice(0, 9)) + " (" + esc(run.d) + ")</div>";
         if (run.msg) {
