@@ -70,16 +70,36 @@ document.querySelectorAll("script[data-wpt-history-data]").forEach(function (dat
         var prev = runIdx > 0 ? data.runs[runIdx - 1] : null;
 
         // Pick the single series whose line is vertically nearest the cursor.
-        // Percentages use the latest run's subtest total as the denominator,
-        // matching the plotted lines.
+        // Distance is measured to the line as drawn (interpolated between the
+        // runs bracketing the cursor) so steep jumps stay hoverable anywhere
+        // along their length. Percentages use the latest run's subtest total
+        // as the denominator, matching the plotted lines.
+        function lineYAtCursor(i) {
+            var runs = data.runs, latest = data.series[i].latest;
+            var before = -1, after = -1;
+            for (var j = data.first; j < runs.length; j++) {
+                if (runs[j].v[i] == null) continue;
+                if (runs[j].x <= data.xMin + ((vx - px) / pw) * xRange) before = j;
+                else { after = j; break; }
+            }
+            if (before < 0 && after < 0) return null;
+            if (before < 0) before = after;
+            if (after < 0) after = before;
+            function yOf(j) { return py + (1 - runs[j].v[i][0] / latest) * ph; }
+            function xOf(j) { return px + ((runs[j].x - data.xMin) / xRange) * pw; }
+            if (xOf(after) === xOf(before)) return yOf(before);
+            var t = (vx - xOf(before)) / (xOf(after) - xOf(before));
+            return yOf(before) + t * (yOf(after) - yOf(before));
+        }
         var best = -1, bestDist = Y_THRESHOLD;
         for (var i = 0; i < data.series.length; i++) {
-            if (run.v[i] == null || !data.series[i].latest) continue;
-            var sy = py + (1 - (run.v[i][0] / data.series[i].latest)) * ph;
+            if (!data.series[i].latest) continue;
+            var sy = lineYAtCursor(i);
+            if (sy == null) continue;
             var dist = Math.abs(sy - vy);
             if (dist < bestDist) { best = i; bestDist = dist; }
         }
-        if (best < 0) { hide(); return; }
+        if (best < 0 || run.v[best] == null) { hide(); return; }
 
         // Prefer a nearby commit whose value actually changed for this
         // series over the strictly-nearest commit
