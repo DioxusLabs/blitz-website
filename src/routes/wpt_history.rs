@@ -321,14 +321,7 @@ pub const SERIES_COLORS: &[&str] = &[
     "#000000", "#e57373", "#7986cb", "#4db6ac", "#ffb74d", "#ba68c8", "#64b5f6", "#a1887f",
 ];
 
-const HIGHLIGHT_AREAS: &[&str] = &[
-    "css",
-    "css/CSS2",
-    "css/css-flexbox",
-    "css/css-grid",
-    "css/css-text",
-    "css/css-position",
-];
+const HIGHLIGHT_AREAS: &[&str] = &["css", "css/CSS2"];
 
 fn highlight_series() -> Vec<ChartSeries> {
     HIGHLIGHT_AREAS

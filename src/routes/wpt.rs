@@ -153,8 +153,11 @@ fn FolderHistoryChart(
     }];
 
     rsx! {
-        ChartRangeSelector { current_range: range, base_path }
-        WptHistoryChart { history, series_spec, range, height: 240.0 }
+        details {
+            summary { "Score history" }
+            ChartRangeSelector { current_range: range, base_path }
+            WptHistoryChart { history, series_spec, range, height: 240.0 }
+        }
     }
 }
 
