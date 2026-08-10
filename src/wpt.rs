@@ -1,4 +1,5 @@
 use std::{
+    collections::BTreeMap,
     io::Cursor,
     sync::{Arc, Mutex, MutexGuard},
     time::Instant,
@@ -35,6 +36,7 @@ impl WptReportCache {
         etag: Option<Arc<str>>,
         report: ArcWptReport,
         scores: ArcWptScores,
+        test_index: Arc<BTreeMap<String, usize>>,
         commit_info: Option<CommitInfo>,
     ) {
         let cached_at = Instant::now();
@@ -43,6 +45,7 @@ impl WptReportCache {
             cached_at,
             report,
             scores,
+            test_index,
             commit_info,
         }));
     }
@@ -56,6 +59,7 @@ impl WptReportCache {
                 etag: entry.etag.clone(),
                 report: entry.report.clone(),
                 scores: entry.scores.clone(),
+                test_index: entry.test_index.clone(),
                 commit_info: entry.commit_info.clone(),
             }));
         }
@@ -67,6 +71,8 @@ pub struct WptReportCacheEntry {
     pub cached_at: Instant,
     pub report: ArcWptReport,
     pub scores: ArcWptScores,
+    /// Maps test name to index within `report.results`
+    pub test_index: Arc<BTreeMap<String, usize>>,
     pub commit_info: Option<CommitInfo>,
 }
 
@@ -128,10 +134,24 @@ pub async fn load_wpt_results(etag: Option<Arc<str>>) {
 
     let scores = score_wpt_report::<WptReport>(&report);
 
+    let test_index: BTreeMap<String, usize> = report
+        .results
+        .iter()
+        .enumerate()
+        .map(|(idx, test)| (test.test.clone(), idx))
+        .collect();
+
     let report = ArcWptReport(Arc::new(report));
     let scores = ArcWptScores(Arc::new(scores));
+    let test_index = Arc::new(test_index);
 
-    WPT_REPORT_CACHE.update(etag, report.clone(), scores.clone(), commit_info);
+    WPT_REPORT_CACHE.update(
+        etag,
+        report.clone(),
+        scores.clone(),
+        test_index,
+        commit_info,
+    );
 
     println!("New WPT results processed and cached.");
 }

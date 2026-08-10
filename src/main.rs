@@ -22,13 +22,13 @@ use routes::{child_areas, folder_chart_areas};
 use routes::{
     AboutPage, ArcDownloadLinks, ArcWptHistory, ChartRange, CssSupportPage, DownloadsPage,
     DownloadsPageProps, ElementSupportPage, EventSupportPage, GettingStartedPage, HomePage,
-    NLNetInstructionsPage, WptFolderPage, WptFolderPageProps, WptHistoryPage, WptHistoryPageProps,
-    WptResultsPage, WptResultsPageProps,
+    NLNetInstructionsPage, TestPageTab, WptHistoryPage, WptHistoryPageProps, WptResultsPage,
+    WptResultsPageProps, WptTestPage, WptTestPageProps,
 };
 use serde::Deserialize;
 use std::{
     net::{IpAddr, SocketAddr},
-    sync::{Arc, LazyLock},
+    sync::LazyLock,
     time::{Duration, Instant},
 };
 use tokio::net::TcpListener;
@@ -42,10 +42,12 @@ mod github;
 mod routes;
 mod wpt;
 mod wpt_history;
+mod wpt_source;
 
 #[derive(Deserialize)]
-struct WptHistoryQuery {
+struct WptPageQuery {
     range: Option<String>,
+    tab: Option<String>,
 }
 
 #[derive(Deserialize)]
@@ -120,15 +122,16 @@ async fn main() {
         )
         .route(
             "/status/wpt",
-            get(async |query: Query<WptHistoryQuery>| {
+            get(async |query: Query<WptPageQuery>| {
                 let range = ChartRange::from_query(query.range.as_deref());
-                let report_entry = fresh_wpt_report().await;
-                let areas = folder_chart_areas(&report_entry.scores.0, "css");
+                let entry = fresh_wpt_cache_entry().await;
+                let areas = folder_chart_areas(&entry.scores.0, "css");
                 let history = fresh_wpt_history(areas).await;
                 let props = WptResultsPageProps {
-                    report: report_entry.report.clone(),
-                    scores: report_entry.scores.clone(),
-                    commit_info: report_entry.commit_info.clone(),
+                    report: entry.report.clone(),
+                    scores: entry.scores.clone(),
+                    commit_info: entry.commit_info.clone(),
+                    area: None,
                     history,
                     range,
                 };
@@ -139,14 +142,14 @@ async fn main() {
         )
         .route(
             "/status/wpt/history",
-            get(async |query: Query<WptHistoryQuery>| {
+            get(async |query: Query<WptPageQuery>| {
                 let range = ChartRange::from_query(query.range.as_deref());
                 // The history page charts "css" plus every one of its
                 // direct children (sparklines show them all)
-                let report_entry = fresh_wpt_report().await;
+                let entry = fresh_wpt_cache_entry().await;
                 let mut areas = vec!["css".to_string()];
                 areas.extend(
-                    child_areas(&report_entry.scores.0, "css")
+                    child_areas(&entry.scores.0, "css")
                         .into_iter()
                         .map(|(area, _)| area),
                 );
@@ -165,33 +168,63 @@ async fn main() {
             }),
         )
         .route(
-            "/status/wpt/{*folder}",
+            "/status/wpt/{*area}",
             get(
-                async |Path(folder): Path<String>, query: Query<WptHistoryQuery>| {
-                    let range = ChartRange::from_query(query.range.as_deref());
-                    let folder = folder.trim_matches('/').to_string();
-                    let report_entry = fresh_wpt_report().await;
-                    // Folder pages chart a single line for the folder itself
-                    let history = fresh_wpt_history(vec![folder.clone()]).await;
+                async |Path(area): Path<String>, Query(query): Query<WptPageQuery>| {
+                    let area = area.trim_matches('/').to_string();
+                    let entry = fresh_wpt_cache_entry().await;
 
-                    if !report_entry.scores.contains_key(&folder) {
-                        return (
-                            StatusCode::NOT_FOUND,
-                            Html(format!("Unknown WPT folder: {folder}")),
-                        )
-                            .into_response();
+                    if entry.scores.contains_key(&area) {
+                        let range = ChartRange::from_query(query.range.as_deref());
+                        // Folder pages chart a single line for the folder
+                        // itself
+                        let history = fresh_wpt_history(vec![area.clone()]).await;
+                        let props = WptResultsPageProps {
+                            report: entry.report.clone(),
+                            scores: entry.scores.clone(),
+                            commit_info: entry.commit_info.clone(),
+                            area: Some(area),
+                            history,
+                            range,
+                        };
+
+                        return Ok(dx_route_with_props(WptResultsPage, props).await);
                     }
 
-                    let props = WptFolderPageProps {
-                        folder,
-                        scores: report_entry.scores.clone(),
-                        commit_info: report_entry.commit_info.clone(),
-                        history,
-                        range,
-                    };
-                    dx_route_with_props(WptFolderPage, props)
-                        .await
-                        .into_response()
+                    if let Some(&test_index) = entry.test_index.get(&area) {
+                        let tab = TestPageTab::from_query(query.tab.as_deref());
+                        let revision = entry.report.run_info.revision.clone();
+
+                        // Fetch the test source (needed to detect ref tests even when
+                        // the source itself is not being displayed)
+                        let source_path = format!("/{}", area.split('?').next().unwrap());
+                        let source = wpt_source::fetch_test_source(&revision, &source_path).await;
+                        let refs = source
+                            .as_deref()
+                            .map(|source| wpt_source::parse_ref_links(source, &source_path))
+                            .unwrap_or_default();
+
+                        let ref_source = if let Some(ref_link) = refs.first() {
+                            let ref_path = ref_link.href.split('?').next().unwrap();
+                            Some(wpt_source::fetch_test_source(&revision, ref_path).await)
+                        } else {
+                            None
+                        };
+
+                        let props = WptTestPageProps {
+                            report: entry.report.clone(),
+                            commit_info: entry.commit_info.clone(),
+                            test_index,
+                            tab,
+                            source,
+                            refs,
+                            ref_source,
+                        };
+
+                        return Ok(dx_route_with_props(WptTestPage, props).await);
+                    }
+
+                    Err((StatusCode::NOT_FOUND, format!("Unknown WPT area: {area}")))
                 },
             ),
         )
@@ -283,31 +316,6 @@ async fn main() {
         .unwrap();
 }
 
-/// Get the latest WPT report cache entry, refreshing it if it is stale
-/// (serve directly for 30s; serve stale-while-revalidate for 30min)
-async fn fresh_wpt_report() -> Arc<wpt::WptReportCacheEntry> {
-    let now = Instant::now();
-    let cache_entry = WPT_REPORT_CACHE.get_cloned();
-    let etag = cache_entry.as_ref().and_then(|entry| entry.etag.clone());
-
-    let mut await_revalidation = true;
-    if let Some(entry) = cache_entry {
-        let cache_age = now.duration_since(entry.cached_at);
-        if cache_age <= Duration::from_secs(30) {
-            return entry;
-        } else if cache_age <= Duration::from_mins(30) {
-            await_revalidation = false
-        }
-    }
-
-    let handle = tokio::spawn(async move { load_wpt_results(etag).await });
-    if await_revalidation {
-        handle.await.unwrap();
-    }
-
-    WPT_REPORT_CACHE.get_cloned().unwrap()
-}
-
 /// Get the latest WPT history data for a set of areas, refreshing it if it
 /// is stale (serve directly for 30s; serve stale-while-revalidate for 30min).
 /// A refresh only revalidates runs.json (all summary files change together),
@@ -336,6 +344,34 @@ async fn fresh_wpt_history(areas: Vec<String>) -> Option<ArcWptHistory> {
     }
 
     Some(WPT_HISTORY_CACHE.get_cloned()?.merged(&areas))
+}
+
+/// Get the cached WPT report, revalidating it if it is stale.
+/// Revalidation is awaited if the cache is more than 30 minutes old,
+/// and performed in the background if it is between 30 seconds and 30 minutes old.
+async fn fresh_wpt_cache_entry() -> std::sync::Arc<wpt::WptReportCacheEntry> {
+    let now = Instant::now();
+    let cache_entry = WPT_REPORT_CACHE.get_cloned();
+    let etag = cache_entry.as_ref().and_then(|entry| entry.etag.clone());
+
+    // Cache with 30s validity
+    let mut await_revalidation = true;
+    if let Some(entry) = cache_entry {
+        let cache_age = now.duration_since(entry.cached_at);
+        if cache_age <= Duration::from_secs(30) {
+            return entry;
+        } else if cache_age <= Duration::from_mins(30) {
+            await_revalidation = false
+        }
+    }
+
+    let handle = tokio::spawn(async move { load_wpt_results(etag).await });
+
+    if await_revalidation {
+        handle.await.unwrap();
+    }
+
+    WPT_REPORT_CACHE.get_cloned().unwrap()
 }
 
 async fn dx_route_cached(render_fn: fn() -> Element) -> impl IntoResponse {
@@ -369,7 +405,7 @@ async fn dx_route(render_fn: fn() -> Element) -> impl IntoResponse {
 async fn dx_route_with_props<P: Clone + 'static, M: 'static>(
     render_fn: impl ComponentFunction<P, M>,
     props: P,
-) -> impl IntoResponse {
+) -> (StatusCode, Html<String>) {
     let (html, duration) = render_component(render_fn, props);
 
     let duration_millis = duration.as_micros() as f64 / 1000.0;
