@@ -409,6 +409,27 @@ const TOOLTIP_JS: &str = r##"
         }
         if (best < 0) { hide(); return; }
 
+        // Prefer a nearby commit whose value actually changed for this
+        // series over the strictly-nearest commit
+        var SNAP_PX = 10;
+        function screenX(i) { return px + ((data.runs[i].x - data.xMin) / xRange) * pw; }
+        function hasChange(i) {
+            var cur = data.runs[i].v[best];
+            if (cur == null) return false;
+            var p = i > 0 ? data.runs[i - 1].v[best] : null;
+            return p == null || cur[0] !== p[0] || cur[1] !== p[1];
+        }
+        var snapped = -1, snappedDist = SNAP_PX;
+        for (var j = data.first; j < data.runs.length; j++) {
+            var d = Math.abs(screenX(j) - vx);
+            if (d <= snappedDist && hasChange(j)) { snapped = j; snappedDist = d; }
+        }
+        if (snapped >= 0 && !hasChange(runIdx)) {
+            runIdx = snapped;
+            run = data.runs[runIdx];
+            prev = runIdx > 0 ? data.runs[runIdx - 1] : null;
+        }
+
         var runVx = px + ((run.x - data.xMin) / xRange) * pw;
         guide.setAttribute("x1", runVx);
         guide.setAttribute("x2", runVx);
