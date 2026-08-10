@@ -82,10 +82,13 @@ pub fn WptResultsPage(
     report: ArcWptReport,
     scores: ArcWptScores,
     commit_info: Option<CommitInfo>,
-    area: Option<String>,
+    area: String,
     history: Option<ArcWptHistory>,
     range: ChartRange,
 ) -> Element {
+    // Top-level suite pages (e.g. "css") get the full-size multi-series
+    // chart; deeper folder pages get the compact single-line chart
+    let compact = area.contains('/');
     rsx! {
         Page { title: "Status: WPT".into(),
             StatusHeader {}
@@ -101,23 +104,17 @@ pub fn WptResultsPage(
                 "
             }
             hr {}
-            if let Some(area) = area {
-                WptBreadcrumb { area: area.clone() }
-                FolderHistoryChart {
-                    folder: area.clone(),
-                    scores: scores.clone(),
-                    history,
-                    range,
-                    base_path: "/status/wpt/{area}",
-                    compact: true,
-                }
-                CommitInfoDisplay { commit_info, label: "Data from commit:" }
-                WptAreaResults { report, scores, area }
-            } else {
-                FolderHistoryChart { folder: "css", scores: scores.clone(), history, range, base_path: "/status/wpt" }
-                CommitInfoDisplay { commit_info, label: "Data from commit:" }
-                WptResults { scores }
+            WptBreadcrumb { area: area.clone() }
+            FolderHistoryChart {
+                folder: area.clone(),
+                scores: scores.clone(),
+                history,
+                range,
+                base_path: "/status/wpt/{area}",
+                compact,
             }
+            CommitInfoDisplay { commit_info, label: "Data from commit:" }
+            WptAreaResults { report, scores, area }
         }
     }
 }
@@ -195,33 +192,6 @@ fn FolderHistoryChart(
         ChartRangeSelector { current_range: range, base_path }
         WptHistoryChart { history, series_spec, range, height }
     }
-}
-
-fn is_focus_area(area: &str) -> bool {
-    let slash_count = area.chars().filter(|c| *c == '/').count();
-    slash_count < 2
-}
-
-#[component]
-pub fn WptResults(scores: ArcWptScores) -> Element {
-    rsx!(
-        table {
-            width: "100%",
-            tr {
-                th { width: "min-content", "Area",  }
-                th { "Interop Score", }
-                th { "Tests", }
-                th { "Test %", }
-                th { "Subtests" }
-                th { "Subtest %" }
-            }
-            {
-                scores.iter().filter(|(area, _)| is_focus_area(area)).map(|(area, scores)| {
-                    area_score_row(area.clone(), Some(format!("/status/wpt/{area}")), *scores)
-                })
-            }
-        }
-    )
 }
 
 #[component]

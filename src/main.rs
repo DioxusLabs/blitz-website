@@ -122,23 +122,7 @@ async fn main() {
         )
         .route(
             "/status/wpt",
-            get(async |query: Query<WptPageQuery>| {
-                let range = ChartRange::from_query(query.range.as_deref());
-                let entry = fresh_wpt_cache_entry().await;
-                let areas = folder_chart_areas(&entry.scores.0, "css");
-                let history = fresh_wpt_history(areas).await;
-                let props = WptResultsPageProps {
-                    report: entry.report.clone(),
-                    scores: entry.scores.clone(),
-                    commit_info: entry.commit_info.clone(),
-                    area: None,
-                    history,
-                    range,
-                };
-                dx_route_with_props(WptResultsPage, props)
-                    .await
-                    .into_response()
-            }),
+            get(|| async { Redirect::to("/status/wpt/css") }),
         )
         .route(
             "/status/wpt/history",
@@ -176,14 +160,20 @@ async fn main() {
 
                     if entry.scores.contains_key(&area) {
                         let range = ChartRange::from_query(query.range.as_deref());
-                        // Folder pages chart a single line for the folder
-                        // itself
-                        let history = fresh_wpt_history(vec![area.clone()]).await;
+                        // Top-level suite pages chart the suite plus its
+                        // largest children; deeper folder pages chart a
+                        // single line for the folder itself
+                        let history_areas = if area.contains('/') {
+                            vec![area.clone()]
+                        } else {
+                            folder_chart_areas(&entry.scores.0, &area)
+                        };
+                        let history = fresh_wpt_history(history_areas).await;
                         let props = WptResultsPageProps {
                             report: entry.report.clone(),
                             scores: entry.scores.clone(),
                             commit_info: entry.commit_info.clone(),
-                            area: Some(area),
+                            area,
                             history,
                             range,
                         };
