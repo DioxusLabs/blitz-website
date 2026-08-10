@@ -69,11 +69,13 @@ document.querySelectorAll("script[data-wpt-history-data]").forEach(function (dat
         var run = data.runs[runIdx];
         var prev = runIdx > 0 ? data.runs[runIdx - 1] : null;
 
-        // Pick the single series whose line is vertically nearest the cursor
+        // Pick the single series whose line is vertically nearest the cursor.
+        // Percentages use the latest run's subtest total as the denominator,
+        // matching the plotted lines.
         var best = -1, bestDist = Y_THRESHOLD;
         for (var i = 0; i < data.series.length; i++) {
-            if (run.v[i] == null) continue;
-            var sy = py + (1 - (run.v[i][0] / run.v[i][1])) * ph;
+            if (run.v[i] == null || !data.series[i].latest) continue;
+            var sy = py + (1 - (run.v[i][0] / data.series[i].latest)) * ph;
             var dist = Math.abs(sy - vy);
             if (dist < bestDist) { best = i; bestDist = dist; }
         }
@@ -106,7 +108,7 @@ document.querySelectorAll("script[data-wpt-history-data]").forEach(function (dat
         guide.style.display = "";
 
         dot.setAttribute("cx", runVx);
-        dot.setAttribute("cy", py + (1 - (run.v[best][0] / run.v[best][1])) * ph);
+        dot.setAttribute("cy", py + (1 - (run.v[best][0] / data.series[best].latest)) * ph);
         dot.setAttribute("fill", data.series[best].color);
         dot.style.display = "";
 
@@ -115,7 +117,7 @@ document.querySelectorAll("script[data-wpt-history-data]").forEach(function (dat
             html += "<div style='margin-bottom:4px;white-space:nowrap;overflow:hidden;" +
                 "text-overflow:ellipsis'>" + esc(run.msg) + "</div>";
         }
-        var pass = run.v[best][0], total = run.v[best][1];
+        var pass = run.v[best][0], total = data.series[best].latest;
         html += "<div><span style='color:" + data.series[best].color + "'>\u25CF</span> " +
             esc(data.series[best].name) + ": " + (100 * pass / total).toFixed(1) + "% (" +
             pass.toLocaleString() + "/" + total.toLocaleString() + ")</div>";
@@ -123,7 +125,7 @@ document.querySelectorAll("script[data-wpt-history-data]").forEach(function (dat
         // Change relative to the previous run
         if (prev && prev.v[best] != null) {
             var dPass = pass - prev.v[best][0];
-            var dPct = 100 * (pass / total - prev.v[best][0] / prev.v[best][1]);
+            var dPct = 100 * ((pass - prev.v[best][0]) / total);
             var sign = dPass > 0 ? "+" : "";
             var color = dPass > 0 ? "#2e7d32" : (dPass < 0 ? "#c62828" : "#666");
             html += "<div style='color:" + color + "'>Change: " + sign +
