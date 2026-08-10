@@ -6,3 +6,4 @@ mod downloads;          pub use downloads::*;
 mod about;              pub use about::*;
 mod nlnet_instructions; pub use nlnet_instructions::*;
 mod wpt;                pub use wpt::*;
+mod wpt_history;        pub use wpt_history::*;

@@ -14,7 +14,10 @@ use wptreport::{
 use crate::{
     components::{BarePage, CommitInfoDisplay, Page},
     github::CommitInfo,
-    routes::{StatusHeader, StatusTabs},
+    routes::{
+        ArcWptHistory, ChartRange, ChartRangeSelector, ChartSeries, StatusHeader, StatusTabs,
+        WptHistoryChart, SERIES_COLORS,
+    },
     wpt_source::{RefLink, SourceResult},
 };
 
@@ -79,7 +82,9 @@ pub fn WptResultsPage(
     report: ArcWptReport,
     scores: ArcWptScores,
     commit_info: Option<CommitInfo>,
-    area: Option<String>,
+    area: String,
+    history: Option<ArcWptHistory>,
+    range: ChartRange,
 ) -> Element {
     rsx! {
         Page { title: "Status: WPT".into(),
@@ -96,42 +101,64 @@ pub fn WptResultsPage(
                 "
             }
             hr {}
-            CommitInfoDisplay { commit_info, label: "Data from commit:" }
-            if let Some(area) = area {
-                WptBreadcrumb { area: area.clone() }
-                WptAreaResults { report, scores, area }
-            } else {
-                WptResults { scores }
+            WptBreadcrumb { area: area.clone() }
+            FolderHistoryChart {
+                folder: area.clone(),
+                history,
+                range,
+                base_path: "/status/wpt/{area}",
             }
+            CommitInfoDisplay { commit_info, label: "Data from commit:" }
+            WptAreaResults { report, scores, area }
         }
     }
 }
 
-fn is_focus_area(area: &str) -> bool {
-    let slash_count = area.chars().filter(|c| *c == '/').count();
-    slash_count < 2
+/// The direct child areas of a folder, largest (by subtest count) first
+pub fn child_areas(scores: &WptScores, folder: &str) -> Vec<(String, AreaScores)> {
+    let prefix = format!("{folder}/");
+    let mut children: Vec<(String, AreaScores)> = scores
+        .iter()
+        .filter(|(area, _)| {
+            area.strip_prefix(&prefix)
+                .is_some_and(|rest| !rest.contains('/'))
+        })
+        .map(|(area, scores)| (area.clone(), *scores))
+        .collect();
+    children.sort_by_key(|(_, scores)| std::cmp::Reverse(scores.subtests.total));
+    children
 }
 
+/// A short history chart for a folder, showing a single line for the
+/// folder's total
 #[component]
-pub fn WptResults(scores: ArcWptScores) -> Element {
-    rsx!(
-        table {
-            width: "100%",
-            tr {
-                th { width: "min-content", "Area",  }
-                th { "Interop Score", }
-                th { "Tests", }
-                th { "Test %", }
-                th { "Subtests" }
-                th { "Subtest %" }
-            }
-            {
-                scores.iter().filter(|(area, _)| is_focus_area(area)).map(|(area, scores)| {
-                    area_score_row(area.clone(), Some(format!("/status/wpt/{area}")), *scores)
-                })
-            }
+fn FolderHistoryChart(
+    folder: String,
+    history: Option<ArcWptHistory>,
+    range: ChartRange,
+    base_path: String,
+) -> Element {
+    let Some(history) = history else {
+        return rsx!( p { "No history data available" } );
+    };
+
+    let series_spec = vec![ChartSeries {
+        area: folder.clone(),
+        label: if folder == "css" {
+            "all css".to_string()
+        } else {
+            folder.clone()
+        },
+        color: SERIES_COLORS[0],
+    }];
+
+    rsx! {
+        details {
+            summary { "Score history" }
+            ChartRangeSelector { current_range: range, base_path }
+            WptHistoryChart { history, series_spec, range, height: 240.0 }
         }
-    )
+    }
 }
 
 #[component]
