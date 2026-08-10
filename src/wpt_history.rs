@@ -6,159 +6,208 @@ use std::{
 
 use reqwest::Client;
 use serde::Deserialize;
-use wptreport::score_summary::{RunScores, RunSummary, ScoreSummaryReport};
 
-use crate::routes::{ArcCommitMessages, ArcWptSummary};
+use crate::routes::ArcWptHistory;
 
-const SUMMARY_URL: &str =
-    "https://raw.githubusercontent.com/DioxusLabs/blitz-wpt-results/main/summary.json";
-const COMMIT_MESSAGES_URL: &str =
-    "https://raw.githubusercontent.com/DioxusLabs/blitz-wpt-results/main/commit-messages.json";
+const SUMMARY_BASE_URL: &str =
+    "https://raw.githubusercontent.com/DioxusLabs/blitz-wpt-results/main/summary";
 
-/// The compact on-disk format of summary.json: per-area scores are stored as
-/// `[total_tests, total_score, total_subtests, total_subtests_passed]` arrays
-/// (parallel to `focus_areas`)
+/// Per-area scores for a single run:
+/// `[total_tests, total_score, total_subtests, total_subtests_passed]`
+pub type ScoreTuple = (u32, f64, u32, u32);
+
+/// One entry of runs.json: metadata shared by all per-area score files
 #[derive(Deserialize)]
-struct CompactSummary {
-    focus_areas: Vec<String>,
-    runs: Vec<CompactRun>,
-}
-
-#[derive(Deserialize)]
-struct CompactRun {
+struct RunMeta {
     date: String,
+    #[allow(dead_code)]
     wpt_revision: String,
     product_revision: String,
-    scores: Vec<(u32, f64, u32, u32)>,
+    commit_message: Option<String>,
 }
 
-impl From<CompactSummary> for ScoreSummaryReport {
-    fn from(compact: CompactSummary) -> Self {
-        ScoreSummaryReport {
-            focus_areas: compact.focus_areas,
-            runs: compact
-                .runs
-                .into_iter()
-                .map(|run| RunSummary {
-                    date: run.date,
-                    wpt_revision: run.wpt_revision,
-                    product_revision: run.product_revision,
-                    scores: run
-                        .scores
-                        .into_iter()
-                        .map(
-                            |(total_tests, total_score, total_subtests, total_subtests_passed)| {
-                                RunScores {
-                                    total_tests,
-                                    total_score,
-                                    total_subtests,
-                                    total_subtests_passed,
-                                }
-                            },
-                        )
-                        .collect(),
-                })
-                .collect(),
-        }
+#[derive(Deserialize)]
+struct RunsFile {
+    runs: Vec<RunMeta>,
+}
+
+/// One summary/areas/<group>.json file: `scores` has one row per run
+/// (index-aligned with runs.json), each row parallel to `focus_areas`
+#[derive(Deserialize)]
+struct AreaFile {
+    focus_areas: Vec<String>,
+    scores: Vec<Vec<Option<ScoreTuple>>>,
+}
+
+/// The merged history for one group of areas (one top-level WPT folder)
+pub struct WptHistory {
+    pub focus_areas: Vec<String>,
+    pub runs: Vec<HistoryRun>,
+}
+
+pub struct HistoryRun {
+    pub date: String,
+    pub product_revision: String,
+    pub commit_message: Option<String>,
+    pub scores: Vec<Option<ScoreTuple>>,
+}
+
+/// The group (data file) that holds history for a given WPT folder path:
+/// "css" itself and its direct children are in the "css" group; deeper
+/// folders are in the group named for their top-level folder.
+pub fn history_group(area: &str) -> &str {
+    match area.split('/').nth(1) {
+        Some(second) => second,
+        None => "css",
     }
 }
 
 pub static WPT_HISTORY_CACHE: WptHistoryCache = WptHistoryCache::new();
 
-pub struct WptHistoryCache(Mutex<Option<Arc<WptHistoryCacheEntry>>>);
+pub struct WptHistoryCacheEntry {
+    pub runs_etag: Option<Arc<str>>,
+    pub area_etag: Option<Arc<str>>,
+    pub cached_at: Instant,
+    pub history: ArcWptHistory,
+}
+
+/// A cache of merged history data, keyed by group name
+pub struct WptHistoryCache(Mutex<Option<HashMap<String, Arc<WptHistoryCacheEntry>>>>);
 impl WptHistoryCache {
     const fn new() -> Self {
         Self(Mutex::new(None))
     }
 
-    pub fn get_cloned(&self) -> Option<Arc<WptHistoryCacheEntry>> {
-        (*self.0.lock().unwrap()).clone()
+    pub fn get_cloned(&self, group: &str) -> Option<Arc<WptHistoryCacheEntry>> {
+        self.0.lock().unwrap().as_ref()?.get(group).cloned()
     }
 
-    pub fn update(
-        &self,
-        etag: Option<Arc<str>>,
-        summary: ArcWptSummary,
-        commit_messages: ArcCommitMessages,
-    ) {
-        let cached_at = Instant::now();
-        *self.0.lock().unwrap() = Some(Arc::new(WptHistoryCacheEntry {
-            etag,
-            cached_at,
-            summary,
-            commit_messages,
-        }));
+    fn update(&self, group: &str, entry: WptHistoryCacheEntry) {
+        self.0
+            .lock()
+            .unwrap()
+            .get_or_insert_with(HashMap::new)
+            .insert(group.to_string(), Arc::new(entry));
     }
 
-    pub fn mark_as_fresh(&self) {
-        let cached_at = Instant::now();
+    fn mark_as_fresh(&self, group: &str) {
         let mut inner = self.0.lock().unwrap();
-        if let Some(entry) = inner.take() {
-            *inner = Some(Arc::new(WptHistoryCacheEntry {
-                cached_at,
-                etag: entry.etag.clone(),
-                summary: entry.summary.clone(),
-                commit_messages: entry.commit_messages.clone(),
-            }));
-        }
+        let Some(entry) = inner.as_mut().and_then(|map| map.get_mut(group)) else {
+            return;
+        };
+        *entry = Arc::new(WptHistoryCacheEntry {
+            cached_at: Instant::now(),
+            runs_etag: entry.runs_etag.clone(),
+            area_etag: entry.area_etag.clone(),
+            history: entry.history.clone(),
+        });
     }
 }
 
-pub struct WptHistoryCacheEntry {
-    pub etag: Option<Arc<str>>,
-    pub cached_at: Instant,
-    pub summary: ArcWptSummary,
-    pub commit_messages: ArcCommitMessages,
-}
-
-pub async fn load_wpt_history(etag: Option<Arc<str>>) {
-    println!("Checking for new WPT history summary...");
-
-    let client = Client::new();
-    let mut builder = client.get(SUMMARY_URL);
-
-    if let Some(etag) = etag.as_ref() {
+async fn fetch(
+    client: &Client,
+    url: &str,
+    etag: Option<&Arc<str>>,
+) -> Option<(Option<Arc<str>>, Option<Vec<u8>>)> {
+    let mut builder = client.get(url);
+    if let Some(etag) = etag {
         builder = builder.header("If-None-Match", &**etag);
     }
-    let result = builder.send().await.unwrap();
-
+    let result = builder.send().await.ok()?;
     if result.status() == 304 {
-        println!("WPT history summary unchanged");
-        WPT_HISTORY_CACHE.mark_as_fresh();
-        return;
+        return Some((etag.cloned(), None));
     }
-
+    if !result.status().is_success() {
+        println!("Failed to fetch {url}: HTTP {}", result.status());
+        return None;
+    }
     let etag = result
         .headers()
         .get("etag")
         .and_then(|header| header.to_str().ok())
         .map(Arc::from);
+    Some((etag, Some(result.bytes().await.ok()?.to_vec())))
+}
 
-    println!("New WPT history summary found. etag: {etag:?}");
+/// Fetch (or revalidate) the history data for one group
+pub async fn load_wpt_history(group: String) {
+    println!("Checking for new WPT history data for group {group:?}...");
 
-    let body = result.bytes().await.unwrap();
-    let compact: CompactSummary = serde_json::from_slice(&body).unwrap();
-    let summary = ScoreSummaryReport::from(compact);
+    let existing = WPT_HISTORY_CACHE.get_cloned(&group);
+    let (runs_etag, area_etag) = existing
+        .as_ref()
+        .map(|entry| (entry.runs_etag.clone(), entry.area_etag.clone()))
+        .unwrap_or((None, None));
 
-    // Commit messages are optional: tooltips degrade gracefully without them
-    let commit_messages: HashMap<String, String> = match client
-        .get(COMMIT_MESSAGES_URL)
-        .send()
-        .await
-        .and_then(|res| res.error_for_status())
-    {
-        Ok(res) => serde_json::from_slice(&res.bytes().await.unwrap()).unwrap_or_default(),
-        Err(err) => {
-            println!("Failed to fetch commit messages: {err}");
-            HashMap::new()
+    let client = Client::new();
+    let runs_url = format!("{SUMMARY_BASE_URL}/runs.json");
+    let area_url = format!("{SUMMARY_BASE_URL}/areas/{group}.json");
+    let results = tokio::join!(
+        fetch(&client, &runs_url, runs_etag.as_ref()),
+        fetch(&client, &area_url, area_etag.as_ref()),
+    );
+    let (Some(runs_result), Some(area_result)) = results else {
+        return;
+    };
+
+    if runs_result.1.is_none() && area_result.1.is_none() {
+        println!("WPT history data for group {group:?} unchanged");
+        WPT_HISTORY_CACHE.mark_as_fresh(&group);
+        return;
+    }
+
+    // If only one of the two files changed, refetch the other unconditionally
+    // so the pair stays consistent (they must be index-aligned)
+    let (runs_etag, runs_body) = match runs_result {
+        (etag, Some(body)) => (etag, body),
+        (_, None) => {
+            let Some((etag, body)) = fetch(&client, &runs_url, None).await else {
+                return;
+            };
+            (etag, body.unwrap())
+        }
+    };
+    let (area_etag, area_body) = match area_result {
+        (etag, Some(body)) => (etag, body),
+        (_, None) => {
+            let Some((etag, body)) = fetch(&client, &area_url, None).await else {
+                return;
+            };
+            (etag, body.unwrap())
         }
     };
 
-    WPT_HISTORY_CACHE.update(
-        etag,
-        ArcWptSummary(Arc::new(summary)),
-        ArcCommitMessages(Arc::new(commit_messages)),
+    let runs_file: RunsFile = serde_json::from_slice(&runs_body).unwrap();
+    let area_file: AreaFile = serde_json::from_slice(&area_body).unwrap();
+    assert_eq!(
+        runs_file.runs.len(),
+        area_file.scores.len(),
+        "area file {group} is misaligned with runs.json"
     );
 
-    println!("New WPT history summary processed and cached.");
+    let history = WptHistory {
+        focus_areas: area_file.focus_areas,
+        runs: runs_file
+            .runs
+            .into_iter()
+            .zip(area_file.scores)
+            .map(|(meta, scores)| HistoryRun {
+                date: meta.date,
+                product_revision: meta.product_revision,
+                commit_message: meta.commit_message,
+                scores,
+            })
+            .collect(),
+    };
+
+    println!("New WPT history data for group {group:?} processed and cached.");
+    WPT_HISTORY_CACHE.update(
+        &group,
+        WptHistoryCacheEntry {
+            runs_etag,
+            area_etag,
+            cached_at: Instant::now(),
+            history: ArcWptHistory(Arc::new(history)),
+        },
+    );
 }

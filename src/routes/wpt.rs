@@ -6,7 +6,10 @@ use wptreport::{wpt_report::WptReport, AreaScores};
 use crate::{
     components::{CommitInfoDisplay, Page},
     github::CommitInfo,
-    routes::{StatusHeader, StatusTabs},
+    routes::{
+        ArcWptHistory, ChartRange, ChartRangeSelector, ChartSeries, StatusHeader, StatusTabs,
+        WptHistoryChart, SERIES_COLORS,
+    },
 };
 
 struct Colors(&'static [[u8; 3]]);
@@ -70,6 +73,8 @@ pub fn WptResultsPage(
     report: ArcWptReport,
     scores: ArcWptScores,
     commit_info: Option<CommitInfo>,
+    history: Option<ArcWptHistory>,
+    range: ChartRange,
 ) -> Element {
     rsx! {
         Page { title: "Status: WPT".into(),
@@ -86,10 +91,123 @@ pub fn WptResultsPage(
                 "
             }
             hr {}
+            FolderHistoryChart { folder: "css", scores: scores.clone(), history, range, base_path: "/status/wpt" }
             CommitInfoDisplay { commit_info, label: "Data from commit:" }
             WptResults { scores }
         }
     }
+}
+
+#[component]
+pub fn WptFolderPage(
+    folder: String,
+    scores: ArcWptScores,
+    commit_info: Option<CommitInfo>,
+    history: Option<ArcWptHistory>,
+    range: ChartRange,
+) -> Element {
+    // Breadcrumb segments: (path-so-far, segment name)
+    let crumbs: Vec<(String, String)> = folder
+        .split('/')
+        .scan(String::new(), |path, segment| {
+            if !path.is_empty() {
+                path.push('/');
+            }
+            path.push_str(segment);
+            Some((path.clone(), segment.to_string()))
+        })
+        .collect();
+
+    rsx! {
+        Page { title: "Status: WPT: {folder}".into(),
+            StatusHeader {}
+            StatusTabs { current_tab: "wpt" }
+            p {
+                font_size: "18px",
+                a { href: "/status/wpt", "wpt" }
+                for (path, segment) in crumbs {
+                    " / "
+                    a { href: "/status/wpt/{path}", {segment} }
+                }
+            }
+            hr {}
+            FolderHistoryChart {
+                folder: folder.clone(),
+                scores: scores.clone(),
+                history,
+                range,
+                base_path: "/status/wpt/{folder}",
+            }
+            CommitInfoDisplay { commit_info, label: "Data from commit:" }
+            WptFolderResults { folder, scores }
+        }
+    }
+}
+
+/// The direct child areas of a folder, largest (by subtest count) first
+fn child_areas(scores: &WptScores, folder: &str) -> Vec<(String, AreaScores)> {
+    let prefix = format!("{folder}/");
+    let mut children: Vec<(String, AreaScores)> = scores
+        .iter()
+        .filter(|(area, _)| {
+            area.strip_prefix(&prefix)
+                .is_some_and(|rest| !rest.contains('/'))
+        })
+        .map(|(area, scores)| (area.clone(), *scores))
+        .collect();
+    children.sort_by_key(|(_, scores)| std::cmp::Reverse(scores.subtests.total));
+    children
+}
+
+/// A history chart for a folder: one line for the folder itself plus one for
+/// each of its largest direct children
+#[component]
+fn FolderHistoryChart(
+    folder: String,
+    scores: ArcWptScores,
+    history: Option<ArcWptHistory>,
+    range: ChartRange,
+    base_path: String,
+) -> Element {
+    let Some(history) = history else {
+        return rsx!( p { "No history data available" } );
+    };
+
+    let mut series_spec = vec![ChartSeries {
+        area: folder.clone(),
+        label: if folder == "css" {
+            "all css".to_string()
+        } else {
+            folder.clone()
+        },
+        color: SERIES_COLORS[0],
+    }];
+    let prefix = format!("{folder}/");
+    for (child, _) in child_areas(&scores, &folder)
+        .into_iter()
+        .take(SERIES_COLORS.len() - 1)
+    {
+        series_spec.push(ChartSeries {
+            label: child.strip_prefix(&prefix).unwrap_or(&child).to_string(),
+            area: child,
+            color: SERIES_COLORS[series_spec.len()],
+        });
+    }
+
+    rsx! {
+        ChartRangeSelector { current_range: range, base_path }
+        WptHistoryChart { history, series_spec, range }
+    }
+}
+
+#[component]
+pub fn WptFolderResults(folder: String, scores: ArcWptScores) -> Element {
+    let mut areas: Vec<(String, AreaScores)> = child_areas(&scores, &folder);
+    if let Some(own) = scores.get(&folder) {
+        areas.insert(0, (folder, *own));
+    }
+    areas.sort_by(|(a, _), (b, _)| a.cmp(b));
+    wpt_score_table(areas)
 }
 
 fn is_focus_area(area: &str) -> bool {
@@ -99,6 +217,15 @@ fn is_focus_area(area: &str) -> bool {
 
 #[component]
 pub fn WptResults(scores: ArcWptScores) -> Element {
+    let areas: Vec<(String, AreaScores)> = scores
+        .iter()
+        .filter(|(area, _)| is_focus_area(area))
+        .map(|(area, scores)| (area.clone(), *scores))
+        .collect();
+    wpt_score_table(areas)
+}
+
+fn wpt_score_table(areas: Vec<(String, AreaScores)>) -> Element {
     rsx!(
         table {
             width: "100%",
@@ -111,7 +238,7 @@ pub fn WptResults(scores: ArcWptScores) -> Element {
                 th { "Subtest %" }
             }
             {
-                scores.iter().filter(|(area, _)| is_focus_area(area)).map(|(area, scores)| {
+                areas.iter().map(|(area, scores)| {
 
                     let tests = scores.tests;
                     let subtests = scores.subtests;
@@ -123,7 +250,11 @@ pub fn WptResults(scores: ArcWptScores) -> Element {
                             background_color: format!("rgb({},{},{})", color[0], color[1], color[2]),
                             td {
                                 background_color: "white",
-                                {area.clone()}
+                                a {
+                                    color: "inherit",
+                                    href: "/status/wpt/{area}",
+                                    {area.clone()}
+                                }
                             }
                             td {
                                 text_align: "right",

@@ -1,34 +1,20 @@
 use std::{fmt::Write, ops::Deref, sync::Arc};
 
 use dioxus::prelude::*;
-use wptreport::score_summary::{RunSummary, ScoreSummaryReport};
 
-use crate::routes::{StatusHeader, StatusTabs};
 use crate::components::Page;
+use crate::routes::{StatusHeader, StatusTabs};
+use crate::wpt_history::{HistoryRun, WptHistory};
 
 #[derive(Clone)]
-pub struct ArcCommitMessages(pub Arc<std::collections::HashMap<String, String>>);
-impl PartialEq for ArcCommitMessages {
+pub struct ArcWptHistory(pub Arc<WptHistory>);
+impl PartialEq for ArcWptHistory {
     fn eq(&self, other: &Self) -> bool {
         Arc::ptr_eq(&self.0, &other.0)
     }
 }
-impl Deref for ArcCommitMessages {
-    type Target = std::collections::HashMap<String, String>;
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
-}
-
-#[derive(Clone)]
-pub struct ArcWptSummary(pub Arc<ScoreSummaryReport>);
-impl PartialEq for ArcWptSummary {
-    fn eq(&self, other: &Self) -> bool {
-        Arc::ptr_eq(&self.0, &other.0)
-    }
-}
-impl Deref for ArcWptSummary {
-    type Target = ScoreSummaryReport;
+impl Deref for ArcWptHistory {
+    type Target = WptHistory;
     fn deref(&self) -> &Self::Target {
         &self.0
     }
@@ -144,8 +130,8 @@ impl ChartRange {
 
     /// The earliest date (in fractional epoch-days) included in the range,
     /// measured back from the date of the latest run
-    fn min_x(self, summary: &ScoreSummaryReport) -> f64 {
-        let latest = summary
+    fn min_x(self, history: &WptHistory) -> f64 {
+        let latest = history
             .runs
             .last()
             .and_then(|run| parse_date(&run.date))
@@ -157,28 +143,33 @@ impl ChartRange {
     }
 }
 
+/// A single line on the history chart
+#[derive(Clone, PartialEq)]
+pub struct ChartSeries {
+    /// The focus area charted (e.g. "css/css-flexbox")
+    pub area: String,
+    /// The label shown in the legend and tooltip
+    pub label: String,
+    pub color: &'static str,
+}
+
 struct Series {
-    name: &'static str,
+    label: String,
     color: &'static str,
     points: Vec<(f64, f64)>,
 }
 
-fn subtest_pass_percent(run: &RunSummary, area_idx: usize) -> Option<f64> {
-    let scores = run.scores.get(area_idx)?;
-    if scores.total_subtests == 0 {
+fn subtest_pass_percent(run: &HistoryRun, area_idx: usize) -> Option<f64> {
+    let (_, _, total_subtests, total_subtests_passed) = (*run.scores.get(area_idx)?)?;
+    if total_subtests == 0 {
         return None;
     }
-    Some(scores.total_subtests_passed as f64 / scores.total_subtests as f64 * 100.0)
+    Some(total_subtests_passed as f64 / total_subtests as f64 * 100.0)
 }
 
-fn area_series(
-    summary: &ScoreSummaryReport,
-    min_x: f64,
-    area: &'static str,
-    color: &'static str,
-) -> Option<Series> {
-    let area_idx = summary.focus_areas.iter().position(|a| a == area)?;
-    let points: Vec<(f64, f64)> = summary
+fn area_series(history: &WptHistory, min_x: f64, spec: &ChartSeries) -> Option<Series> {
+    let area_idx = history.focus_areas.iter().position(|a| *a == spec.area)?;
+    let points: Vec<(f64, f64)> = history
         .runs
         .iter()
         .filter_map(|run| Some((parse_date(&run.date)?, subtest_pass_percent(run, area_idx)?)))
@@ -188,8 +179,8 @@ fn area_series(
         return None;
     }
     Some(Series {
-        name: area,
-        color,
+        label: spec.label.clone(),
+        color: spec.color,
         points,
     })
 }
@@ -257,11 +248,7 @@ fn month_ticks(x_min: f64, x_max: f64) -> Vec<(f64, String)> {
 }
 
 #[component]
-pub fn WptHistoryPage(
-    summary: ArcWptSummary,
-    range: ChartRange,
-    commit_messages: ArcCommitMessages,
-) -> Element {
+pub fn WptHistoryPage(history: ArcWptHistory, range: ChartRange) -> Element {
     rsx! {
         Page { title: "Status: WPT History".into(),
             StatusHeader {}
@@ -272,16 +259,20 @@ pub fn WptHistoryPage(
                 Scores are the percentage of subtests passing (of those that Blitz can run). Data is recorded for every commit to the main branch."#
             }
             hr {}
-            ChartRangeSelector { current_range: range }
-            WptHistoryChart { summary: summary.clone(), range, commit_messages }
+            ChartRangeSelector { current_range: range, base_path: "/status/wpt/history" }
+            WptHistoryChart {
+                history: history.clone(),
+                series_spec: highlight_series(),
+                range,
+            }
             h2 { "Per-area history" }
-            WptHistorySparklines { summary, range }
+            WptHistorySparklines { history, range }
         }
     }
 }
 
 #[component]
-pub fn ChartRangeSelector(current_range: ChartRange) -> Element {
+pub fn ChartRangeSelector(current_range: ChartRange, base_path: String) -> Element {
     rsx! {
         div {
             display: "flex",
@@ -292,7 +283,7 @@ pub fn ChartRangeSelector(current_range: ChartRange) -> Element {
 
             for range in ChartRange::ALL {
                 a {
-                    href: "/status/wpt/history?range={range.query_value()}",
+                    href: "{base_path}?range={range.query_value()}",
                     padding: "2px 10px",
                     border_radius: "12px",
                     text_decoration: "none",
@@ -305,23 +296,45 @@ pub fn ChartRangeSelector(current_range: ChartRange) -> Element {
     }
 }
 
-const HIGHLIGHT_AREAS: &[(&str, &str)] = &[
-    ("css", "#000000"),
-    ("css/CSS2", "#e57373"),
-    ("css/css-flexbox", "#7986cb"),
-    ("css/css-grid", "#4db6ac"),
-    ("css/css-text", "#ffb74d"),
-    ("css/css-position", "#ba68c8"),
+/// Colors assigned to chart lines, in order. The first is reserved for the
+/// "whole folder" line.
+pub const SERIES_COLORS: &[&str] = &[
+    "#000000", "#e57373", "#7986cb", "#4db6ac", "#ffb74d", "#ba68c8", "#64b5f6", "#a1887f",
 ];
 
+const HIGHLIGHT_AREAS: &[&str] = &[
+    "css",
+    "css/CSS2",
+    "css/css-flexbox",
+    "css/css-grid",
+    "css/css-text",
+    "css/css-position",
+];
+
+fn highlight_series() -> Vec<ChartSeries> {
+    HIGHLIGHT_AREAS
+        .iter()
+        .zip(SERIES_COLORS)
+        .map(|(area, color)| ChartSeries {
+            area: area.to_string(),
+            label: area
+                .strip_prefix("css/")
+                .unwrap_or("all css")
+                .to_string(),
+            color,
+        })
+        .collect()
+}
+
 /// Inline script implementing the hover tooltip as a progressive enhancement.
-/// Reads run data from the `#wpt-history-data` JSON blob and shows the nearest
-/// run's commit id, commit message, and per-area pass percentages.
+/// Reads run data from the chart's JSON blob and shows the nearest run's
+/// commit id, commit message, and pass percentages for the nearest line.
 const TOOLTIP_JS: &str = r##"
 (function () {
-    var container = document.getElementById("wpt-history-chart");
-    var dataEl = document.getElementById("wpt-history-data");
-    if (!container || !dataEl) return;
+    var scripts = document.querySelectorAll("script[data-wpt-history-data]");
+    var dataEl = scripts[scripts.length - 1];
+    if (!dataEl) return;
+    var container = dataEl.parentElement;
     var svg = container.querySelector("svg");
     var data = JSON.parse(dataEl.textContent);
     if (!svg || !data.runs.length) return;
@@ -441,19 +454,19 @@ const TOOLTIP_JS: &str = r##"
 
 #[component]
 pub fn WptHistoryChart(
-    summary: ArcWptSummary,
+    history: ArcWptHistory,
+    series_spec: Vec<ChartSeries>,
     range: ChartRange,
-    commit_messages: ArcCommitMessages,
 ) -> Element {
     const WIDTH: f64 = 900.0;
     const HEIGHT: f64 = 440.0;
     const PLOT: (f64, f64, f64, f64) = (50.0, 15.0, WIDTH - 65.0, HEIGHT - 55.0);
     let (px, py, pw, ph) = PLOT;
 
-    let min_x = range.min_x(&summary);
-    let series: Vec<Series> = HIGHLIGHT_AREAS
+    let min_x = range.min_x(&history);
+    let series: Vec<Series> = series_spec
         .iter()
-        .filter_map(|(area, color)| area_series(&summary, min_x, area, color))
+        .filter_map(|spec| area_series(&history, min_x, spec))
         .collect();
 
     let x_min = series
@@ -473,32 +486,29 @@ pub fn WptHistoryChart(
     let x_range = (x_max - x_min).max(f64::EPSILON);
 
     // Per-run data for the hover tooltip (a JS progressive enhancement)
-    let area_indices: Vec<Option<usize>> = HIGHLIGHT_AREAS
+    let area_indices: Vec<Option<usize>> = series_spec
         .iter()
-        .map(|(area, _)| summary.focus_areas.iter().position(|a| a == area))
+        .map(|spec| history.focus_areas.iter().position(|a| *a == spec.area))
         .collect();
     // Include the run immediately before the visible range (if any) so the
     // first visible run's tooltip can show a delta against it
-    let first_visible = summary
+    let first_visible = history
         .runs
         .iter()
         .position(|run| parse_date(&run.date).is_some_and(|x| x >= min_x))
         .unwrap_or(0);
     let start = first_visible.saturating_sub(1);
-    let runs_json: Vec<serde_json::Value> = summary.runs[start..]
+    let runs_json: Vec<serde_json::Value> = history.runs[start..]
         .iter()
         .filter_map(|run| {
             let x = parse_date(&run.date)?;
             let values: Vec<serde_json::Value> = area_indices
                 .iter()
                 .map(|idx| {
-                    idx.and_then(|idx| run.scores.get(idx))
-                        .filter(|scores| scores.total_subtests != 0)
-                        .map(|scores| {
-                            serde_json::json!([
-                                scores.total_subtests_passed,
-                                scores.total_subtests
-                            ])
+                    idx.and_then(|idx| *run.scores.get(idx)?)
+                        .filter(|(_, _, total_subtests, _)| *total_subtests != 0)
+                        .map(|(_, _, total_subtests, total_subtests_passed)| {
+                            serde_json::json!([total_subtests_passed, total_subtests])
                         })
                         .unwrap_or(serde_json::Value::Null)
                 })
@@ -507,7 +517,7 @@ pub fn WptHistoryChart(
                 "x": x,
                 "d": run.date.split('T').next().unwrap_or(&run.date),
                 "sha": run.product_revision,
-                "msg": commit_messages.get(&run.product_revision),
+                "msg": run.commit_message,
                 "v": values,
             }))
         })
@@ -520,10 +530,7 @@ pub fn WptHistoryChart(
         "xMax": x_max,
         "series": series
             .iter()
-            .map(|s| serde_json::json!({
-                "name": s.name.strip_prefix("css/").unwrap_or("all css"),
-                "color": s.color,
-            }))
+            .map(|s| serde_json::json!({ "name": s.label, "color": s.color }))
             .collect::<Vec<_>>(),
         "runs": runs_json,
     })
@@ -533,7 +540,6 @@ pub fn WptHistoryChart(
 
     rsx! {
         div {
-            id: "wpt-history-chart",
             position: "relative",
 
         svg {
@@ -582,12 +588,12 @@ pub fn WptHistoryChart(
             }
 
             // Data series
-            for s in series.iter() {
+            for (i, s) in series.iter().enumerate() {
                 polyline {
                     points: polyline_points(&s.points, x_min, x_max, PLOT),
                     fill: "none",
                     stroke: s.color,
-                    stroke_width: if s.name == "css" { "2.5" } else { "1.5" },
+                    stroke_width: if i == 0 { "2.5" } else { "1.5" },
                 }
             }
 
@@ -606,13 +612,13 @@ pub fn WptHistoryChart(
                     y: "{HEIGHT - 6.0}",
                     font_size: "12",
                     fill: "#333",
-                    {s.name.strip_prefix("css/").unwrap_or("all css")}
+                    {s.label.clone()}
                 }
             }
         }
 
         script {
-            id: "wpt-history-data",
+            "data-wpt-history-data": "true",
             r#type: "application/json",
             dangerous_inner_html: tooltip_data,
         }
@@ -622,19 +628,19 @@ pub fn WptHistoryChart(
 }
 
 #[component]
-pub fn WptHistorySparklines(summary: ArcWptSummary, range: ChartRange) -> Element {
+pub fn WptHistorySparklines(history: ArcWptHistory, range: ChartRange) -> Element {
     const WIDTH: f64 = 260.0;
     const HEIGHT: f64 = 60.0;
     const PLOT: (f64, f64, f64, f64) = (0.0, 2.0, WIDTH, HEIGHT - 4.0);
 
-    let range_min_x = range.min_x(&summary);
-    let x_min = summary
+    let range_min_x = range.min_x(&history);
+    let x_min = history
         .runs
         .first()
         .and_then(|run| parse_date(&run.date))
         .unwrap_or(0.0)
         .max(range_min_x);
-    let x_max = summary
+    let x_max = history
         .runs
         .last()
         .and_then(|run| parse_date(&run.date))
@@ -646,9 +652,9 @@ pub fn WptHistorySparklines(summary: ArcWptSummary, range: ChartRange) -> Elemen
             grid_template_columns: "repeat(auto-fill, minmax(280px, 1fr))",
             gap: "16px",
 
-            for (area_idx, area) in summary.focus_areas.iter().enumerate() {
+            for (area_idx, area) in history.focus_areas.iter().enumerate() {
                 {
-                    let points: Vec<(f64, f64)> = summary
+                    let points: Vec<(f64, f64)> = history
                         .runs
                         .iter()
                         .filter_map(|run| {

@@ -1,6 +1,6 @@
 use axum::{
     body::{Body, Bytes},
-    extract::Query,
+    extract::{Path, Query},
     http::{header, StatusCode},
     response::{AppendHeaders, Html, IntoResponse, Redirect},
     routing::{get, get_service},
@@ -19,20 +19,21 @@ use dioxus::{core::ComponentFunction, prelude::*};
 use dioxus_html_macro::html;
 use downloads::{load_downloads, DOWNLOAD_CACHE};
 use routes::{
-    AboutPage, ArcDownloadLinks, ChartRange, CssSupportPage, DownloadsPage, DownloadsPageProps,
-    ElementSupportPage, EventSupportPage, GettingStartedPage, HomePage, NLNetInstructionsPage,
-    WptHistoryPage, WptHistoryPageProps, WptResultsPage, WptResultsPageProps,
+    AboutPage, ArcDownloadLinks, ArcWptHistory, ChartRange, CssSupportPage, DownloadsPage,
+    DownloadsPageProps, ElementSupportPage, EventSupportPage, GettingStartedPage, HomePage,
+    NLNetInstructionsPage, WptFolderPage, WptFolderPageProps, WptHistoryPage, WptHistoryPageProps,
+    WptResultsPage, WptResultsPageProps,
 };
 use serde::Deserialize;
 use std::{
     net::{IpAddr, SocketAddr},
-    sync::LazyLock,
+    sync::{Arc, LazyLock},
     time::{Duration, Instant},
 };
 use tokio::net::TcpListener;
 use tower_http::{services::ServeDir, trace::TraceLayer};
 use wpt::{load_wpt_results, WPT_REPORT_CACHE};
-use wpt_history::{load_wpt_history, WPT_HISTORY_CACHE};
+use wpt_history::{history_group, load_wpt_history, WPT_HISTORY_CACHE};
 
 mod components;
 mod downloads;
@@ -118,82 +119,69 @@ async fn main() {
         )
         .route(
             "/status/wpt",
-            get(async || {
-                let now = Instant::now();
-                let cache_entry = WPT_REPORT_CACHE.get_cloned();
-                let etag = cache_entry.as_ref().and_then(|entry| entry.etag.clone());
-
-                // Cache with 30s validity
-                let mut await_revalidation = true;
-                if let Some(entry) = &cache_entry {
-                    let cache_age = now.duration_since(entry.cached_at);
-                    if cache_age <= Duration::from_secs(30) {
-                        let props = WptResultsPageProps {
-                            report: entry.report.clone(),
-                            scores: entry.scores.clone(),
-                            commit_info: entry.commit_info.clone(),
-                        };
-                        return dx_route_with_props(WptResultsPage, props).await;
-                    } else if cache_age <= Duration::from_mins(30) {
-                        await_revalidation = false
-                    }
-                }
-
-                let handle = tokio::spawn(async move { load_wpt_results(etag).await });
-
-                if await_revalidation {
-                    handle.await.unwrap();
-                }
-
-                let entry = WPT_REPORT_CACHE.get_cloned().unwrap();
+            get(async |query: Query<WptHistoryQuery>| {
+                let range = ChartRange::from_query(query.range.as_deref());
+                let (report_entry, history) =
+                    tokio::join!(fresh_wpt_report(), fresh_wpt_history("css"));
                 let props = WptResultsPageProps {
-                    report: entry.report.clone(),
-                    scores: entry.scores.clone(),
-                    commit_info: entry.commit_info.clone(),
+                    report: report_entry.report.clone(),
+                    scores: report_entry.scores.clone(),
+                    commit_info: report_entry.commit_info.clone(),
+                    history,
+                    range,
                 };
-
-                dx_route_with_props(WptResultsPage, props).await
+                dx_route_with_props(WptResultsPage, props)
+                    .await
+                    .into_response()
             }),
         )
         .route(
             "/status/wpt/history",
             get(async |query: Query<WptHistoryQuery>| {
                 let range = ChartRange::from_query(query.range.as_deref());
-                let now = Instant::now();
-                let cache_entry = WPT_HISTORY_CACHE.get_cloned();
-                let etag = cache_entry.as_ref().and_then(|entry| entry.etag.clone());
-
-                // Cache with 30s validity
-                let mut await_revalidation = true;
-                if let Some(entry) = &cache_entry {
-                    let cache_age = now.duration_since(entry.cached_at);
-                    if cache_age <= Duration::from_secs(30) {
-                        let props = WptHistoryPageProps {
-                            summary: entry.summary.clone(),
-                            range,
-                            commit_messages: entry.commit_messages.clone(),
-                        };
-                        return dx_route_with_props(WptHistoryPage, props).await;
-                    } else if cache_age <= Duration::from_mins(30) {
-                        await_revalidation = false
-                    }
-                }
-
-                let handle = tokio::spawn(async move { load_wpt_history(etag).await });
-
-                if await_revalidation {
-                    handle.await.unwrap();
-                }
-
-                let entry = WPT_HISTORY_CACHE.get_cloned().unwrap();
-                let props = WptHistoryPageProps {
-                    summary: entry.summary.clone(),
-                    range,
-                    commit_messages: entry.commit_messages.clone(),
+                let Some(history) = fresh_wpt_history("css").await else {
+                    return (
+                        StatusCode::INTERNAL_SERVER_ERROR,
+                        Html("History data not available".to_string()),
+                    )
+                        .into_response();
                 };
-
-                dx_route_with_props(WptHistoryPage, props).await
+                let props = WptHistoryPageProps { history, range };
+                dx_route_with_props(WptHistoryPage, props)
+                    .await
+                    .into_response()
             }),
+        )
+        .route(
+            "/status/wpt/{*folder}",
+            get(
+                async |Path(folder): Path<String>, query: Query<WptHistoryQuery>| {
+                    let range = ChartRange::from_query(query.range.as_deref());
+                    let folder = folder.trim_matches('/').to_string();
+                    let group = history_group(&folder).to_string();
+                    let (report_entry, history) =
+                        tokio::join!(fresh_wpt_report(), fresh_wpt_history(&group));
+
+                    if !report_entry.scores.contains_key(&folder) {
+                        return (
+                            StatusCode::NOT_FOUND,
+                            Html(format!("Unknown WPT folder: {folder}")),
+                        )
+                            .into_response();
+                    }
+
+                    let props = WptFolderPageProps {
+                        folder,
+                        scores: report_entry.scores.clone(),
+                        commit_info: report_entry.commit_info.clone(),
+                        history,
+                        range,
+                    };
+                    dx_route_with_props(WptFolderPage, props)
+                        .await
+                        .into_response()
+                },
+            ),
         )
         .route(
             "/downloads",
@@ -269,6 +257,7 @@ async fn main() {
 
     // Prime WPT result and download caches
     tokio::spawn(async move { load_wpt_results(None).await });
+    tokio::spawn(async move { load_wpt_history("css".to_string()).await });
 
     if std::env::var("PRECACHE_DOWNLOADS").is_ok() {
         tokio::spawn(async move { load_downloads(None).await });
@@ -280,6 +269,59 @@ async fn main() {
     axum::serve(listener, app.into_make_service())
         .await
         .unwrap();
+}
+
+/// Get the latest WPT report cache entry, refreshing it if it is stale
+/// (serve directly for 30s; serve stale-while-revalidate for 30min)
+async fn fresh_wpt_report() -> Arc<wpt::WptReportCacheEntry> {
+    let now = Instant::now();
+    let cache_entry = WPT_REPORT_CACHE.get_cloned();
+    let etag = cache_entry.as_ref().and_then(|entry| entry.etag.clone());
+
+    let mut await_revalidation = true;
+    if let Some(entry) = cache_entry {
+        let cache_age = now.duration_since(entry.cached_at);
+        if cache_age <= Duration::from_secs(30) {
+            return entry;
+        } else if cache_age <= Duration::from_mins(30) {
+            await_revalidation = false
+        }
+    }
+
+    let handle = tokio::spawn(async move { load_wpt_results(etag).await });
+    if await_revalidation {
+        handle.await.unwrap();
+    }
+
+    WPT_REPORT_CACHE.get_cloned().unwrap()
+}
+
+/// Get the latest WPT history data for a group, refreshing it if it is stale
+/// (serve directly for 30s; serve stale-while-revalidate for 30min)
+async fn fresh_wpt_history(group: &str) -> Option<ArcWptHistory> {
+    let now = Instant::now();
+    let cache_entry = WPT_HISTORY_CACHE.get_cloned(group);
+
+    let mut await_revalidation = true;
+    if let Some(entry) = cache_entry {
+        let cache_age = now.duration_since(entry.cached_at);
+        if cache_age <= Duration::from_secs(30) {
+            return Some(entry.history.clone());
+        } else if cache_age <= Duration::from_mins(30) {
+            await_revalidation = false
+        }
+    }
+
+    let group = group.to_string();
+    let handle = {
+        let group = group.clone();
+        tokio::spawn(async move { load_wpt_history(group).await })
+    };
+    if await_revalidation {
+        let _ = handle.await;
+    }
+
+    Some(WPT_HISTORY_CACHE.get_cloned(&group)?.history.clone())
 }
 
 async fn dx_route_cached(render_fn: fn() -> Element) -> impl IntoResponse {
