@@ -214,7 +214,13 @@
       { "name" : "background-repeat", "status": "Yes" },
       { "name" : "background-clip", "status": "Yes" },
       { "name" : "background-origin", "status": "Yes" },
-      { "name" : "background-attachment", "status": "No" }
+      { "name" : "background-attachment",
+        "values": [
+          { "value": "scroll", "status": "Yes" },
+          { "value": "fixed", "status": "Yes" },
+          { "value": "local", "status": "No" }
+        ]
+      }
     ]
   },
   {
