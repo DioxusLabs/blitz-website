@@ -86,8 +86,8 @@
       { "name": "mask-size", "status": "Yes" },
       { "name": "mask-composite", "status": "Yes" },
       { "name": "mask-mode", "status": "No" },
-      { "name": "mask-origin", "status": "No" },
-      { "name": "mask-clip", "status": "No" }
+      { "name": "mask-origin", "status": "Yes" },
+      { "name": "mask-clip", "status": "Yes" }
     ]
   },
   {
