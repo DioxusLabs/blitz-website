@@ -71,7 +71,15 @@
     "entries": [
       { "name": "opacity", "status": "Yes", "notes": "Nodes with opacity are currently clipped regardless of the overflow style" },
       { "name": "visibility", "status": "Yes" },
-      { "name": "contain", "status": "No" },
+      { "name": "contain",
+        "values": [
+          { "value": "layout", "status": "Yes" },
+          { "value": "paint", "status": "Yes" },
+          { "value": "style", "status": "No" },
+          { "value": "size", "status": "No" },
+          { "value": "inline-size", "status": "No" }
+        ]
+      },
       { "name": "isolation", "status": "No" },
       { "name": "content-visibility", "status": "No" }
     ]
