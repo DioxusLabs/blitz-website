@@ -379,8 +379,8 @@
     "id": "scrollbar-presentation",
     "name": "Scrollbar Presentation",
     "entries": [
-      { "name": "scrollbar-width", "status": "No" },
-      { "name": "scrollbar-color", "status": "No" },
+      { "name": "scrollbar-width", "status": "Yes" },
+      { "name": "scrollbar-color", "status": "Yes" },
       { "name": "scrollbar-gutter", "status": "No" }
     ]
   },
