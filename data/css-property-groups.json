@@ -38,8 +38,8 @@
           { "value": "overflow:auto", "status": "No" }
         ]
       },
-      { "name": "box-sizing", "status": "Yes" },
       { "name": "z-index", "status": "Yes" },
+      { "name": "box-sizing", "status": "Yes" },
       {
         "name": "cursor",
         "values": [
@@ -61,7 +61,8 @@
         "name": "float","status": "Yes" },
       { "name": "clear", "status": "Yes" },
       { "name": "order", "status": "Yes" },
-      { "name": "zoom", "status": "No" }
+      { "name": "zoom", "status": "No" },
+      { "name": "all", "status": "Yes" }
     ]
   },
   {
@@ -121,16 +122,6 @@
     ]
   },
   {
-    "id": "text-direction",
-    "name": "Text Direction",
-    "entries": [
-      { "name": "direction", "status": "Partial", "notes": "Supported for block-level but not inline-level boxes. Auto-detection of RTL text is support for inline content." },
-      { "name": "all", "status": "Yes" },
-      { "name": "unicode-bidi", "status": "No" },
-      { "name": "writing-mode", "status": "No" }
-    ]
-  },
-  {
     "id": "font",
     "name": "Font",
     "entries": [
@@ -163,6 +154,15 @@
     ]
   },
   {
+    "id": "text-direction",
+    "name": "Text Direction",
+    "entries": [
+      { "name": "direction", "status": "Partial", "notes": "Supported for block-level but not inline-level boxes. Auto-detection of RTL text is support for inline content." },
+      { "name": "unicode-bidi", "status": "No" },
+      { "name": "writing-mode", "status": "No" }
+    ]
+  },
+  {
     "id": "text",
     "name": "Text",
     "entries": [
@@ -190,10 +190,10 @@
       { "name": "text-decoration-line", "status": "Yes" },
       { "name": "text-underline-offset", "status": "Yes" },
       { "name": "text-decoration-color", "status": "Yes" },
-      { "name": "word-spacing", "status": "Yes" },
-      { "name": "tab-size", "status": "No" },
       { "name": "text-decoration-style", "status": "Yes" },
       { "name": "text-decoration-thickness", "status": "Yes" },
+      { "name": "tab-size", "status": "No" },
+      { "name": "word-spacing", "status": "Yes" },
       { "name": "webkit-text-fill-color", "status": "No" },
       { "name": "hyphens", "status": "No" },
       { "name": "text-decoration-skip-ink", "status": "No" },
@@ -229,8 +229,8 @@
     "entries": [
       { "name": "flex-direction", "status": "Yes" },
       { "name": "flex-wrap", "status": "Yes" },
-      { "name": "flex-grow", "status": "Yes" },
       { "name": "flex-shrink", "status": "Yes" },
+      { "name": "flex-grow", "status": "Yes" },
       { "name": "flex-basis", "status": "Yes" },
       {
         "name": "webkit-box-*",
@@ -405,8 +405,8 @@
       { "name": "appearance", "status": "No" },
       { "name": "will-change", "status": "No" },
       { "name": "text-rendering", "status": "No" },
-      { "name": "text-size-adjust", "status": "No" },
       { "name": "color-scheme", "status": "No" },
+      { "name": "text-size-adjust", "status": "No" },
       { "name": "forced-color-adjust", "status": "No" },
       { "name": "overflow-anchor", "status": "No" },
       { "name": "image-rendering", "status": "Yes" }
@@ -437,12 +437,12 @@
     "id": "anchor-positioning",
     "name": "Anchor Positioning",
     "entries": [
-      { "name": "anchor-scope", "status": "No" },
       { "name": "anchor-name", "status": "No" },
       { "name": "position-anchor", "status": "No" },
       { "name": "position-area", "status": "No" },
       { "name": "position-try", "status": "No", "properties": ["position-try-fallbacks", "position-try-order", "position-try"] },
-      { "name": "position-visibility", "status": "No" }
+      { "name": "position-visibility", "status": "No" },
+      { "name": "anchor-scope", "status": "No" }
     ]
   },
   {
