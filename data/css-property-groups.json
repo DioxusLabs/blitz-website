@@ -388,7 +388,7 @@
     "id": "scroll-behaviour",
     "name": "Scroll Behaviour",
     "entries": [
-      { "name": "scroll-behavior", "status": "No" },
+      { "name": "scroll-behavior", "status": "Yes" },
       { "name": "overscroll-behavior", "status": "No" },
       { "name": "scroll-snap-type", "status": "No" },
       { "name": "scroll-snap-align", "status": "No" },
