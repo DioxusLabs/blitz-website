@@ -656,16 +656,7 @@ pub fn child_area_scores(
             (name, scores)
         })
         .collect();
-    children.sort_by_key(|(_, scores)| {
-        std::cmp::Reverse(
-            scores
-                .iter()
-                .flatten()
-                .map(|s| s.subtests_total)
-                .max()
-                .unwrap_or(0),
-        )
-    });
+    children.sort_by(|(a, _), (b, _)| a.cmp(b));
     children
 }
 
