@@ -3,7 +3,7 @@ use dioxus::prelude::*;
 use crate::{
     components::Page,
     routes::{encode_test_path, score_color},
-    wpt_db::{status_str, AreaScore, RunRow, SubtestRow, TestDetail, TestRow, TestRunResult},
+    wpt_db::{status_str, AreaScore, AreaSort, RunRow, SubtestRow, TestDetail, TestRow, TestRunResult},
 };
 
 /// Display name for a product identifier (e.g. "chrome" -> "Chrome")
@@ -28,6 +28,7 @@ fn short_version(version: &str) -> String {
 pub fn WptComparePage(
     runs: Vec<RunRow>,
     area: String,
+    sort: AreaSort,
     total: Vec<Option<AreaScore>>,
     child_areas: Vec<(String, Vec<Option<AreaScore>>)>,
     tests: Vec<TestRow>,
@@ -50,6 +51,7 @@ pub fn WptComparePage(
             hr {}
             WptCompareBreadcrumb { area: area.clone() }
             RunInfoDisplay { runs: runs.clone() }
+            SortToggle { area: area.clone(), sort }
             table {
                 width: "100%",
                 tr {
@@ -81,6 +83,32 @@ pub fn WptComparePage(
                         CompareTestRow { test: test.clone() }
                     }
                 }
+            }
+        }
+    }
+}
+
+#[component]
+fn SortToggle(area: String, sort: AreaSort) -> Element {
+    let base = if area.is_empty() {
+        "/wpt".to_string()
+    } else {
+        format!("/wpt/{area}")
+    };
+    rsx! {
+        p {
+            font_size: "smaller",
+            b { "Sort areas: " }
+            if sort == AreaSort::Alpha {
+                "alphabetical"
+            } else {
+                a { href: format!("{base}?sort=alpha"), "alphabetical" }
+            }
+            " | "
+            if sort == AreaSort::Subtests {
+                "by subtest count"
+            } else {
+                a { href: format!("{base}?sort=subtests"), "by subtest count" }
             }
         }
     }

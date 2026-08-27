@@ -674,12 +674,20 @@ pub fn area_score(conn: &Connection, run_ids: &[i64], area: &str) -> Vec<Option<
     run_ids.iter().map(|id| by_run.get(id).copied()).collect()
 }
 
-/// Direct child areas of `area` with per-run scores. Top-level areas are
-/// sorted by subtest count (largest first); deeper levels alphabetically.
+/// Sort order for area listings
+#[derive(Clone, Copy, PartialEq, Eq)]
+pub enum AreaSort {
+    Alpha,
+    /// By subtest count, largest first
+    Subtests,
+}
+
+/// Direct child areas of `area` with per-run scores
 pub fn child_area_scores(
     conn: &Connection,
     run_ids: &[i64],
     area: &str,
+    sort: AreaSort,
 ) -> Vec<(String, Vec<Option<AreaScore>>)> {
     let sql = if area.is_empty() {
         "SELECT a.name, s.run_id, s.tests_pass, s.tests_total, s.subtests_pass, s.subtests_total, s.interop_score_sum
@@ -714,22 +722,23 @@ pub fn child_area_scores(
             (name, scores)
         })
         .collect();
-    if area.is_empty() {
-        let subtest_total = |scores: &[Option<AreaScore>]| {
-            scores
-                .iter()
-                .flatten()
-                .map(|s| s.subtests_total)
-                .max()
-                .unwrap_or(0)
-        };
-        children.sort_by(|(a_name, a), (b_name, b)| {
-            subtest_total(b)
-                .cmp(&subtest_total(a))
-                .then_with(|| a_name.cmp(b_name))
-        });
-    } else {
-        children.sort_by(|(a, _), (b, _)| a.cmp(b));
+    match sort {
+        AreaSort::Subtests => {
+            let subtest_total = |scores: &[Option<AreaScore>]| {
+                scores
+                    .iter()
+                    .flatten()
+                    .map(|s| s.subtests_total)
+                    .max()
+                    .unwrap_or(0)
+            };
+            children.sort_by(|(a_name, a), (b_name, b)| {
+                subtest_total(b)
+                    .cmp(&subtest_total(a))
+                    .then_with(|| a_name.cmp(b_name))
+            });
+        }
+        AreaSort::Alpha => children.sort_by(|(a, _), (b, _)| a.cmp(b)),
     }
     children
 }

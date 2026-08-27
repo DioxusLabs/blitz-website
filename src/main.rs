@@ -57,6 +57,11 @@ struct WptPageQuery {
 }
 
 #[derive(Deserialize)]
+struct WptCompareQuery {
+    sort: Option<String>,
+}
+
+#[derive(Deserialize)]
 struct DownloadLinkKey {
     platform: String,
     arch: String,
@@ -218,12 +223,19 @@ async fn main() {
                 },
             ),
         )
-        .route("/wpt", get(|| wpt_compare_route(String::new())))
+        .route(
+            "/wpt",
+            get(async |Query(query): Query<WptCompareQuery>| {
+                wpt_compare_route(String::new(), query.sort).await
+            }),
+        )
         .route(
             "/wpt/{*area}",
-            get(async |Path(area): Path<String>| {
-                wpt_compare_route(area.trim_matches('/').to_string()).await
-            }),
+            get(
+                async |Path(area): Path<String>, Query(query): Query<WptCompareQuery>| {
+                    wpt_compare_route(area.trim_matches('/').to_string(), query.sort).await
+                },
+            ),
         )
         .route(
             "/status/wpt-compare",
@@ -326,7 +338,15 @@ async fn fresh_wpt_history(areas: Vec<String>) -> Option<ArcWptHistory> {
 
 async fn wpt_compare_route(
     area: String,
+    sort: Option<String>,
 ) -> Result<(StatusCode, Html<String>), (StatusCode, String)> {
+    // Default: top-level areas by subtest count, deeper levels alphabetical
+    let sort = match sort.as_deref() {
+        Some("alpha") => wpt_db::AreaSort::Alpha,
+        Some("subtests") => wpt_db::AreaSort::Subtests,
+        _ if area.is_empty() => wpt_db::AreaSort::Subtests,
+        _ => wpt_db::AreaSort::Alpha,
+    };
     let Some(entry) = fresh_wpt_compare_entry().await else {
         return Err((
             StatusCode::INTERNAL_SERVER_ERROR,
@@ -353,7 +373,7 @@ async fn wpt_compare_route(
                 if wpt_db::area_exists(conn, &area) {
                     PageData::Area {
                         total: wpt_db::area_score(conn, &run_ids, &area),
-                        children: wpt_db::child_area_scores(conn, &run_ids, &area),
+                        children: wpt_db::child_area_scores(conn, &run_ids, &area, sort),
                         tests: wpt_db::tests_in_area(conn, &run_ids, &area),
                     }
                 } else if let Some(detail) =
@@ -378,6 +398,7 @@ async fn wpt_compare_route(
             let props = WptComparePageProps {
                 runs: runs.0.as_ref().clone(),
                 area,
+                sort,
                 total,
                 child_areas: children,
                 tests,
