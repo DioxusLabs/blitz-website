@@ -674,7 +674,8 @@ pub fn area_score(conn: &Connection, run_ids: &[i64], area: &str) -> Vec<Option<
     run_ids.iter().map(|id| by_run.get(id).copied()).collect()
 }
 
-/// Direct child areas of `area` with per-run scores, sorted alphabetically.
+/// Direct child areas of `area` with per-run scores. Top-level areas are
+/// sorted by subtest count (largest first); deeper levels alphabetically.
 pub fn child_area_scores(
     conn: &Connection,
     run_ids: &[i64],
@@ -713,7 +714,23 @@ pub fn child_area_scores(
             (name, scores)
         })
         .collect();
-    children.sort_by(|(a, _), (b, _)| a.cmp(b));
+    if area.is_empty() {
+        let subtest_total = |scores: &[Option<AreaScore>]| {
+            scores
+                .iter()
+                .flatten()
+                .map(|s| s.subtests_total)
+                .max()
+                .unwrap_or(0)
+        };
+        children.sort_by(|(a_name, a), (b_name, b)| {
+            subtest_total(b)
+                .cmp(&subtest_total(a))
+                .then_with(|| a_name.cmp(b_name))
+        });
+    } else {
+        children.sort_by(|(a, _), (b, _)| a.cmp(b));
+    }
     children
 }
 
