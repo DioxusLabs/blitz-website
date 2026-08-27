@@ -67,6 +67,10 @@ pub fn StatusTabs(current_tab: &'static str) -> Element {
             href: "/status/wpt/history",
             label: "WPT History",
         },
+        Tab {
+            href: "/status/wpt-compare",
+            label: "WPT Comparison",
+        },
     ];
 
     rsx!(

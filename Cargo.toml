@@ -12,6 +12,8 @@ tokio-util = { version = "0.7"}
 tower-http = { version = "0.6", features = ["fs", "trace"] }
 reqwest = { version = "0.13", features = ["json"] }
 zstd = "0.13"
+flate2 = "1"
+rusqlite = { version = "0.40", features = ["bundled"] }
 
 # Content
 fxhash = "0.2"
