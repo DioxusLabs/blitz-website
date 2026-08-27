@@ -32,7 +32,11 @@ pub fn WptComparePage(
     child_areas: Vec<(String, Vec<Option<AreaScore>>)>,
     tests: Vec<TestRow>,
 ) -> Element {
-    let child_prefix = format!("{area}/");
+    let child_prefix = if area.is_empty() {
+        String::new()
+    } else {
+        format!("{area}/")
+    };
 
     rsx! {
         Page { title: "Status: WPT Comparison".into(),
@@ -40,7 +44,7 @@ pub fn WptComparePage(
             StatusTabs { current_tab: "wpt-compare" }
             p {
                 dangerous_inner_html: r#"
-                This page compares scores on the "css" subsuite of the <a href="https://github.com/web-platform-tests/wpt" target="_blank">Web Platform Tests</a>
+                This page compares scores on the <a href="https://github.com/web-platform-tests/wpt" target="_blank">Web Platform Tests</a>
                 across web engines, using the latest master runs from <a href="https://wpt.fyi" target="_blank">wpt.fyi</a> and Blitz's own test runner."#
             }
             p {
@@ -116,6 +120,7 @@ pub fn WptCompareBreadcrumb(area: String) -> Element {
     let mut prefix = String::new();
     let segments: Vec<(String, String)> = area
         .split('/')
+        .filter(|segment| !segment.is_empty())
         .map(|segment| {
             if !prefix.is_empty() {
                 prefix.push('/');

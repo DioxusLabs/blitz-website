@@ -15,6 +15,11 @@ use rusqlite::{params, Connection, Transaction};
 use serde::de::{DeserializeSeed, IgnoredAny, MapAccess, SeqAccess, Visitor};
 use serde::Deserialize;
 
+/// Version of the on-disk format. Stored in SQLite's `user_version` pragma;
+/// a database with a different version is deleted and rebuilt from scratch
+/// (all data is re-ingestable from upstream sources).
+const DB_VERSION: i64 = 2;
+
 const SCHEMA: &str = r#"
 PRAGMA journal_mode = WAL;
 PRAGMA synchronous = NORMAL;
@@ -110,13 +115,50 @@ impl WptDb {
         let conn = guard.get_or_insert_with(|| {
             let dir = data_dir();
             std::fs::create_dir_all(&dir).expect("failed to create WPT data directory");
-            let conn = Connection::open(dir.join("wpt-compare.db"))
-                .expect("failed to open wpt-compare database");
+            let path = dir.join("wpt-compare.db");
+            let conn = open_versioned(&path)
+                .unwrap_or_else(|err| panic!("failed to open wpt-compare database: {err}"));
             conn.execute_batch(SCHEMA).unwrap();
             conn
         });
         f(conn)
     }
+}
+
+/// Open the database at `path`, deleting and recreating it if its stored
+/// format version (SQLite `user_version`) doesn't match [`DB_VERSION`].
+fn open_versioned(path: &std::path::Path) -> rusqlite::Result<Connection> {
+    let conn = Connection::open(path)?;
+    let version: i64 = conn.query_row("PRAGMA user_version", [], |row| row.get(0))?;
+    let has_tables: bool = conn.query_row(
+        "SELECT EXISTS (SELECT 1 FROM sqlite_master WHERE type = 'table')",
+        [],
+        |row| row.get(0),
+    )?;
+
+    if has_tables && version != DB_VERSION {
+        println!(
+            "wpt-compare database has format version {version}, expected {DB_VERSION}: rebuilding"
+        );
+        drop(conn);
+        for suffix in ["", "-wal", "-shm"] {
+            let mut sidecar = path.as_os_str().to_owned();
+            sidecar.push(suffix);
+            match std::fs::remove_file(std::path::Path::new(&sidecar)) {
+                Ok(()) => {}
+                Err(err) if err.kind() == std::io::ErrorKind::NotFound => {}
+                Err(err) => panic!("failed to remove outdated wpt-compare database: {err}"),
+            }
+        }
+        let conn = Connection::open(path)?;
+        conn.pragma_update(None, "user_version", DB_VERSION)?;
+        return Ok(conn);
+    }
+
+    if version != DB_VERSION {
+        conn.pragma_update(None, "user_version", DB_VERSION)?;
+    }
+    Ok(conn)
 }
 
 pub fn status_str(status: i64) -> &'static str {
@@ -228,7 +270,8 @@ impl IngestCtx<'_> {
         if !test.test.starts_with('/') {
             test.test.insert(0, '/');
         }
-        if !test.test.starts_with("/css/") {
+        // The /encoding/ suite is excluded (very large, not layout-relevant)
+        if test.test.starts_with("/encoding/") {
             return;
         }
 
@@ -587,22 +630,29 @@ impl AreaScore {
     }
 }
 
-/// Whether an area with this name exists.
+/// Whether an area with this name exists. The empty string is the root
+/// (the parent of all top-level areas).
 pub fn area_exists(conn: &Connection, area: &str) -> bool {
-    conn.query_row("SELECT 1 FROM areas WHERE name = ?1", params![area], |_| {
-        Ok(())
-    })
-    .is_ok()
+    area.is_empty()
+        || conn
+            .query_row("SELECT 1 FROM areas WHERE name = ?1", params![area], |_| {
+                Ok(())
+            })
+            .is_ok()
 }
 
 /// Scores for `area` itself, one entry per run (None if the run has no data).
 pub fn area_score(conn: &Connection, run_ids: &[i64], area: &str) -> Vec<Option<AreaScore>> {
-    let mut stmt = conn
-        .prepare_cached(
-            "SELECT s.run_id, s.tests_pass, s.tests_total, s.subtests_pass, s.subtests_total, s.interop_score_sum
-             FROM area_scores s JOIN areas a ON a.id = s.area_id WHERE a.name = ?1",
-        )
-        .unwrap();
+    // The root area has no row of its own: aggregate the top-level areas
+    let sql = if area.is_empty() {
+        "SELECT s.run_id, SUM(s.tests_pass), SUM(s.tests_total), SUM(s.subtests_pass), SUM(s.subtests_total), SUM(s.interop_score_sum)
+         FROM area_scores s JOIN areas a ON a.id = s.area_id WHERE a.parent_id IS NULL AND ?1 = ''
+         GROUP BY s.run_id"
+    } else {
+        "SELECT s.run_id, s.tests_pass, s.tests_total, s.subtests_pass, s.subtests_total, s.interop_score_sum
+         FROM area_scores s JOIN areas a ON a.id = s.area_id WHERE a.name = ?1"
+    };
+    let mut stmt = conn.prepare_cached(sql).unwrap();
     let mut by_run: HashMap<i64, AreaScore> = HashMap::new();
     let mut rows = stmt.query(params![area]).unwrap();
     while let Some(row) = rows.next().unwrap() {
@@ -620,19 +670,22 @@ pub fn area_score(conn: &Connection, run_ids: &[i64], area: &str) -> Vec<Option<
     run_ids.iter().map(|id| by_run.get(id).copied()).collect()
 }
 
-/// Direct child areas of `area` with per-run scores, largest first.
+/// Direct child areas of `area` with per-run scores, sorted alphabetically.
 pub fn child_area_scores(
     conn: &Connection,
     run_ids: &[i64],
     area: &str,
 ) -> Vec<(String, Vec<Option<AreaScore>>)> {
-    let mut stmt = conn
-        .prepare_cached(
-            "SELECT a.name, s.run_id, s.tests_pass, s.tests_total, s.subtests_pass, s.subtests_total, s.interop_score_sum
-             FROM area_scores s JOIN areas a ON a.id = s.area_id
-             WHERE a.parent_id = (SELECT id FROM areas WHERE name = ?1)",
-        )
-        .unwrap();
+    let sql = if area.is_empty() {
+        "SELECT a.name, s.run_id, s.tests_pass, s.tests_total, s.subtests_pass, s.subtests_total, s.interop_score_sum
+         FROM area_scores s JOIN areas a ON a.id = s.area_id
+         WHERE a.parent_id IS NULL AND ?1 = ''"
+    } else {
+        "SELECT a.name, s.run_id, s.tests_pass, s.tests_total, s.subtests_pass, s.subtests_total, s.interop_score_sum
+         FROM area_scores s JOIN areas a ON a.id = s.area_id
+         WHERE a.parent_id = (SELECT id FROM areas WHERE name = ?1)"
+    };
+    let mut stmt = conn.prepare_cached(sql).unwrap();
     let mut by_area: HashMap<String, HashMap<i64, AreaScore>> = HashMap::new();
     let mut rows = stmt.query(params![area]).unwrap();
     while let Some(row) = rows.next().unwrap() {

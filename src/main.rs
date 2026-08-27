@@ -220,80 +220,12 @@ async fn main() {
         )
         .route(
             "/status/wpt-compare",
-            get(|| async { Redirect::to("/status/wpt-compare/css") }),
+            get(|| wpt_compare_route(String::new())),
         )
         .route(
             "/status/wpt-compare/{*area}",
             get(async |Path(area): Path<String>| {
-                let area = area.trim_matches('/').to_string();
-                let Some(entry) = fresh_wpt_compare_entry().await else {
-                    return Err((
-                        StatusCode::INTERNAL_SERVER_ERROR,
-                        "WPT comparison data not available".to_string(),
-                    ));
-                };
-                let runs = entry.runs.clone();
-                let run_ids: Vec<i64> = runs.iter().map(|run| run.id).collect();
-
-                enum PageData {
-                    Area {
-                        total: Vec<Option<wpt_db::AreaScore>>,
-                        children: Vec<(String, Vec<Option<wpt_db::AreaScore>>)>,
-                        tests: Vec<wpt_db::TestRow>,
-                    },
-                    Test(wpt_db::TestDetail),
-                    NotFound,
-                }
-
-                let data = {
-                    let area = area.clone();
-                    tokio::task::spawn_blocking(move || {
-                        WPT_COMPARE_DB.with(|conn| {
-                            if wpt_db::area_exists(conn, &area) {
-                                PageData::Area {
-                                    total: wpt_db::area_score(conn, &run_ids, &area),
-                                    children: wpt_db::child_area_scores(conn, &run_ids, &area),
-                                    tests: wpt_db::tests_in_area(conn, &run_ids, &area),
-                                }
-                            } else if let Some(detail) =
-                                wpt_db::test_detail(conn, &run_ids, &format!("/{area}"))
-                            {
-                                PageData::Test(detail)
-                            } else {
-                                PageData::NotFound
-                            }
-                        })
-                    })
-                    .await
-                    .unwrap()
-                };
-
-                match data {
-                    PageData::Area {
-                        total,
-                        children,
-                        tests,
-                    } => {
-                        let props = WptComparePageProps {
-                            runs: runs.0.as_ref().clone(),
-                            area,
-                            total,
-                            child_areas: children,
-                            tests,
-                        };
-                        Ok(dx_route_with_props(WptComparePage, props).await)
-                    }
-                    PageData::Test(detail) => {
-                        let props = WptCompareTestPageProps {
-                            runs: runs.0.as_ref().clone(),
-                            detail,
-                        };
-                        Ok(dx_route_with_props(WptCompareTestPage, props).await)
-                    }
-                    PageData::NotFound => {
-                        Err((StatusCode::NOT_FOUND, format!("Unknown WPT area: {area}")))
-                    }
-                }
+                wpt_compare_route(area.trim_matches('/').to_string()).await
             }),
         )
         .route(
@@ -383,6 +315,77 @@ async fn fresh_wpt_history(areas: Vec<String>) -> Option<ArcWptHistory> {
         )
         .await?;
     Some(entry.merged(&areas))
+}
+
+async fn wpt_compare_route(
+    area: String,
+) -> Result<(StatusCode, Html<String>), (StatusCode, String)> {
+    let Some(entry) = fresh_wpt_compare_entry().await else {
+        return Err((
+            StatusCode::INTERNAL_SERVER_ERROR,
+            "WPT comparison data not available".to_string(),
+        ));
+    };
+    let runs = entry.runs.clone();
+    let run_ids: Vec<i64> = runs.iter().map(|run| run.id).collect();
+
+    enum PageData {
+        Area {
+            total: Vec<Option<wpt_db::AreaScore>>,
+            children: Vec<(String, Vec<Option<wpt_db::AreaScore>>)>,
+            tests: Vec<wpt_db::TestRow>,
+        },
+        Test(wpt_db::TestDetail),
+        NotFound,
+    }
+
+    let data = {
+        let area = area.clone();
+        tokio::task::spawn_blocking(move || {
+            WPT_COMPARE_DB.with(|conn| {
+                if wpt_db::area_exists(conn, &area) {
+                    PageData::Area {
+                        total: wpt_db::area_score(conn, &run_ids, &area),
+                        children: wpt_db::child_area_scores(conn, &run_ids, &area),
+                        tests: wpt_db::tests_in_area(conn, &run_ids, &area),
+                    }
+                } else if let Some(detail) =
+                    wpt_db::test_detail(conn, &run_ids, &format!("/{area}"))
+                {
+                    PageData::Test(detail)
+                } else {
+                    PageData::NotFound
+                }
+            })
+        })
+        .await
+        .unwrap()
+    };
+
+    match data {
+        PageData::Area {
+            total,
+            children,
+            tests,
+        } => {
+            let props = WptComparePageProps {
+                runs: runs.0.as_ref().clone(),
+                area,
+                total,
+                child_areas: children,
+                tests,
+            };
+            Ok(dx_route_with_props(WptComparePage, props).await)
+        }
+        PageData::Test(detail) => {
+            let props = WptCompareTestPageProps {
+                runs: runs.0.as_ref().clone(),
+                detail,
+            };
+            Ok(dx_route_with_props(WptCompareTestPage, props).await)
+        }
+        PageData::NotFound => Err((StatusCode::NOT_FOUND, format!("Unknown WPT area: {area}"))),
+    }
 }
 
 /// Get the cached WPT comparison run list, revalidating (checking wpt.fyi
