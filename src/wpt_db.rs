@@ -82,6 +82,18 @@ CREATE TABLE IF NOT EXISTS area_scores (
 ) WITHOUT ROWID;
 "#;
 
+/// The directory data files (SQLite databases) are stored in: the
+/// `WPT_DATA_DIR` env var if set, otherwise a `.data` directory in the
+/// repo root when run via cargo, falling back to `.data` in the current
+/// working directory.
+fn data_dir() -> std::path::PathBuf {
+    if let Ok(dir) = std::env::var("WPT_DATA_DIR") {
+        return dir.into();
+    }
+    let root = std::env::var("CARGO_MANIFEST_DIR").unwrap_or_else(|_| ".".to_string());
+    std::path::Path::new(&root).join(".data")
+}
+
 pub static WPT_COMPARE_DB: WptDb = WptDb::new();
 
 pub struct WptDb(Mutex<Option<Connection>>);
@@ -96,9 +108,10 @@ impl WptDb {
     pub fn with<T>(&self, f: impl FnOnce(&mut Connection) -> T) -> T {
         let mut guard = self.0.lock().unwrap();
         let conn = guard.get_or_insert_with(|| {
-            let path = std::env::var("WPT_COMPARE_DB_PATH")
-                .unwrap_or_else(|_| "wpt-compare.db".to_string());
-            let conn = Connection::open(path).expect("failed to open wpt-compare database");
+            let dir = data_dir();
+            std::fs::create_dir_all(&dir).expect("failed to create WPT data directory");
+            let conn = Connection::open(dir.join("wpt-compare.db"))
+                .expect("failed to open wpt-compare database");
             conn.execute_batch(SCHEMA).unwrap();
             conn
         });
