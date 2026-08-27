@@ -34,6 +34,31 @@ foldhash = "0.2.0"
 humansize = "2.1.3"
 tempfile = "3.27.0"
 
+# WPT report ingestion is ~5x slower unoptimized: lightly optimize our own
+# code and fully optimize the hot dependencies (bundled SQLite, JSON stream
+# parsing, decompression) even in dev builds
+[profile.dev]
+opt-level = 1
+
+[profile.dev.package.libsqlite3-sys]
+opt-level = 3
+[profile.dev.package.rusqlite]
+opt-level = 3
+[profile.dev.package.serde_json]
+opt-level = 3
+[profile.dev.package.serde]
+opt-level = 3
+[profile.dev.package.flate2]
+opt-level = 3
+[profile.dev.package.miniz_oxide]
+opt-level = 3
+[profile.dev.package.zstd]
+opt-level = 3
+[profile.dev.package.zstd-safe]
+opt-level = 3
+[profile.dev.package.zstd-sys]
+opt-level = 3
+
 [build-dependencies]
 grass = { version = "0.13", default-features = false }
 

@@ -71,9 +71,21 @@ struct FyiRun {
     raw_results_url: String,
 }
 
+/// Process-global lock ensuring only one refresh runs at a time (repeated
+/// page visits during a slow ingest would otherwise start concurrent ones)
+static REFRESH_LOCK: tokio::sync::Mutex<()> = tokio::sync::Mutex::const_new(());
+
 /// Check for new runs on wpt.fyi (and a new Blitz report), ingest any that
-/// are missing, and refresh the cached run list.
+/// are missing, and refresh the cached run list. Only one refresh runs at a
+/// time; calls that arrive while one is in flight wait for it and return
+/// without doing their own.
 pub async fn load_wpt_compare() {
+    let Ok(_guard) = REFRESH_LOCK.try_lock() else {
+        // A refresh is already running: wait for it to finish instead
+        let _ = REFRESH_LOCK.lock().await;
+        return;
+    };
+
     println!("Checking for new WPT comparison runs...");
     let client = Client::new();
 

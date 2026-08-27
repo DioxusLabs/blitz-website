@@ -18,7 +18,7 @@ use serde::Deserialize;
 /// Version of the on-disk format. Stored in SQLite's `user_version` pragma;
 /// a database with a different version is deleted and rebuilt from scratch
 /// (all data is re-ingestable from upstream sources).
-const DB_VERSION: i64 = 2;
+const DB_VERSION: i64 = 3;
 
 const SCHEMA: &str = r#"
 PRAGMA journal_mode = WAL;
@@ -35,6 +35,10 @@ CREATE TABLE IF NOT EXISTS runs (
     ingested_at      TEXT NOT NULL,
     is_latest        INTEGER NOT NULL DEFAULT 0
 );
+CREATE UNIQUE INDEX IF NOT EXISTS runs_source_run
+    ON runs(product, source_run_id) WHERE source_run_id IS NOT NULL;
+CREATE UNIQUE INDEX IF NOT EXISTS runs_version_revision
+    ON runs(product, browser_version, wpt_revision) WHERE source_run_id IS NULL;
 
 CREATE TABLE IF NOT EXISTS areas (
     id        INTEGER PRIMARY KEY,
