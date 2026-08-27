@@ -218,14 +218,21 @@ async fn main() {
                 },
             ),
         )
+        .route("/wpt", get(|| wpt_compare_route(String::new())))
+        .route(
+            "/wpt/{*area}",
+            get(async |Path(area): Path<String>| {
+                wpt_compare_route(area.trim_matches('/').to_string()).await
+            }),
+        )
         .route(
             "/status/wpt-compare",
-            get(|| wpt_compare_route(String::new())),
+            get(|| async { Redirect::permanent("/wpt") }),
         )
         .route(
             "/status/wpt-compare/{*area}",
             get(async |Path(area): Path<String>| {
-                wpt_compare_route(area.trim_matches('/').to_string()).await
+                Redirect::permanent(&format!("/wpt/{}", area.trim_matches('/')))
             }),
         )
         .route(

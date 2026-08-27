@@ -90,6 +90,7 @@ pub fn Page(
                             class: "desktop",
                             // a { href: "/about", "About" }
                             a { href: "/status", "Status" }
+                            a { href: "/wpt", "WPT" }
                             a { href: "/downloads", "Downloads" }
                             a {
                                 class: "nav-icon",
@@ -181,6 +182,7 @@ pub fn HamburgerMenu() -> Element {
             }
             nav { class: "mobile-menu",
                 a { href: "/status", "Status" }
+                a { href: "/wpt", "WPT" }
                 a { href: "/downloads", "Downloads" }
                 a {
                     class: "external-link",

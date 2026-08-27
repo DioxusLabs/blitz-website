@@ -2,7 +2,7 @@ use dioxus::prelude::*;
 
 use crate::{
     components::Page,
-    routes::{encode_test_path, score_color, StatusHeader, StatusTabs},
+    routes::{encode_test_path, score_color},
     wpt_db::{status_str, AreaScore, RunRow, SubtestRow, TestDetail, TestRow, TestRunResult},
 };
 
@@ -39,21 +39,13 @@ pub fn WptComparePage(
     };
 
     rsx! {
-        Page { title: "Status: WPT Comparison".into(),
-            StatusHeader {}
-            StatusTabs { current_tab: "wpt-compare" }
+        Page { title: "WPT".into(),
+            h1 { "WPT" }
             p {
+                class: "introduction",
                 dangerous_inner_html: r#"
                 This page compares scores on the <a href="https://github.com/web-platform-tests/wpt" target="_blank">Web Platform Tests</a>
                 across web engines, using the latest master runs from <a href="https://wpt.fyi" target="_blank">wpt.fyi</a> and Blitz's own test runner."#
-            }
-            p {
-                font_size: "smaller",
-                "All engines are scored against the same denominator: the union of tests reported by any engine,
-                with each test's subtest total being the maximum reported across engines. Tests an engine did not
-                run count as failing. Blitz's numbers therefore differ from the "
-                a { href: "/status/wpt", "Blitz-normalized WPT dashboard" }
-                ", which ignores tests Blitz cannot run."
             }
             hr {}
             WptCompareBreadcrumb { area: area.clone() }
@@ -70,7 +62,7 @@ pub fn WptComparePage(
                 for (child, scores) in &child_areas {
                     {compare_area_row(
                         child[child_prefix.len().min(child.len())..].to_string(),
-                        Some(format!("/status/wpt-compare/{child}")),
+                        Some(format!("/wpt/{child}")),
                         scores,
                     )}
                 }
@@ -126,13 +118,13 @@ pub fn WptCompareBreadcrumb(area: String) -> Element {
                 prefix.push('/');
             }
             prefix.push_str(segment);
-            (segment.to_string(), format!("/status/wpt-compare/{prefix}"))
+            (segment.to_string(), format!("/wpt/{prefix}"))
         })
         .collect();
 
     rsx!(
         p {
-            a { href: "/status/wpt-compare", "wpt" }
+            a { href: "/wpt", "wpt" }
             for (segment, href) in segments {
                 " / "
                 a { href, {segment} }
@@ -198,7 +190,7 @@ fn CompareTestRow(test: TestRow) -> Element {
             td {
                 background_color: "white",
                 a {
-                    href: format!("/status/wpt-compare/{}", encode_test_path(test.name.trim_start_matches('/'))),
+                    href: format!("/wpt/{}", encode_test_path(test.name.trim_start_matches('/'))),
                     {file_name}
                 }
             }
@@ -254,9 +246,8 @@ pub fn WptCompareTestPage(runs: Vec<RunRow>, detail: TestDetail) -> Element {
         .max(1);
 
     rsx! {
-        Page { title: format!("WPT Comparison: {file_name}").into(),
-            StatusHeader {}
-            StatusTabs { current_tab: "wpt-compare" }
+        Page { title: format!("WPT: {file_name}").into(),
+            h1 { "WPT" }
             WptCompareBreadcrumb { area: name.trim_start_matches('/').to_string() }
             RunInfoDisplay { runs: runs.clone() }
             p {
