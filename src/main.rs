@@ -49,6 +49,7 @@ mod wpt_compare;
 mod wpt_db;
 mod wpt_history;
 mod wpt_source;
+mod wpt_spec_meta;
 
 #[derive(Deserialize)]
 struct WptPageQuery {

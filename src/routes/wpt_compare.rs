@@ -50,6 +50,7 @@ pub fn WptComparePage(
             }
             hr {}
             WptCompareBreadcrumb { area: area.clone() }
+            SpecInfoDisplay { area: area.clone() }
             RunInfoDisplay { runs: runs.clone() }
             SortToggle { area: area.clone(), sort }
             table {
@@ -109,6 +110,25 @@ fn SortToggle(area: String, sort: AreaSort) -> Element {
                 "by subtest count"
             } else {
                 a { href: format!("{base}?sort=subtests"), "by subtest count" }
+            }
+        }
+    }
+}
+
+#[component]
+fn SpecInfoDisplay(area: String) -> Element {
+    let Some(meta) = crate::wpt_spec_meta::lookup(&area) else {
+        return rsx! {};
+    };
+    rsx! {
+        p {
+            font_size: "smaller",
+            b { "Spec: " }
+            a {
+                href: meta.spec.clone(),
+                target: "_blank",
+                {meta.title.clone().unwrap_or_else(|| meta.spec.clone())}
+                " \u{2197}"
             }
         }
     }
@@ -277,6 +297,14 @@ pub fn WptCompareTestPage(runs: Vec<RunRow>, detail: TestDetail) -> Element {
         Page { title: format!("WPT: {file_name}").into(),
             h1 { "WPT" }
             WptCompareBreadcrumb { area: name.trim_start_matches('/').to_string() }
+            SpecInfoDisplay {
+                area: name
+                    .trim_start_matches('/')
+                    .rsplit_once('/')
+                    .map(|(dir, _)| dir)
+                    .unwrap_or("")
+                    .to_string(),
+            }
             RunInfoDisplay { runs: runs.clone() }
             p {
                 a {

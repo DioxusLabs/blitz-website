@@ -1,0 +1,1327 @@
+{
+ "FileAPI": {
+  "spec": "https://w3c.github.io/FileAPI/",
+  "title": "File API"
+ },
+ "IndexedDB": {
+  "spec": "https://w3c.github.io/IndexedDB/",
+  "title": "Indexed DB"
+ },
+ "WebCryptoAPI": {
+  "spec": "https://w3c.github.io/webcrypto/",
+  "title": "Web Cryptography"
+ },
+ "accelerometer": {
+  "spec": "https://w3c.github.io/accelerometer/",
+  "title": "Accelerometer"
+ },
+ "accname": {
+  "spec": "https://w3c.github.io/accname/",
+  "title": "Accessible Name and Description Computation"
+ },
+ "ambient-light": {
+  "spec": "https://w3c.github.io/ambient-light/",
+  "title": "Ambient Light Sensor"
+ },
+ "animation-worklet": {
+  "spec": "https://drafts.css-houdini.org/css-animationworklet/"
+ },
+ "annotation-model": {
+  "spec": "https://www.w3.org/TR/annotation-model/"
+ },
+ "annotation-protocol": {
+  "spec": "https://www.w3.org/TR/annotation-protocol/"
+ },
+ "annotation-vocab": {
+  "spec": "https://www.w3.org/TR/annotation-vocab/"
+ },
+ "apng": {
+  "spec": "https://wiki.mozilla.org/APNG_Specification"
+ },
+ "appmanifest": {
+  "spec": "https://w3c.github.io/manifest/",
+  "title": "Web Application Manifest"
+ },
+ "audio-output": {
+  "spec": "https://w3c.github.io/mediacapture-output/",
+  "title": "Audio Output Devices API"
+ },
+ "autoplay-policy-detection": {
+  "spec": "https://w3c.github.io/autoplay/",
+  "title": "Autoplay Policy Detection"
+ },
+ "avif": {
+  "spec": "https://aomediacodec.github.io/av1-avif/",
+  "title": "AVIF"
+ },
+ "background-fetch": {
+  "spec": "https://wicg.github.io/background-fetch/",
+  "title": "Background Fetch"
+ },
+ "background-sync": {
+  "spec": "https://wicg.github.io/background-sync/spec/",
+  "title": "Background Sync"
+ },
+ "badging": {
+  "spec": "https://w3c.github.io/badging/",
+  "title": "Badging API"
+ },
+ "battery-status": {
+  "spec": "https://w3c.github.io/battery/",
+  "title": "Battery Status API"
+ },
+ "beacon": {
+  "spec": "https://w3c.github.io/beacon/",
+  "title": "Beacon"
+ },
+ "bluetooth": {
+  "spec": "https://webbluetoothcg.github.io/web-bluetooth/",
+  "title": "Web Bluetooth"
+ },
+ "captured-mouse-events": {
+  "spec": "https://screen-share.github.io/captured-mouse-events/",
+  "title": "Captured Mouse Events"
+ },
+ "clear-site-data": {
+  "spec": "https://w3c.github.io/webappsec-clear-site-data/",
+  "title": "Clear Site Data"
+ },
+ "client-hints": {
+  "spec": "https://wicg.github.io/client-hints-infrastructure/",
+  "title": "Client Hints Infrastructure"
+ },
+ "clipboard-apis": {
+  "spec": "https://w3c.github.io/clipboard-apis/",
+  "title": "Clipboard API and events"
+ },
+ "close-watcher": {
+  "spec": "https://html.spec.whatwg.org/multipage/#close-requests-and-close-watchers",
+  "title": "HTML"
+ },
+ "compat": {
+  "spec": "https://compat.spec.whatwg.org/",
+  "title": "Compatibility"
+ },
+ "compression": {
+  "spec": "https://wicg.github.io/compression/"
+ },
+ "compute-pressure": {
+  "spec": "https://w3c.github.io/compute-pressure/",
+  "title": "Compute Pressure"
+ },
+ "console": {
+  "spec": "https://console.spec.whatwg.org/",
+  "title": "Console"
+ },
+ "contacts": {
+  "spec": "https://wicg.github.io/contact-api/spec/"
+ },
+ "container-timing": {
+  "spec": "https://github.com/bloomberg/container-timing/"
+ },
+ "content-index": {
+  "spec": "https://wicg.github.io/content-index/spec/",
+  "title": "Content Index"
+ },
+ "content-security-policy": {
+  "spec": "https://w3c.github.io/webappsec-csp/",
+  "title": "Content Security Policy"
+ },
+ "content-security-policy/embedded-enforcement": {
+  "spec": "https://w3c.github.io/webappsec-cspee/",
+  "title": "Content Security Policy: Embedded Enforcement"
+ },
+ "contenteditable": {
+  "spec": "https://w3c.github.io/contentEditable/",
+  "title": "ContentEditable"
+ },
+ "cookiestore": {
+  "spec": "https://cookiestore.spec.whatwg.org/",
+  "title": "Cookie Store API"
+ },
+ "core-aam": {
+  "spec": "https://w3c.github.io/core-aam/",
+  "title": "Core Accessibility API Mappings"
+ },
+ "cors": {
+  "spec": "https://fetch.spec.whatwg.org/#http-cors-protocol",
+  "title": "Fetch"
+ },
+ "credential-management": {
+  "spec": "https://w3c.github.io/webappsec-credential-management/",
+  "title": "Credential Management"
+ },
+ "css/CSS1": {
+  "spec": "https://www.w3.org/TR/CSS1/"
+ },
+ "css/CSS2": {
+  "spec": "https://drafts.csswg.org/css2/",
+  "title": "CSS"
+ },
+ "css/WOFF2": {
+  "spec": "https://w3c.github.io/woff/woff2/",
+  "title": "WOFF"
+ },
+ "css/compositing": {
+  "spec": "https://drafts.csswg.org/compositing/",
+  "title": "Compositing"
+ },
+ "css/css-align": {
+  "spec": "https://drafts.csswg.org/css-align/",
+  "title": "CSS Box Alignment"
+ },
+ "css/css-anchor-position": {
+  "spec": "https://drafts.csswg.org/css-anchor-position/",
+  "title": "CSS Anchor Positioning"
+ },
+ "css/css-animations": {
+  "spec": "https://drafts.csswg.org/css-animations/",
+  "title": "CSS Animations"
+ },
+ "css/css-backgrounds": {
+  "spec": "https://drafts.csswg.org/css-backgrounds/",
+  "title": "CSS Backgrounds"
+ },
+ "css/css-borders": {
+  "spec": "https://drafts.csswg.org/css-borders/",
+  "title": "CSS Borders and Box Decorations"
+ },
+ "css/css-box": {
+  "spec": "https://drafts.csswg.org/css-box/",
+  "title": "CSS Box Model"
+ },
+ "css/css-break": {
+  "spec": "https://drafts.csswg.org/css-break/",
+  "title": "CSS Fragmentation"
+ },
+ "css/css-cascade": {
+  "spec": "https://drafts.csswg.org/css-cascade/",
+  "title": "CSS Cascading"
+ },
+ "css/css-color": {
+  "spec": "https://drafts.csswg.org/css-color/",
+  "title": "CSS Color"
+ },
+ "css/css-color-adjust": {
+  "spec": "https://drafts.csswg.org/css-color-adjust/",
+  "title": "CSS Color Adjustment"
+ },
+ "css/css-color-hdr": {
+  "spec": "https://drafts.csswg.org/css-color-hdr/",
+  "title": "CSS Color HDR"
+ },
+ "css/css-conditional": {
+  "spec": "https://drafts.csswg.org/css-conditional/",
+  "title": "CSS Conditional"
+ },
+ "css/css-contain": {
+  "spec": "https://drafts.csswg.org/css-contain/",
+  "title": "CSS Containment"
+ },
+ "css/css-content": {
+  "spec": "https://drafts.csswg.org/css-content/",
+  "title": "CSS Generated Content"
+ },
+ "css/css-counter-styles": {
+  "spec": "https://drafts.csswg.org/css-counter-styles/",
+  "title": "CSS Counter Styles"
+ },
+ "css/css-device-adapt": {
+  "spec": "https://drafts.csswg.org/css-device-adapt/"
+ },
+ "css/css-display": {
+  "spec": "https://drafts.csswg.org/css-display/",
+  "title": "CSS Display"
+ },
+ "css/css-easing": {
+  "spec": "https://drafts.csswg.org/css-easing/",
+  "title": "CSS Easing Functions"
+ },
+ "css/css-env": {
+  "spec": "https://drafts.csswg.org/css-env/",
+  "title": "CSS Environment Variables"
+ },
+ "css/css-exclusions": {
+  "spec": "https://drafts.csswg.org/css-exclusions/"
+ },
+ "css/css-flexbox": {
+  "spec": "https://drafts.csswg.org/css-flexbox/",
+  "title": "CSS Flexbox"
+ },
+ "css/css-font-loading": {
+  "spec": "https://drafts.csswg.org/css-font-loading/",
+  "title": "CSS Font Loading"
+ },
+ "css/css-fonts": {
+  "spec": "https://drafts.csswg.org/css-fonts/",
+  "title": "CSS Fonts"
+ },
+ "css/css-gaps": {
+  "spec": "https://drafts.csswg.org/css-gaps/",
+  "title": "CSS Gaps"
+ },
+ "css/css-gcpm": {
+  "spec": "https://drafts.csswg.org/css-gcpm/",
+  "title": "CSS GCPM"
+ },
+ "css/css-grid": {
+  "spec": "https://drafts.csswg.org/css-grid/",
+  "title": "CSS Grid Layout"
+ },
+ "css/css-highlight-api": {
+  "spec": "https://drafts.csswg.org/css-highlight-api/",
+  "title": "CSS Custom Highlight API"
+ },
+ "css/css-images": {
+  "spec": "https://drafts.csswg.org/css-images/",
+  "title": "CSS Images"
+ },
+ "css/css-inline": {
+  "spec": "https://drafts.csswg.org/css-inline/",
+  "title": "CSS Inline Layout"
+ },
+ "css/css-layout-api": {
+  "spec": "https://drafts.css-houdini.org/css-layout-api/",
+  "title": "CSS Layout API"
+ },
+ "css/css-lists": {
+  "spec": "https://drafts.csswg.org/css-lists/",
+  "title": "CSS Lists"
+ },
+ "css/css-logical": {
+  "spec": "https://drafts.csswg.org/css-logical/",
+  "title": "CSS Logical Properties"
+ },
+ "css/css-masking": {
+  "spec": "https://drafts.csswg.org/css-masking/",
+  "title": "CSS Masking"
+ },
+ "css/css-mixins": {
+  "spec": "https://drafts.csswg.org/css-mixins/",
+  "title": "CSS Functions and Mixins"
+ },
+ "css/css-multicol": {
+  "spec": "https://drafts.csswg.org/css-multicol/",
+  "title": "CSS Multicol"
+ },
+ "css/css-namespaces": {
+  "spec": "https://drafts.csswg.org/css-namespaces/",
+  "title": "CSS Namespaces"
+ },
+ "css/css-navigation": {
+  "spec": "https://drafts.csswg.org/css-navigation-1/",
+  "title": "CSS Navigation Matching"
+ },
+ "css/css-nesting": {
+  "spec": "https://drafts.csswg.org/css-nesting/",
+  "title": "CSS Nesting"
+ },
+ "css/css-overflow": {
+  "spec": "https://drafts.csswg.org/css-overflow/",
+  "title": "CSS Overflow"
+ },
+ "css/css-overscroll-behavior": {
+  "spec": "https://drafts.csswg.org/css-overscroll/",
+  "title": "CSS Overscroll Behavior"
+ },
+ "css/css-page": {
+  "spec": "https://drafts.csswg.org/css-page/",
+  "title": "CSS Paged Media"
+ },
+ "css/css-paint-api": {
+  "spec": "https://drafts.css-houdini.org/css-paint-api/",
+  "title": "CSS Painting API"
+ },
+ "css/css-parser-api": {
+  "spec": "https://wicg.github.io/css-parser-api/",
+  "title": "CSS Parser API"
+ },
+ "css/css-position": {
+  "spec": "https://drafts.csswg.org/css-position/",
+  "title": "CSS Positioned Layout"
+ },
+ "css/css-properties-values-api": {
+  "spec": "https://drafts.css-houdini.org/css-properties-values-api/",
+  "title": "CSS Properties and Values API"
+ },
+ "css/css-pseudo": {
+  "spec": "https://drafts.csswg.org/css-pseudo/",
+  "title": "CSS Pseudo-Elements"
+ },
+ "css/css-rhythm": {
+  "spec": "https://drafts.csswg.org/css-rhythm/",
+  "title": "CSS Rhythmic Sizing"
+ },
+ "css/css-round-display": {
+  "spec": "https://drafts.csswg.org/css-round-display/",
+  "title": "CSS Round Display"
+ },
+ "css/css-ruby": {
+  "spec": "https://drafts.csswg.org/css-ruby/",
+  "title": "CSS Ruby Annotation Layout"
+ },
+ "css/css-scroll-anchoring": {
+  "spec": "https://drafts.csswg.org/css-scroll-anchoring/",
+  "title": "CSS Scroll Anchoring"
+ },
+ "css/css-scroll-snap": {
+  "spec": "https://drafts.csswg.org/css-scroll-snap/",
+  "title": "CSS Scroll Snap"
+ },
+ "css/css-scrollbars": {
+  "spec": "https://drafts.csswg.org/css-scrollbars/",
+  "title": "CSS Scrollbars"
+ },
+ "css/css-shadow": {
+  "spec": "https://drafts.csswg.org/css-shadow/",
+  "title": "CSS Shadow"
+ },
+ "css/css-shadow/part": {
+  "spec": "https://drafts.csswg.org/css-shadow/#part",
+  "title": "CSS Shadow"
+ },
+ "css/css-shapes": {
+  "spec": "https://drafts.csswg.org/css-shapes/",
+  "title": "CSS Shapes"
+ },
+ "css/css-size-adjust": {
+  "spec": "https://drafts.csswg.org/css-size-adjust/",
+  "title": "CSS Size Adjustment"
+ },
+ "css/css-sizing": {
+  "spec": "https://drafts.csswg.org/css-sizing/",
+  "title": "CSS Sizing"
+ },
+ "css/css-speech": {
+  "spec": "https://drafts.csswg.org/css-speech/",
+  "title": "CSS Speech"
+ },
+ "css/css-style-attr": {
+  "spec": "https://drafts.csswg.org/css-style-attr/",
+  "title": "CSS Style Attributes"
+ },
+ "css/css-syntax": {
+  "spec": "https://drafts.csswg.org/css-syntax/",
+  "title": "CSS Syntax"
+ },
+ "css/css-tables": {
+  "spec": "https://drafts.csswg.org/css-tables/",
+  "title": "CSS Table"
+ },
+ "css/css-text": {
+  "spec": "https://drafts.csswg.org/css-text/",
+  "title": "CSS Text"
+ },
+ "css/css-text-decor": {
+  "spec": "https://drafts.csswg.org/css-text-decor/",
+  "title": "CSS Text Decoration"
+ },
+ "css/css-transforms": {
+  "spec": "https://drafts.csswg.org/css-transforms/",
+  "title": "CSS Transforms"
+ },
+ "css/css-transitions": {
+  "spec": "https://drafts.csswg.org/css-transitions/",
+  "title": "CSS Transitions"
+ },
+ "css/css-typed-om": {
+  "spec": "https://drafts.css-houdini.org/css-typed-om/",
+  "title": "CSS Typed OM"
+ },
+ "css/css-ui": {
+  "spec": "https://drafts.csswg.org/css-ui/",
+  "title": "CSS User Interface"
+ },
+ "css/css-values": {
+  "spec": "https://drafts.csswg.org/css-values/",
+  "title": "CSS Values"
+ },
+ "css/css-variables": {
+  "spec": "https://drafts.csswg.org/css-variables/",
+  "title": "CSS Variables"
+ },
+ "css/css-view-transitions": {
+  "spec": "https://drafts.csswg.org/css-view-transitions/",
+  "title": "CSS View Transitions"
+ },
+ "css/css-viewport": {
+  "spec": "https://drafts.csswg.org/css-viewport/",
+  "title": "CSS Viewport"
+ },
+ "css/css-will-change": {
+  "spec": "https://drafts.csswg.org/css-will-change/",
+  "title": "CSS Will Change"
+ },
+ "css/css-writing-modes": {
+  "spec": "https://drafts.csswg.org/css-writing-modes/",
+  "title": "CSS Writing Modes"
+ },
+ "css/cssom": {
+  "spec": "https://drafts.csswg.org/cssom/",
+  "title": "CSSOM"
+ },
+ "css/cssom-view": {
+  "spec": "https://drafts.csswg.org/cssom-view/",
+  "title": "CSSOM View"
+ },
+ "css/fill-stroke": {
+  "spec": "https://drafts.csswg.org/fill-stroke/",
+  "title": "CSS Fill and Stroke"
+ },
+ "css/filter-effects": {
+  "spec": "https://drafts.csswg.org/filter-effects/",
+  "title": "Filter Effects"
+ },
+ "css/geometry": {
+  "spec": "https://drafts.csswg.org/geometry/",
+  "title": "Geometry Interfaces"
+ },
+ "css/mediaqueries": {
+  "spec": "https://drafts.csswg.org/mediaqueries/",
+  "title": "Media Queries"
+ },
+ "css/motion": {
+  "spec": "https://drafts.csswg.org/motion/",
+  "title": "Motion Path"
+ },
+ "css/selectors": {
+  "spec": "https://drafts.csswg.org/selectors/",
+  "title": "Selectors"
+ },
+ "custom-elements": {
+  "spec": "https://html.spec.whatwg.org/multipage/custom-elements.html"
+ },
+ "custom-elements/state": {
+  "spec": "https://html.spec.whatwg.org/multipage/custom-elements.html#custom-state-pseudo-class"
+ },
+ "deprecation-reporting": {
+  "spec": "https://wicg.github.io/deprecation-reporting/",
+  "title": "Deprecation Reporting"
+ },
+ "device-memory": {
+  "spec": "https://www.w3.org/TR/device-memory/",
+  "title": "Device Memory"
+ },
+ "device-posture": {
+  "spec": "https://w3c.github.io/device-posture/",
+  "title": "Device Posture API"
+ },
+ "digital-credentials": {
+  "spec": "https://github.com/w3c-fedid/digital-credentials/"
+ },
+ "direct-sockets": {
+  "spec": "https://github.com/WICG/direct-sockets/blob/main/docs/explainer.md"
+ },
+ "document-picture-in-picture": {
+  "spec": "https://wicg.github.io/document-picture-in-picture/",
+  "title": "Document Picture-in-Picture"
+ },
+ "document-policy": {
+  "spec": "https://wicg.github.io/document-policy/",
+  "title": "Document Policy"
+ },
+ "dom": {
+  "spec": "https://dom.spec.whatwg.org/",
+  "title": "DOM"
+ },
+ "domparsing": {
+  "spec": "https://w3c.github.io/DOM-Parsing/",
+  "title": "DOM Parsing and Serialization"
+ },
+ "domxpath": {
+  "spec": "https://www.w3.org/TR/DOM-Level-3-XPath/"
+ },
+ "dpub-aam": {
+  "spec": "https://w3c.github.io/dpub-aam/",
+  "title": "Digital Publishing Accessibility API Mappings"
+ },
+ "dpub-aam/manual": {
+  "spec": "https://w3c.github.io/dpub-aam/",
+  "title": "Digital Publishing Accessibility API Mappings"
+ },
+ "dpub-aria": {
+  "spec": "https://w3c.github.io/dpub-aria/",
+  "title": "Digital Publishing WAI-ARIA"
+ },
+ "editing": {
+  "spec": "https://w3c.github.io/editing/execCommand.html"
+ },
+ "element-timing": {
+  "spec": "https://wicg.github.io/element-timing/"
+ },
+ "encoding": {
+  "spec": "https://encoding.spec.whatwg.org/",
+  "title": "Encoding"
+ },
+ "encrypted-media": {
+  "spec": "https://w3c.github.io/encrypted-media/",
+  "title": "Encrypted Media Extensions"
+ },
+ "entries-api": {
+  "spec": "https://wicg.github.io/entries-api/",
+  "title": "File and Directory Entries API"
+ },
+ "event-timing": {
+  "spec": "https://wicg.github.io/event-timing/"
+ },
+ "eventsource": {
+  "spec": "https://html.spec.whatwg.org/multipage/server-sent-events.html"
+ },
+ "fedcm": {
+  "spec": "https://fedidcg.github.io/FedCM/"
+ },
+ "fenced-frame": {
+  "spec": "https://wicg.github.io/fenced-frame/",
+  "title": "Fenced Frame"
+ },
+ "fetch": {
+  "spec": "https://fetch.spec.whatwg.org/",
+  "title": "Fetch"
+ },
+ "fetch/fetch-later": {
+  "spec": "https://fetch.spec.whatwg.org/#dom-window-fetchlater",
+  "title": "Fetch"
+ },
+ "fetch/local-network-access": {
+  "spec": "https://wicg.github.io/local-network-access/",
+  "title": "Local Network Access"
+ },
+ "fetch/metadata": {
+  "spec": "https://w3c.github.io/webappsec-fetch-metadata/",
+  "title": "Fetch Metadata"
+ },
+ "file-system-access": {
+  "spec": "https://wicg.github.io/file-system-access/",
+  "title": "File System Access"
+ },
+ "font-access": {
+  "spec": "https://wicg.github.io/local-font-access/",
+  "title": "Local Font Access API"
+ },
+ "fs": {
+  "spec": "https://fs.spec.whatwg.org/",
+  "title": "File System"
+ },
+ "fullscreen": {
+  "spec": "https://fullscreen.spec.whatwg.org/",
+  "title": "Fullscreen API"
+ },
+ "gamepad": {
+  "spec": "https://w3c.github.io/gamepad/",
+  "title": "Gamepad"
+ },
+ "generic-sensor": {
+  "spec": "https://w3c.github.io/sensors/",
+  "title": "Generic Sensor API"
+ },
+ "geolocation": {
+  "spec": "https://w3c.github.io/geolocation-api/"
+ },
+ "geolocation-sensor": {
+  "spec": "https://w3c.github.io/geolocation-sensor/",
+  "title": "Geolocation Sensor"
+ },
+ "gif": {
+  "spec": "https://www.w3.org/Graphics/GIF/spec-gif89a.txt",
+  "title": "GIF"
+ },
+ "gpc": {
+  "spec": "https://www.w3.org/TR/gpc/",
+  "title": "GPC"
+ },
+ "graphics-aam": {
+  "spec": "https://w3c.github.io/graphics-aam/",
+  "title": "Graphics Accessibility API Mappings"
+ },
+ "graphics-aria": {
+  "spec": "https://w3c.github.io/graphics-aria/",
+  "title": "WAI-ARIA Graphics"
+ },
+ "gyroscope": {
+  "spec": "https://w3c.github.io/gyroscope/",
+  "title": "Gyroscope"
+ },
+ "hr-time": {
+  "spec": "https://w3c.github.io/hr-time/",
+  "title": "High Resolution Time"
+ },
+ "html": {
+  "spec": "https://html.spec.whatwg.org/multipage/",
+  "title": "HTML"
+ },
+ "html-aam": {
+  "spec": "https://w3c.github.io/html-aam/",
+  "title": "HTML Accessibility API Mappings"
+ },
+ "html-longdesc": {
+  "spec": "https://www.w3.org/TR/html-longdesc/"
+ },
+ "html-media-capture": {
+  "spec": "https://w3c.github.io/html-media-capture/",
+  "title": "HTML Media Capture"
+ },
+ "html/browsers/origin/origin-keyed-agent-clusters": {
+  "spec": "https://html.spec.whatwg.org/multipage/#origin-keyed-agent-clusters",
+  "title": "HTML"
+ },
+ "html/canvas": {
+  "spec": "https://html.spec.whatwg.org/multipage/canvas.html#2dcontext"
+ },
+ "html/canvas/offscreen": {
+  "spec": "https://html.spec.whatwg.org/multipage/canvas.html#the-offscreencanvas-interface"
+ },
+ "html/cross-origin-embedder-policy": {
+  "spec": "https://html.spec.whatwg.org/multipage/origin.html#coep"
+ },
+ "html/cross-origin-embedder-policy/credentialless": {
+  "spec": "To"
+ },
+ "html/cross-origin-opener-policy": {
+  "spec": "https://html.spec.whatwg.org/multipage/origin.html#cross-origin-opener-policies"
+ },
+ "html/dom/partial-updates/tentative": {
+  "spec": "https://github.com/WICG/declarative-partial-updates"
+ },
+ "html/user-activation": {
+  "spec": "https://html.spec.whatwg.org/multipage/interaction.html#tracking-user-activation"
+ },
+ "idle-detection": {
+  "spec": "https://wicg.github.io/idle-detection/",
+  "title": "Idle Detection API"
+ },
+ "imagebitmap-renderingcontext": {
+  "spec": "https://html.spec.whatwg.org/multipage/canvas.html#the-imagebitmap-rendering-context"
+ },
+ "import-maps": {
+  "spec": "https://html.spec.whatwg.org/multipage/webappapis.html#import-maps"
+ },
+ "input-device-capabilities": {
+  "spec": "https://wicg.github.io/input-device-capabilities/",
+  "title": "Input Device Capabilities"
+ },
+ "input-events": {
+  "spec": "https://w3c.github.io/input-events/",
+  "title": "Input Events"
+ },
+ "installedapp": {
+  "spec": "https://wicg.github.io/get-installed-related-apps/spec/",
+  "title": "Get Installed Related Apps API"
+ },
+ "intersection-observer": {
+  "spec": "https://w3c.github.io/IntersectionObserver/",
+  "title": "Intersection Observer"
+ },
+ "intervention-reporting": {
+  "spec": "https://wicg.github.io/intervention-reporting/",
+  "title": "Intervention Reporting"
+ },
+ "is-input-pending": {
+  "spec": "https://wicg.github.io/is-input-pending/",
+  "title": "Early detection of input events"
+ },
+ "jpegxl": {
+  "spec": "https://jpeg.org/jpegxl/workplan.html"
+ },
+ "js": {
+  "spec": "https://tc39.es/ecma262/"
+ },
+ "js-self-profiling": {
+  "spec": "https://wicg.github.io/js-self-profiling/",
+  "title": "JS Self-Profiling API"
+ },
+ "keyboard-lock": {
+  "spec": "https://wicg.github.io/keyboard-lock/",
+  "title": "Keyboard Lock"
+ },
+ "keyboard-map": {
+  "spec": "https://wicg.github.io/keyboard-map/",
+  "title": "Keyboard Map"
+ },
+ "largest-contentful-paint": {
+  "spec": "https://w3c.github.io/largest-contentful-paint/",
+  "title": "Largest Contentful Paint"
+ },
+ "layout-instability": {
+  "spec": "https://wicg.github.io/layout-instability/",
+  "title": "Layout Instability API"
+ },
+ "long-animation-frame": {
+  "spec": "https://w3c.github.io/long-animation-frames/",
+  "title": "Long Animation Frames API"
+ },
+ "longtask-timing": {
+  "spec": "https://w3c.github.io/longtasks/",
+  "title": "Long Tasks API"
+ },
+ "magnetometer": {
+  "spec": "https://w3c.github.io/magnetometer/",
+  "title": "Magnetometer"
+ },
+ "managed": {
+  "spec": "https://wicg.github.io/WebApiDevice/managed_config/",
+  "title": "Managed Configuration API"
+ },
+ "mathml": {
+  "spec": "https://w3c.github.io/mathml-core/",
+  "title": "MathML Core"
+ },
+ "measure-memory": {
+  "spec": "https://wicg.github.io/performance-measure-memory/",
+  "title": "Measure Memory API"
+ },
+ "media-capabilities": {
+  "spec": "https://w3c.github.io/media-capabilities/",
+  "title": "Media Capabilities"
+ },
+ "media-playback-quality": {
+  "spec": "https://w3c.github.io/media-playback-quality/",
+  "title": "Media Playback Quality"
+ },
+ "media-source": {
+  "spec": "https://w3c.github.io/media-source/",
+  "title": "Media Source Extensions\u2122"
+ },
+ "mediacapture-extensions": {
+  "spec": "https://w3c.github.io/mediacapture-extensions/",
+  "title": "Media Capture and Streams Extensions"
+ },
+ "mediacapture-fromelement": {
+  "spec": "https://w3c.github.io/mediacapture-fromelement/",
+  "title": "Media Capture from DOM Elements"
+ },
+ "mediacapture-image": {
+  "spec": "https://w3c.github.io/mediacapture-image/",
+  "title": "MediaStream Image Capture"
+ },
+ "mediacapture-insertable-streams": {
+  "spec": "https://w3c.github.io/mediacapture-transform/",
+  "title": "MediaStreamTrack Insertable Media Processing using Streams"
+ },
+ "mediacapture-record": {
+  "spec": "https://w3c.github.io/mediacapture-record/",
+  "title": "MediaStream Recording"
+ },
+ "mediacapture-streams": {
+  "spec": "https://w3c.github.io/mediacapture-main/",
+  "title": "Media Capture and Streams"
+ },
+ "mediasession": {
+  "spec": "https://w3c.github.io/mediasession/",
+  "title": "Media Session"
+ },
+ "merchant-validation": {
+  "spec": "https://w3c.github.io/merchant-validation/",
+  "title": "The MerchantValidationEvent interface"
+ },
+ "mimesniff": {
+  "spec": "https://mimesniff.spec.whatwg.org/",
+  "title": "MIME Sniffing"
+ },
+ "mixed-content": {
+  "spec": "https://w3c.github.io/webappsec-mixed-content/",
+  "title": "Mixed Content"
+ },
+ "mst-content-hint": {
+  "spec": "https://w3c.github.io/mst-content-hint/",
+  "title": "MediaStreamTrack Content Hints"
+ },
+ "nav-tracking-mitigations": {
+  "spec": "https://privacycg.github.io/nav-tracking-mitigations/",
+  "title": "Navigational-Tracking Mitigations"
+ },
+ "navigation-api": {
+  "spec": "https://html.spec.whatwg.org/multipage/nav-history-apis.html#navigation-api"
+ },
+ "navigation-timing": {
+  "spec": "https://w3c.github.io/navigation-timing/",
+  "title": "Navigation Timing"
+ },
+ "netinfo": {
+  "spec": "https://wicg.github.io/netinfo/",
+  "title": "Network Information API"
+ },
+ "network-error-logging": {
+  "spec": "https://w3c.github.io/network-error-logging/",
+  "title": "Network Error Logging"
+ },
+ "notifications": {
+  "spec": "https://notifications.spec.whatwg.org/",
+  "title": "Notifications API"
+ },
+ "orientation-event": {
+  "spec": "https://w3c.github.io/deviceorientation/",
+  "title": "Device Orientation and Motion"
+ },
+ "orientation-sensor": {
+  "spec": "https://w3c.github.io/orientation-sensor/",
+  "title": "Orientation Sensor"
+ },
+ "page-lifecycle": {
+  "spec": "https://wicg.github.io/page-lifecycle/",
+  "title": "Page Lifecycle"
+ },
+ "page-visibility": {
+  "spec": "https://w3c.github.io/page-visibility/"
+ },
+ "paint-timing": {
+  "spec": "https://w3c.github.io/paint-timing/",
+  "title": "Paint Timing"
+ },
+ "payment-method-basic-card": {
+  "spec": "https://w3c.github.io/payment-method-basic-card/"
+ },
+ "payment-method-id": {
+  "spec": "https://w3c.github.io/payment-method-id/",
+  "title": "Payment Method Identifiers"
+ },
+ "payment-method-manifest": {
+  "spec": "https://w3c.github.io/payment-method-manifest/",
+  "title": "Payment Method Manifest"
+ },
+ "payment-request": {
+  "spec": "https://w3c.github.io/payment-request/",
+  "title": "Payment Request API"
+ },
+ "performance-timeline": {
+  "spec": "https://w3c.github.io/performance-timeline/",
+  "title": "Performance Timeline"
+ },
+ "periodic-background-sync": {
+  "spec": "https://wicg.github.io/periodic-background-sync/",
+  "title": "Web Periodic Background Synchronization"
+ },
+ "permissions": {
+  "spec": "https://w3c.github.io/permissions/",
+  "title": "Permissions"
+ },
+ "permissions-policy": {
+  "spec": "https://w3c.github.io/webappsec-permissions-policy/",
+  "title": "Permissions Policy"
+ },
+ "permissions-request": {
+  "spec": "https://wicg.github.io/permissions-request/",
+  "title": "Requesting Permissions"
+ },
+ "permissions-revoke": {
+  "spec": "https://wicg.github.io/permissions-revoke/",
+  "title": "Relinquishing Permissions"
+ },
+ "picture-in-picture": {
+  "spec": "https://w3c.github.io/picture-in-picture/",
+  "title": "Picture-in-Picture"
+ },
+ "png": {
+  "spec": "https://www.w3.org/TR/png/",
+  "title": "PNG"
+ },
+ "pointerevents": {
+  "spec": "https://w3c.github.io/pointerevents/",
+  "title": "Pointer Events"
+ },
+ "pointerlock": {
+  "spec": "https://w3c.github.io/pointerlock/",
+  "title": "Pointer Lock"
+ },
+ "preload": {
+  "spec": "https://w3c.github.io/preload/"
+ },
+ "presentation-api": {
+  "spec": "https://w3c.github.io/presentation-api/",
+  "title": "Presentation API"
+ },
+ "proximity": {
+  "spec": "https://w3c.github.io/proximity/",
+  "title": "Proximity Sensor"
+ },
+ "push-api": {
+  "spec": "https://w3c.github.io/push-api/",
+  "title": "Push API"
+ },
+ "quirks": {
+  "spec": "https://quirks.spec.whatwg.org/",
+  "title": "Quirks Mode"
+ },
+ "referrer-policy": {
+  "spec": "https://w3c.github.io/webappsec-referrer-policy/",
+  "title": "Referrer Policy"
+ },
+ "remote-playback": {
+  "spec": "https://w3c.github.io/remote-playback/",
+  "title": "Remote Playback API"
+ },
+ "reporting": {
+  "spec": "https://w3c.github.io/reporting/",
+  "title": "Reporting API"
+ },
+ "requestidlecallback": {
+  "spec": "https://w3c.github.io/requestidlecallback/",
+  "title": "requestIdleCallback()"
+ },
+ "resize-observer": {
+  "spec": "https://drafts.csswg.org/resize-observer/",
+  "title": "Resize Observer"
+ },
+ "resource-timing": {
+  "spec": "https://w3c.github.io/resource-timing/",
+  "title": "Resource Timing"
+ },
+ "sanitizer-api": {
+  "spec": "https://wicg.github.io/sanitizer-api/",
+  "title": "HTML Sanitizer API"
+ },
+ "savedata": {
+  "spec": "https://wicg.github.io/savedata/",
+  "title": "Save Data API"
+ },
+ "scheduler": {
+  "spec": "https://wicg.github.io/scheduling-apis/",
+  "title": "Prioritized Task Scheduling"
+ },
+ "screen-capture": {
+  "spec": "https://w3c.github.io/mediacapture-screen-share/",
+  "title": "Screen Capture"
+ },
+ "screen-details": {
+  "spec": "https://webscreens.github.io/window-management/"
+ },
+ "screen-orientation": {
+  "spec": "https://w3c.github.io/screen-orientation/",
+  "title": "Screen Orientation"
+ },
+ "screen-wake-lock": {
+  "spec": "https://w3c.github.io/screen-wake-lock/",
+  "title": "Screen Wake Lock API"
+ },
+ "scroll-animations": {
+  "spec": "https://drafts.csswg.org/scroll-animations/",
+  "title": "Scroll-driven Animations"
+ },
+ "scroll-to-text-fragment": {
+  "spec": "https://wicg.github.io/scroll-to-text-fragment/",
+  "title": "URL Fragment Text Directives"
+ },
+ "secure-contexts": {
+  "spec": "https://w3c.github.io/webappsec-secure-contexts/",
+  "title": "Secure Contexts"
+ },
+ "secure-payment-confirmation": {
+  "spec": "https://w3c.github.io/secure-payment-confirmation/",
+  "title": "Secure Payment Confirmation"
+ },
+ "selection": {
+  "spec": "https://w3c.github.io/selection-api/",
+  "title": "Selection API"
+ },
+ "serial": {
+  "spec": "https://wicg.github.io/serial/",
+  "title": "Web Serial API"
+ },
+ "server-timing": {
+  "spec": "https://w3c.github.io/server-timing/",
+  "title": "Server Timing"
+ },
+ "service-workers": {
+  "spec": "https://w3c.github.io/ServiceWorker/",
+  "title": "Service Workers"
+ },
+ "shadow-dom": {
+  "spec": "https://dom.spec.whatwg.org/#shadow-trees",
+  "title": "DOM"
+ },
+ "shape-detection": {
+  "spec": "https://wicg.github.io/shape-detection-api/",
+  "title": "Accelerated Shape Detection in Images"
+ },
+ "signed-exchange": {
+  "spec": "https://wicg.github.io/webpackage/draft-yasskin-http-origin-signed-responses.html"
+ },
+ "speculation-rules": {
+  "spec": "https://wicg.github.io/nav-speculation/speculation-rules.html",
+  "title": "Speculation Rules"
+ },
+ "speech-api": {
+  "spec": "https://wicg.github.io/speech-api/"
+ },
+ "storage": {
+  "spec": "https://storage.spec.whatwg.org/",
+  "title": "Storage"
+ },
+ "storage-access-api": {
+  "spec": "https://privacycg.github.io/storage-access/",
+  "title": "The Storage Access API"
+ },
+ "storage/buckets": {
+  "spec": "https://wicg.github.io/storage-buckets/",
+  "title": "Storage Buckets API"
+ },
+ "streams": {
+  "spec": "https://streams.spec.whatwg.org/",
+  "title": "Streams"
+ },
+ "subresource-integrity": {
+  "spec": "https://w3c.github.io/webappsec-subresource-integrity/",
+  "title": "SRI"
+ },
+ "svg": {
+  "spec": "https://w3c.github.io/svgwg/svg2-draft/",
+  "title": "SVG"
+ },
+ "svg-aam": {
+  "spec": "https://w3c.github.io/svg-aam/",
+  "title": "SVG Accessibility API Mappings"
+ },
+ "timing-entrytypes-registry": {
+  "spec": "https://w3c.github.io/timing-entrytypes-registry/",
+  "title": "Timing Entry Names Registry"
+ },
+ "top-level-storage-access-api": {
+  "spec": "https://privacycg.github.io/requestStorageAccessFor/",
+  "title": "requestStorageAccessFor API"
+ },
+ "touch-events": {
+  "spec": "https://w3c.github.io/touch-events/",
+  "title": "Touch Events"
+ },
+ "trust-tokens": {
+  "spec": "https://wicg.github.io/trust-token-api/",
+  "title": "Private State Token API"
+ },
+ "trusted-types": {
+  "spec": "https://w3c.github.io/trusted-types/dist/spec/",
+  "title": "Trusted Types"
+ },
+ "ua-client-hints": {
+  "spec": "https://wicg.github.io/ua-client-hints/",
+  "title": "User-Agent Client Hints"
+ },
+ "uievents": {
+  "spec": "https://w3c.github.io/uievents/",
+  "title": "UI Events"
+ },
+ "upgrade-insecure-requests": {
+  "spec": "https://w3c.github.io/webappsec-upgrade-insecure-requests/",
+  "title": "Upgrade Insecure Requests"
+ },
+ "url": {
+  "spec": "https://url.spec.whatwg.org/",
+  "title": "URL"
+ },
+ "urlpattern": {
+  "spec": "https://urlpattern.spec.whatwg.org/",
+  "title": "URL Pattern"
+ },
+ "user-timing": {
+  "spec": "https://w3c.github.io/user-timing/",
+  "title": "User Timing"
+ },
+ "vibration": {
+  "spec": "https://w3c.github.io/vibration/",
+  "title": "Vibration API"
+ },
+ "video-rvfc": {
+  "spec": "https://wicg.github.io/video-rvfc/",
+  "title": "HTMLVideoElement.requestVideoFrameCallback()"
+ },
+ "viewport": {
+  "spec": "https://drafts.csswg.org/css-viewport-1/"
+ },
+ "viewport-segments": {
+  "spec": "https://drafts.csswg.org/css-viewport-1/"
+ },
+ "virtual-keyboard": {
+  "spec": "https://github.com/w3c/editing/blob/gh-pages/docs/virtualkeyboard/index.html"
+ },
+ "visual-viewport": {
+  "spec": "https://wicg.github.io/visual-viewport/"
+ },
+ "wai-aria": {
+  "spec": "https://w3c.github.io/aria/",
+  "title": "WAI-ARIA"
+ },
+ "wasm/jsapi": {
+  "spec": "https://webassembly.github.io/spec/js-api/",
+  "title": "WebAssembly JavaScript Interface"
+ },
+ "wasm/webapi": {
+  "spec": "https://webassembly.github.io/spec/web-api/",
+  "title": "WebAssembly Web API"
+ },
+ "web-animations": {
+  "spec": "https://drafts.csswg.org/web-animations/",
+  "title": "Web Animations"
+ },
+ "web-based-payment-handler": {
+  "spec": "https://w3c.github.io/web-based-payment-handler/",
+  "title": "Web-based Payment Handler API"
+ },
+ "web-bundle": {
+  "spec": "https://wicg.github.io/webpackage/draft-yasskin-wpack-bundled-exchanges.html"
+ },
+ "web-extensions": {
+  "spec": "https://w3c.github.io/webextensions/specification/index.html"
+ },
+ "web-locks": {
+  "spec": "https://w3c.github.io/web-locks/",
+  "title": "Web Locks API"
+ },
+ "web-nfc": {
+  "spec": "https://w3c-cg.github.io/web-nfc/",
+  "title": "Web NFC"
+ },
+ "web-otp": {
+  "spec": "https://wicg.github.io/web-otp/",
+  "title": "WebOTP API"
+ },
+ "web-share": {
+  "spec": "https://w3c.github.io/web-share/",
+  "title": "Web Share API"
+ },
+ "webaudio": {
+  "spec": "https://webaudio.github.io/web-audio-api/",
+  "title": "Web Audio API"
+ },
+ "webauthn": {
+  "spec": "https://w3c.github.io/webauthn/",
+  "title": "Web Authentication"
+ },
+ "webcodecs": {
+  "spec": "https://w3c.github.io/webcodecs/",
+  "title": "WebCodecs"
+ },
+ "webdriver": {
+  "spec": "https://w3c.github.io/webdriver/",
+  "title": "WebDriver"
+ },
+ "webdriver/tests/classic/external/webauthn": {
+  "spec": "https://w3c.github.io/webauthn/",
+  "title": "Web Authentication"
+ },
+ "webgpu": {
+  "spec": "https://gpuweb.github.io/gpuweb/",
+  "title": "WebGPU"
+ },
+ "webhid": {
+  "spec": "https://wicg.github.io/webhid/",
+  "title": "WebHID API"
+ },
+ "webidl": {
+  "spec": "https://webidl.spec.whatwg.org/",
+  "title": "Web IDL"
+ },
+ "webmcp": {
+  "spec": "hthttps://webmachinelearning.github.io/webmcp/"
+ },
+ "webmessaging": {
+  "spec": "https://html.spec.whatwg.org/multipage/web-messaging.html"
+ },
+ "webmidi": {
+  "spec": "https://webaudio.github.io/web-midi-api/",
+  "title": "Web MIDI API"
+ },
+ "webnn": {
+  "spec": "https://www.w3.org/TR/webnn/",
+  "title": "Web Neural Network API"
+ },
+ "webrtc": {
+  "spec": "https://w3c.github.io/webrtc-pc/",
+  "title": "WebRTC"
+ },
+ "webrtc-encoded-transform": {
+  "spec": "https://w3c.github.io/webrtc-encoded-transform/",
+  "title": "WebRTC Encoded Transform"
+ },
+ "webrtc-extensions": {
+  "spec": "https://w3c.github.io/webrtc-extensions/"
+ },
+ "webrtc-ice": {
+  "spec": "https://w3c.github.io/webrtc-ice/",
+  "title": "IceTransport Extensions for WebRTC"
+ },
+ "webrtc-identity": {
+  "spec": "https://w3c.github.io/webrtc-identity/identity.html"
+ },
+ "webrtc-priority": {
+  "spec": "https://w3c.github.io/webrtc-priority/",
+  "title": "WebRTC Priority Control API"
+ },
+ "webrtc-stats": {
+  "spec": "https://w3c.github.io/webrtc-stats/",
+  "title": "WebRTC Statistics"
+ },
+ "webrtc-svc": {
+  "spec": "https://w3c.github.io/webrtc-svc/",
+  "title": "SVC"
+ },
+ "websockets": {
+  "spec": "https://websockets.spec.whatwg.org/",
+  "title": "WebSockets"
+ },
+ "webstorage": {
+  "spec": "https://html.spec.whatwg.org/multipage/webstorage.html"
+ },
+ "webtransport": {
+  "spec": "https://w3c.github.io/webtransport/",
+  "title": "WebTransport"
+ },
+ "webusb": {
+  "spec": "https://wicg.github.io/webusb/",
+  "title": "WebUSB API"
+ },
+ "webvtt": {
+  "spec": "https://w3c.github.io/webvtt/",
+  "title": "WebVTT: The Web Video Text Tracks Format"
+ },
+ "webxr": {
+  "spec": "https://immersive-web.github.io/webxr/",
+  "title": "WebXR Device API"
+ },
+ "webxr/anchors": {
+  "spec": "https://immersive-web.github.io/anchors/",
+  "title": "WebXR Anchors"
+ },
+ "webxr/ar-module": {
+  "spec": "https://immersive-web.github.io/webxr-ar-module/",
+  "title": "WebXR Augmented Reality"
+ },
+ "webxr/dom-overlay": {
+  "spec": "https://immersive-web.github.io/dom-overlays/",
+  "title": "WebXR DOM Overlays"
+ },
+ "webxr/gamepads-module": {
+  "spec": "https://immersive-web.github.io/webxr-gamepads-module/",
+  "title": "WebXR Gamepads"
+ },
+ "webxr/hand-input": {
+  "spec": "https://immersive-web.github.io/webxr-hand-input/",
+  "title": "WebXR Hand Input"
+ },
+ "webxr/hit-test": {
+  "spec": "https://immersive-web.github.io/hit-test/",
+  "title": "WebXR Hit Test"
+ },
+ "webxr/layers": {
+  "spec": "https://immersive-web.github.io/layers/",
+  "title": "WebXR Layers API"
+ },
+ "webxr/plane-detection": {
+  "spec": "https://immersive-web.github.io/plane-detection/",
+  "title": "WebXR Plane Detection"
+ },
+ "window-management": {
+  "spec": "https://w3c.github.io/window-management/",
+  "title": "Window Management"
+ },
+ "workers": {
+  "spec": "https://html.spec.whatwg.org/multipage/workers.html"
+ },
+ "worklets": {
+  "spec": "https://html.spec.whatwg.org/multipage/worklets.html"
+ },
+ "x-frame-options": {
+  "spec": "https://html.spec.whatwg.org/multipage/browsing-the-web.html#the-x-frame-options-header"
+ },
+ "xhr": {
+  "spec": "https://xhr.spec.whatwg.org/",
+  "title": "XMLHttpRequest"
+ }
+}
