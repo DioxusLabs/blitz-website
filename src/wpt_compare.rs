@@ -14,8 +14,16 @@ use serde::Deserialize;
 
 use crate::wpt_db::{self, RunMeta, RunRow, WPT_COMPARE_DB};
 
-/// Engines compared against Blitz, in display order
-const PRODUCTS: &[&str] = &["chrome", "firefox", "safari", "servo", "ladybird"];
+/// Engines compared against Blitz, in display order. The experimental
+/// channels match wpt.fyi's default dashboard (the stable Safari runs in
+/// particular score far lower, e.g. collapsing on the wasm suite).
+const PRODUCTS: &[&str] = &[
+    "chrome[experimental]",
+    "firefox[experimental]",
+    "safari[experimental]",
+    "servo",
+    "ladybird",
+];
 
 const BLITZ_REPORT_URL: &str = "https://dioxuslabs.github.io/blitz/wptreport.json.zst";
 
@@ -141,7 +149,8 @@ pub async fn load_wpt_compare() {
 
     // Order columns: wpt.fyi products first (in PRODUCTS order), then Blitz
     let mut ordered: Vec<RunRow> = Vec::with_capacity(runs.len());
-    for product in PRODUCTS.iter().copied().chain(["blitz"]) {
+    for spec in PRODUCTS.iter().copied().chain(["blitz"]) {
+        let product = spec.split('[').next().unwrap();
         ordered.extend(runs.iter().filter(|run| run.product == product).cloned());
     }
 
