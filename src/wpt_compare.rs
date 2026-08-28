@@ -130,6 +130,9 @@ pub async fn load_wpt_compare() {
                     t0.elapsed().as_secs_f64() * 1000.0
                 );
             }
+            // Only the latest run per product is kept; a no-op when there
+            // are no superseded runs, so run it on every refresh
+            wpt_db::prune_old_runs(conn);
             wpt_db::latest_runs(conn)
         })
     })

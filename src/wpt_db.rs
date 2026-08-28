@@ -585,6 +585,43 @@ pub fn recompute_area_scores(conn: &mut Connection) {
     tx.commit().unwrap();
 }
 
+/// Delete all non-latest runs and their per-run data, keeping only the
+/// latest run of each product. Interned names (`areas`/`tests`/`subtests`)
+/// are append-only and left in place. Freed pages stay on SQLite's freelist
+/// for reuse by subsequent ingests, so the file size plateaus rather than
+/// growing with history.
+pub fn prune_old_runs(conn: &mut Connection) {
+    let tx = conn.transaction().unwrap();
+    let old_ids: Vec<i64> = {
+        let mut stmt = tx
+            .prepare("SELECT id FROM runs WHERE is_latest = 0")
+            .unwrap();
+        let ids = stmt
+            .query_map([], |row| row.get(0))
+            .unwrap()
+            .map(|r| r.unwrap())
+            .collect();
+        ids
+    };
+    for id in &old_ids {
+        tx.execute("DELETE FROM subtest_results WHERE run_id = ?1", params![id])
+            .unwrap();
+        tx.execute("DELETE FROM results WHERE run_id = ?1", params![id])
+            .unwrap();
+        tx.execute("DELETE FROM area_scores WHERE run_id = ?1", params![id])
+            .unwrap();
+        tx.execute("DELETE FROM runs WHERE id = ?1", params![id])
+            .unwrap();
+    }
+    tx.commit().unwrap();
+    if !old_ids.is_empty() {
+        println!("Pruned {} old WPT run(s)", old_ids.len());
+        // Keep the WAL file bounded after the bulk delete
+        conn.execute_batch("PRAGMA wal_checkpoint(TRUNCATE);")
+            .unwrap();
+    }
+}
+
 /// The latest run for each product, in ingestion order.
 pub fn latest_runs(conn: &Connection) -> Vec<RunRow> {
     let mut stmt = conn
