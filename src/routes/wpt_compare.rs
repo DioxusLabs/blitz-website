@@ -6,6 +6,45 @@ use crate::{
     wpt_db::{status_str, AreaScore, AreaSort, RunRow, SubtestRow, TestDetail, TestRow, TestRunResult},
 };
 
+/// Servo's WPT focus areas, as tracked by
+/// <https://github.com/servo/internal-wpt-dashboard>. The empty string is
+/// the full test suite; the dashboard's combined "/css/CSS2/tables/ &
+/// /css/css-tables/" entry is split into its two constituent rows.
+pub const SERVO_FOCUS_AREAS: &[&str] = &[
+    "",
+    "content-security-policy",
+    "credential-management",
+    "css",
+    "css/CSS2",
+    "css/CSS2/abspos",
+    "css/CSS2/box-display",
+    "css/CSS2/floats",
+    "css/CSS2/floats-clear",
+    "css/CSS2/linebox",
+    "css/CSS2/margin-padding-clear",
+    "css/CSS2/normal-flow",
+    "css/CSS2/positioning",
+    "css/CSS2/tables",
+    "css/css-tables",
+    "css/cssom",
+    "css/css-align",
+    "css/css-break",
+    "css/css-flexbox",
+    "css/css-grid",
+    "css/css-position",
+    "css/css-sizing",
+    "css/css-text",
+    "editing",
+    "gamepad",
+    "IndexedDB",
+    "shadow-dom",
+    "streams",
+    "trusted-types",
+    "WebCryptoAPI",
+    "webdriver/tests/classic",
+    "webxr",
+];
+
 /// Display name for a product identifier (e.g. "chrome" -> "Chrome")
 fn product_label(product: &str) -> String {
     let mut chars = product.chars();
@@ -49,6 +88,12 @@ pub fn WptComparePage(
                 across web engines, using the latest master runs from <a href="https://wpt.fyi" target="_blank">wpt.fyi</a> and Blitz's own test runner."#
             }
             hr {}
+            if area.is_empty() {
+                p {
+                    font_size: "smaller",
+                    a { href: "/wpt/focus-areas", "Servo focus areas summary" }
+                }
+            }
             WptCompareBreadcrumb { area: area.clone() }
             SpecInfoDisplay { area: area.clone() }
             RunInfoDisplay { runs: runs.clone() }
@@ -82,6 +127,46 @@ pub fn WptComparePage(
                     }
                     for test in &tests {
                         CompareTestRow { test: test.clone() }
+                    }
+                }
+            }
+        }
+    }
+}
+
+#[component]
+pub fn WptFocusAreasPage(
+    runs: Vec<RunRow>,
+    scores: Vec<(String, Vec<Option<AreaScore>>)>,
+) -> Element {
+    rsx! {
+        Page { title: "WPT: Servo focus areas".into(),
+            h1 { "WPT" }
+            p {
+                class: "introduction",
+                dangerous_inner_html: r#"
+                This page compares scores on Servo's <a href="https://github.com/servo/internal-wpt-dashboard" target="_blank">WPT focus areas</a>
+                across web engines, using the latest master runs from <a href="https://wpt.fyi" target="_blank">wpt.fyi</a> and Blitz's own test runner."#
+            }
+            hr {}
+            p {
+                a { href: "/wpt", "wpt" }
+                " / focus areas"
+            }
+            RunInfoDisplay { runs: runs.clone() }
+            table {
+                width: "100%",
+                tr {
+                    th { width: "min-content", "Focus area" }
+                    for run in &runs {
+                        th { text_align: "center", {product_label(&run.product)} }
+                    }
+                }
+                for (area, area_scores) in &scores {
+                    if area.is_empty() {
+                        {compare_area_row("All WPT tests".to_string(), Some("/wpt".to_string()), area_scores)}
+                    } else {
+                        {compare_area_row(format!("/{area}/"), Some(format!("/wpt/{area}")), area_scores)}
                     }
                 }
             }

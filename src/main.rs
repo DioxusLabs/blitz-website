@@ -23,8 +23,8 @@ use routes::{
     AboutPage, ArcDownloadLinks, ArcWptHistory, ChartRange, CssSupportPage, DownloadsPage,
     DownloadsPageProps, ElementSupportPage, EventSupportPage, GettingStartedPage, HomePage,
     NLNetInstructionsPage, TestPageTab, WptComparePage, WptComparePageProps, WptCompareTestPage,
-    WptCompareTestPageProps, WptHistoryPage, WptHistoryPageProps, WptResultsPage,
-    WptResultsPageProps, WptTestPage, WptTestPageProps,
+    WptCompareTestPageProps, WptFocusAreasPage, WptFocusAreasPageProps, WptHistoryPage,
+    WptHistoryPageProps, WptResultsPage, WptResultsPageProps, WptTestPage, WptTestPageProps,
 };
 use serde::Deserialize;
 use std::{
@@ -230,6 +230,7 @@ async fn main() {
                 wpt_compare_route(String::new(), query.sort).await
             }),
         )
+        .route("/wpt/focus-areas", get(wpt_focus_areas_route))
         .route(
             "/wpt/{*area}",
             get(
@@ -415,6 +416,34 @@ async fn wpt_compare_route(
         }
         PageData::NotFound => Err((StatusCode::NOT_FOUND, format!("Unknown WPT area: {area}"))),
     }
+}
+
+async fn wpt_focus_areas_route() -> Result<(StatusCode, Html<String>), (StatusCode, String)> {
+    let Some(entry) = fresh_wpt_compare_entry().await else {
+        return Err((
+            StatusCode::INTERNAL_SERVER_ERROR,
+            "WPT comparison data not available".to_string(),
+        ));
+    };
+    let runs = entry.runs.clone();
+    let run_ids: Vec<i64> = runs.iter().map(|run| run.id).collect();
+
+    let scores = tokio::task::spawn_blocking(move || {
+        WPT_COMPARE_DB.with(|conn| {
+            routes::SERVO_FOCUS_AREAS
+                .iter()
+                .map(|area| (area.to_string(), wpt_db::area_score(conn, &run_ids, area)))
+                .collect::<Vec<_>>()
+        })
+    })
+    .await
+    .unwrap();
+
+    let props = WptFocusAreasPageProps {
+        runs: runs.0.as_ref().clone(),
+        scores,
+    };
+    Ok(dx_route_with_props(WptFocusAreasPage, props).await)
 }
 
 /// Get the cached WPT comparison run list, revalidating (checking wpt.fyi
