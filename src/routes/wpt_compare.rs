@@ -1,3 +1,5 @@
+use std::sync::LazyLock;
+
 use dioxus::prelude::*;
 
 use crate::{
@@ -10,40 +12,10 @@ use crate::{
 /// <https://github.com/servo/internal-wpt-dashboard>. The empty string is
 /// the full test suite; the dashboard's combined "/css/CSS2/tables/ &
 /// /css/css-tables/" entry is split into its two constituent rows.
-pub const SERVO_FOCUS_AREAS: &[&str] = &[
-    "",
-    "content-security-policy",
-    "credential-management",
-    "css",
-    "css/CSS2",
-    "css/CSS2/abspos",
-    "css/CSS2/box-display",
-    "css/CSS2/floats",
-    "css/CSS2/floats-clear",
-    "css/CSS2/linebox",
-    "css/CSS2/margin-padding-clear",
-    "css/CSS2/normal-flow",
-    "css/CSS2/positioning",
-    "css/CSS2/tables",
-    "css/css-tables",
-    "css/cssom",
-    "css/css-align",
-    "css/css-break",
-    "css/css-flexbox",
-    "css/css-grid",
-    "css/css-position",
-    "css/css-sizing",
-    "css/css-text",
-    "editing",
-    "gamepad",
-    "IndexedDB",
-    "shadow-dom",
-    "streams",
-    "trusted-types",
-    "WebCryptoAPI",
-    "webdriver/tests/classic",
-    "webxr",
-];
+pub static SERVO_FOCUS_AREAS: LazyLock<Vec<String>> = LazyLock::new(|| {
+    serde_json::from_str(include_str!("../../data/focus_areas/servo.json"))
+        .expect("invalid data/focus_areas/servo.json")
+});
 
 /// Display name for a product identifier (e.g. "chrome" -> "Chrome")
 fn product_label(product: &str) -> String {

@@ -423,7 +423,7 @@ async fn wpt_focus_areas_route() -> Result<(StatusCode, Html<String>), (StatusCo
         WPT_COMPARE_DB.with(|conn| {
             routes::SERVO_FOCUS_AREAS
                 .iter()
-                .map(|area| (area.to_string(), wpt_db::area_score(conn, &run_ids, area)))
+                .map(|area| (area.clone(), wpt_db::area_score(conn, &run_ids, area)))
                 .collect::<Vec<_>>()
         })
     })
