@@ -340,7 +340,7 @@ async fn wpt_compare_route(
         _ if area.is_empty() => wpt_db::AreaSort::Subtests,
         _ => wpt_db::AreaSort::Alpha,
     };
-    let Some(entry) = get_wpt_comparison_data().await else {
+    let Some(entry) = get_wpt_comparison_run_list().await else {
         return Err((
             StatusCode::INTERNAL_SERVER_ERROR,
             "WPT comparison data not available".to_string(),
@@ -410,7 +410,7 @@ async fn wpt_compare_route(
 }
 
 async fn wpt_focus_areas_route() -> Result<(StatusCode, Html<String>), (StatusCode, String)> {
-    let Some(entry) = get_wpt_comparison_data().await else {
+    let Some(entry) = get_wpt_comparison_run_list().await else {
         return Err((
             StatusCode::INTERNAL_SERVER_ERROR,
             "WPT comparison data not available".to_string(),
@@ -441,7 +441,7 @@ async fn wpt_focus_areas_route() -> Result<(StatusCode, Html<String>), (StatusCo
 /// for new runs and ingesting them) if it is stale. Revalidation is awaited
 /// if the cache is missing, and performed in the background otherwise
 /// (new runs only appear roughly daily, so stale data is always usable).
-async fn get_wpt_comparison_data(
+async fn get_wpt_comparison_run_list(
 ) -> Option<std::sync::Arc<cache::Cached<wpt_compare::WptCompareCacheEntry>>> {
     WPT_COMPARE_CACHE
         .get_or_refresh(Duration::from_mins(30), Duration::MAX, load_wpt_compare)
