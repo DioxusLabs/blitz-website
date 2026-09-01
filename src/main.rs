@@ -444,7 +444,7 @@ async fn wpt_focus_areas_route() -> Result<(StatusCode, Html<String>), (StatusCo
 async fn fresh_wpt_compare_entry(
 ) -> Option<std::sync::Arc<cache::Cached<wpt_compare::WptCompareCacheEntry>>> {
     WPT_COMPARE_CACHE
-        .fresh(Duration::from_mins(30), Duration::MAX, load_wpt_compare)
+        .get_or_refresh(Duration::from_mins(30), Duration::MAX, load_wpt_compare)
         .await
 }
 
