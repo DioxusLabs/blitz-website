@@ -591,31 +591,21 @@ pub fn recompute_area_scores(conn: &mut Connection) {
 /// for reuse by subsequent ingests, so the file size plateaus rather than
 /// growing with history.
 pub fn prune_old_runs(conn: &mut Connection) {
+    const OLD_RUNS: &str = "SELECT id FROM runs WHERE is_latest = 0";
     let tx = conn.transaction().unwrap();
-    let old_ids: Vec<i64> = {
-        let mut stmt = tx
-            .prepare("SELECT id FROM runs WHERE is_latest = 0")
-            .unwrap();
-        let ids = stmt
-            .query_map([], |row| row.get(0))
-            .unwrap()
-            .map(|r| r.unwrap())
-            .collect();
-        ids
-    };
-    for id in &old_ids {
-        tx.execute("DELETE FROM subtest_results WHERE run_id = ?1", params![id])
-            .unwrap();
-        tx.execute("DELETE FROM results WHERE run_id = ?1", params![id])
-            .unwrap();
-        tx.execute("DELETE FROM area_scores WHERE run_id = ?1", params![id])
-            .unwrap();
-        tx.execute("DELETE FROM runs WHERE id = ?1", params![id])
-            .unwrap();
+    for table in ["subtest_results", "results", "area_scores"] {
+        tx.execute(
+            &format!("DELETE FROM {table} WHERE run_id IN ({OLD_RUNS})"),
+            [],
+        )
+        .unwrap();
     }
+    let pruned = tx
+        .execute(&format!("DELETE FROM runs WHERE id IN ({OLD_RUNS})"), [])
+        .unwrap();
     tx.commit().unwrap();
-    if !old_ids.is_empty() {
-        println!("Pruned {} old WPT run(s)", old_ids.len());
+    if pruned > 0 {
+        println!("Pruned {pruned} old WPT run(s)");
         // Keep the WAL file bounded after the bulk delete
         conn.execute_batch("PRAGMA wal_checkpoint(TRUNCATE);")
             .unwrap();
