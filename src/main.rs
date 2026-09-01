@@ -223,7 +223,7 @@ async fn main() {
                 // while revalidating in the background (builds are heavy to
                 // fetch, so a request never awaits a refresh once primed)
                 let entry = DOWNLOAD_CACHE
-                    .fresh(Duration::from_secs(30), Duration::MAX, || {
+                    .get_or_refresh(Duration::from_secs(30), Duration::MAX, || {
                         load_downloads(etag)
                     })
                     .await
@@ -291,7 +291,7 @@ async fn main() {
 /// so cached areas are reused and only missing area files are fetched.
 async fn fresh_wpt_history(areas: Vec<String>) -> Option<ArcWptHistory> {
     let entry = WPT_HISTORY_CACHE
-        .fresh_if(
+        .get_usable_or_refresh(
             Duration::from_secs(30),
             Duration::from_mins(30),
             |entry| entry.contains_areas(&areas),
@@ -312,7 +312,7 @@ async fn fresh_wpt_cache_entry() -> std::sync::Arc<cache::Cached<wpt::WptReportC
         .get_cloned()
         .and_then(|entry| entry.etag.clone());
     WPT_REPORT_CACHE
-        .fresh(Duration::from_secs(30), Duration::from_mins(30), || {
+        .get_or_refresh(Duration::from_secs(30), Duration::from_mins(30), || {
             load_wpt_results(etag)
         })
         .await

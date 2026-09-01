@@ -62,7 +62,7 @@ impl<T: Send + Sync + 'static> Cache<T> {
     ///
     /// `refresh` is responsible for storing its result via [`Cache::update`]
     /// (or [`Cache::mark_as_fresh`]).
-    pub async fn fresh<Fut>(
+    pub async fn get_or_refresh<Fut>(
         &self,
         fresh_for: Duration,
         stale_for: Duration,
@@ -71,12 +71,13 @@ impl<T: Send + Sync + 'static> Cache<T> {
     where
         Fut: Future<Output = ()> + Send + 'static,
     {
-        self.fresh_if(fresh_for, stale_for, |_| true, refresh).await
+        self.get_usable_or_refresh(fresh_for, stale_for, |_| true, refresh)
+            .await
     }
 
-    /// Like [`Cache::fresh`], but a cached entry only counts as usable if
+    /// Like [`Cache::get_or_refresh`], but a cached entry only counts as usable if
     /// `is_usable` returns true (e.g. it contains the data the caller needs).
-    pub async fn fresh_if<Fut>(
+    pub async fn get_usable_or_refresh<Fut>(
         &self,
         fresh_for: Duration,
         stale_for: Duration,
