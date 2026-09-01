@@ -296,7 +296,7 @@ async fn main() {
     tokio::spawn(
         WPT_HISTORY_CACHE.refresh(|existing| load_wpt_history(vec!["css".to_string()], existing)),
     );
-    tokio::spawn(async move { load_wpt_compare().await });
+    tokio::spawn(WPT_COMPARE_CACHE.refresh(load_wpt_compare));
 
     if std::env::var("PRECACHE_DOWNLOADS").is_ok() {
         tokio::spawn(DOWNLOAD_CACHE.refresh(load_downloads));

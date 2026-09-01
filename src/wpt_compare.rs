@@ -11,7 +11,7 @@ use std::time::Instant;
 use reqwest::Client;
 use serde::Deserialize;
 
-use crate::cache::Cache;
+use crate::cache::{Cache, Cached, RefreshOutcome};
 use crate::wpt_db::{self, RunMeta, RunRow, WPT_COMPARE_DB};
 use crate::wpt_fyi;
 
@@ -30,6 +30,7 @@ const BLITZ_REPORT_URL: &str = "https://dioxuslabs.github.io/blitz/wptreport.jso
 
 pub static WPT_COMPARE_CACHE: Cache<WptCompareCacheEntry> = Cache::new();
 
+#[derive(Clone)]
 pub struct WptCompareCacheEntry {
     /// The latest run for each product (column order for comparison pages)
     pub runs: ArcRunRows,
@@ -57,11 +58,14 @@ static REFRESH_LOCK: tokio::sync::Mutex<()> = tokio::sync::Mutex::const_new(());
 /// are missing, and refresh the cached run list. Only one refresh runs at a
 /// time; calls that arrive while one is in flight wait for it and return
 /// without doing their own.
-pub async fn load_wpt_compare() {
+pub async fn load_wpt_compare(
+    _existing: Option<Arc<Cached<WptCompareCacheEntry>>>,
+) -> RefreshOutcome<WptCompareCacheEntry> {
     let Ok(_guard) = REFRESH_LOCK.try_lock() else {
-        // A refresh is already running: wait for it to finish instead
+        // A refresh is already running: wait for it to finish, then leave
+        // its result in place instead of doing our own
         let _ = REFRESH_LOCK.lock().await;
-        return;
+        return RefreshOutcome::Unchanged;
     };
 
     println!("Checking for new WPT comparison runs...");
@@ -124,10 +128,11 @@ pub async fn load_wpt_compare() {
         ordered.extend(runs.iter().filter(|run| run.product == product).cloned());
     }
 
-    WPT_COMPARE_CACHE.update(WptCompareCacheEntry {
-        runs: ArcRunRows(Arc::new(ordered)),
-    });
     println!("WPT comparison runs refreshed.");
+
+    RefreshOutcome::Updated(WptCompareCacheEntry {
+        runs: ArcRunRows(Arc::new(ordered)),
+    })
 }
 
 /// Download and ingest a wpt.fyi raw report if it hasn't been ingested yet.
