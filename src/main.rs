@@ -22,8 +22,9 @@ use routes::child_areas;
 use routes::{
     AboutPage, ArcDownloadLinks, ArcWptHistory, ChartRange, CssSupportPage, DownloadsPage,
     DownloadsPageProps, ElementSupportPage, EventSupportPage, GettingStartedPage, HomePage,
-    NLNetInstructionsPage, TestPageTab, WptHistoryPage, WptHistoryPageProps, WptResultsPage,
-    WptResultsPageProps, WptTestPage, WptTestPageProps,
+    NLNetInstructionsPage, TestPageTab, WptComparePage, WptComparePageProps, WptCompareTestPage,
+    WptCompareTestPageProps, WptFocusAreasPage, WptFocusAreasPageProps, WptHistoryPage,
+    WptHistoryPageProps, WptResultsPage, WptResultsPageProps, WptTestPage, WptTestPageProps,
 };
 use serde::Deserialize;
 use std::{
@@ -34,6 +35,8 @@ use std::{
 use tokio::net::TcpListener;
 use tower_http::{services::ServeDir, trace::TraceLayer};
 use wpt::{load_wpt_results, WPT_REPORT_CACHE};
+use wpt_compare::{load_wpt_compare, WPT_COMPARE_CACHE};
+use wpt_db::WPT_COMPARE_DB;
 use wpt_history::{load_wpt_history, WPT_HISTORY_CACHE};
 
 mod cache;
@@ -42,13 +45,22 @@ mod downloads;
 mod github;
 mod routes;
 mod wpt;
+mod wpt_compare;
+mod wpt_db;
+mod wpt_fyi;
 mod wpt_history;
 mod wpt_source;
+mod wpt_spec_meta;
 
 #[derive(Deserialize)]
 struct WptPageQuery {
     range: Option<String>,
     tab: Option<String>,
+}
+
+#[derive(Deserialize)]
+struct WptCompareQuery {
+    sort: Option<String>,
 }
 
 #[derive(Deserialize)]
@@ -214,6 +226,21 @@ async fn main() {
             ),
         )
         .route(
+            "/wpt",
+            get(async |Query(query): Query<WptCompareQuery>| {
+                wpt_compare_route(String::new(), query.sort).await
+            }),
+        )
+        .route("/wpt/focus-areas", get(wpt_focus_areas_route))
+        .route(
+            "/wpt/{*area}",
+            get(
+                async |Path(area): Path<String>, Query(query): Query<WptCompareQuery>| {
+                    wpt_compare_route(area.trim_matches('/').to_string(), query.sort).await
+                },
+            ),
+        )
+        .route(
             "/downloads",
             get(async || {
                 // Serve directly for 30s; any older entry is served stale
@@ -269,6 +296,15 @@ async fn main() {
     tokio::spawn(
         WPT_HISTORY_CACHE.refresh(|existing| load_wpt_history(vec!["css".to_string()], existing)),
     );
+    // Refresh WPT comparison data on startup and every 15 minutes (the first
+    // tick fires immediately), so new runs are ingested off the request path
+    tokio::spawn(async {
+        let mut interval = tokio::time::interval(Duration::from_mins(15));
+        loop {
+            interval.tick().await;
+            WPT_COMPARE_CACHE.refresh(load_wpt_compare).await;
+        }
+    });
 
     if std::env::var("PRECACHE_DOWNLOADS").is_ok() {
         tokio::spawn(DOWNLOAD_CACHE.refresh(load_downloads));
@@ -299,6 +335,125 @@ async fn fresh_wpt_history(areas: Vec<String>) -> Option<ArcWptHistory> {
         )
         .await?;
     Some(entry.merged(&areas))
+}
+
+async fn wpt_compare_route(
+    area: String,
+    sort: Option<String>,
+) -> Result<(StatusCode, Html<String>), (StatusCode, String)> {
+    // Default: top-level areas by subtest count, deeper levels alphabetical
+    let sort = match sort.as_deref() {
+        Some("alpha") => wpt_db::AreaSort::Alpha,
+        Some("subtests") => wpt_db::AreaSort::Subtests,
+        _ if area.is_empty() => wpt_db::AreaSort::Subtests,
+        _ => wpt_db::AreaSort::Alpha,
+    };
+    let Some(entry) = get_wpt_comparison_run_list().await else {
+        return Err((
+            StatusCode::INTERNAL_SERVER_ERROR,
+            "WPT comparison data not available".to_string(),
+        ));
+    };
+    let runs = entry.runs.clone();
+    let run_ids: Vec<i64> = runs.iter().map(|run| run.id).collect();
+
+    enum PageData {
+        Area {
+            total: Vec<Option<wpt_db::AreaScore>>,
+            children: Vec<(String, Vec<Option<wpt_db::AreaScore>>)>,
+            tests: Vec<wpt_db::TestRow>,
+        },
+        Test(wpt_db::TestDetail),
+        NotFound,
+    }
+
+    let data = {
+        let area = area.clone();
+        tokio::task::spawn_blocking(move || {
+            WPT_COMPARE_DB.with(|conn| {
+                if wpt_db::area_exists(conn, &area) {
+                    PageData::Area {
+                        total: wpt_db::area_score(conn, &run_ids, &area),
+                        children: wpt_db::child_area_scores(conn, &run_ids, &area, sort),
+                        tests: wpt_db::tests_in_area(conn, &run_ids, &area),
+                    }
+                } else if let Some(detail) =
+                    wpt_db::test_detail(conn, &run_ids, &format!("/{area}"))
+                {
+                    PageData::Test(detail)
+                } else {
+                    PageData::NotFound
+                }
+            })
+        })
+        .await
+        .unwrap()
+    };
+
+    match data {
+        PageData::Area {
+            total,
+            children,
+            tests,
+        } => {
+            let props = WptComparePageProps {
+                runs: runs.0.as_ref().clone(),
+                area,
+                sort,
+                total,
+                child_areas: children,
+                tests,
+            };
+            Ok(dx_route_with_props(WptComparePage, props).await)
+        }
+        PageData::Test(detail) => {
+            let props = WptCompareTestPageProps {
+                runs: runs.0.as_ref().clone(),
+                detail,
+            };
+            Ok(dx_route_with_props(WptCompareTestPage, props).await)
+        }
+        PageData::NotFound => Err((StatusCode::NOT_FOUND, format!("Unknown WPT area: {area}"))),
+    }
+}
+
+async fn wpt_focus_areas_route() -> Result<(StatusCode, Html<String>), (StatusCode, String)> {
+    let Some(entry) = get_wpt_comparison_run_list().await else {
+        return Err((
+            StatusCode::INTERNAL_SERVER_ERROR,
+            "WPT comparison data not available".to_string(),
+        ));
+    };
+    let runs = entry.runs.clone();
+    let run_ids: Vec<i64> = runs.iter().map(|run| run.id).collect();
+
+    let scores = tokio::task::spawn_blocking(move || {
+        WPT_COMPARE_DB.with(|conn| {
+            routes::SERVO_FOCUS_AREAS
+                .iter()
+                .map(|area| (area.clone(), wpt_db::area_score(conn, &run_ids, area)))
+                .collect::<Vec<_>>()
+        })
+    })
+    .await
+    .unwrap();
+
+    let props = WptFocusAreasPageProps {
+        runs: runs.0.as_ref().clone(),
+        scores,
+    };
+    Ok(dx_route_with_props(WptFocusAreasPage, props).await)
+}
+
+/// Get the cached WPT comparison run list, revalidating (checking wpt.fyi
+/// for new runs and ingesting them) if it is stale. Revalidation is awaited
+/// if the cache is missing, and performed in the background otherwise
+/// (new runs only appear roughly daily, so stale data is always usable).
+async fn get_wpt_comparison_run_list(
+) -> Option<std::sync::Arc<cache::Cached<wpt_compare::WptCompareCacheEntry>>> {
+    WPT_COMPARE_CACHE
+        .get_or_refresh(Duration::from_mins(30), Duration::MAX, load_wpt_compare)
+        .await
 }
 
 /// Get the cached WPT report, revalidating it if it is stale.

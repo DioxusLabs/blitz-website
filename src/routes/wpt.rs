@@ -37,6 +37,12 @@ impl Colors {
     }
 }
 
+/// The background color for a score cell, from the shared red-to-green ramp
+pub fn score_color(pass_fraction: f32) -> String {
+    let color = COLORS.get(pass_fraction);
+    format!("rgb({},{},{})", color[0], color[1], color[2])
+}
+
 const COLORS: Colors = Colors(&[
     [229, 115, 115],
     [255, 183, 77],
