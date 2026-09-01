@@ -1,64 +1,16 @@
-use std::{
-    io::Write as _,
-    path::PathBuf,
-    sync::{Arc, Mutex, MutexGuard},
-    time::Instant,
-};
+use std::{io::Write as _, path::PathBuf, sync::Arc};
 
 use tempfile::NamedTempFile;
 
+use crate::cache::{Cache, Cached, RefreshOutcome};
 use crate::github::{CommitInfo, GithubClient};
 
-pub static DOWNLOAD_CACHE: DownloadCache = DownloadCache::new();
+pub static DOWNLOAD_CACHE: Cache<DownloadCacheEntry> = Cache::new();
 
-pub struct DownloadCache(Mutex<Option<Arc<DownloadCacheEntry>>>);
-impl DownloadCache {
-    const fn new() -> Self {
-        Self(Mutex::new(None))
-    }
-
-    pub fn get_cloned(&self) -> Option<Arc<DownloadCacheEntry>> {
-        (*self.0.lock().unwrap()).clone()
-    }
-
-    #[allow(dead_code)]
-    pub fn get_mut(&self) -> MutexGuard<'_, Option<Arc<DownloadCacheEntry>>> {
-        self.0.lock().unwrap()
-    }
-
-    pub fn update(
-        &self,
-        etag: Option<Arc<str>>,
-        artifacts: Arc<[DownloadLink]>,
-        commit_info: Option<CommitInfo>,
-    ) {
-        let cached_at = Instant::now();
-        *self.0.lock().unwrap() = Some(Arc::new(DownloadCacheEntry {
-            etag,
-            cached_at,
-            artifacts,
-            commit_info,
-        }));
-    }
-
-    #[allow(dead_code)]
-    pub fn mark_as_fresh(&self) {
-        let cached_at = Instant::now();
-        let mut inner = self.0.lock().unwrap();
-        if let Some(entry) = inner.take() {
-            *inner = Some(Arc::new(DownloadCacheEntry {
-                cached_at,
-                etag: entry.etag.clone(),
-                artifacts: entry.artifacts.clone(),
-                commit_info: entry.commit_info.clone(),
-            }));
-        }
-    }
-}
-
+#[derive(Clone)]
 pub struct DownloadCacheEntry {
+    #[allow(dead_code)]
     pub etag: Option<Arc<str>>,
-    pub cached_at: Instant,
     pub artifacts: Arc<[DownloadLink]>,
     pub commit_info: Option<CommitInfo>,
 }
@@ -82,7 +34,9 @@ pub struct DownloadLink {
     pub file_path: PathBuf,
 }
 
-pub async fn load_downloads(_etag: Option<Arc<str>>) {
+pub async fn load_downloads(
+    _existing: Option<Arc<Cached<DownloadCacheEntry>>>,
+) -> RefreshOutcome<DownloadCacheEntry> {
     println!("Checking for new Browser UI builds...");
 
     // Request latest WPT report (with etag)
@@ -122,7 +76,7 @@ pub async fn load_downloads(_etag: Option<Arc<str>>) {
     });
 
     let Some(latest_build_workflow) = latest_build_workflow else {
-        return;
+        return RefreshOutcome::Failed;
     };
 
     let workflow_artifact_response = client
@@ -201,7 +155,11 @@ pub async fn load_downloads(_etag: Option<Arc<str>>) {
             })
         });
 
-    DOWNLOAD_CACHE.update(None, Arc::from(artifacts), commit_info);
-
     println!("New Browser build links processed and cached.");
+
+    RefreshOutcome::Updated(DownloadCacheEntry {
+        etag: None,
+        artifacts: Arc::from(artifacts),
+        commit_info,
+    })
 }

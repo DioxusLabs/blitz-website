@@ -36,6 +36,7 @@ use tower_http::{services::ServeDir, trace::TraceLayer};
 use wpt::{load_wpt_results, WPT_REPORT_CACHE};
 use wpt_history::{load_wpt_history, WPT_HISTORY_CACHE};
 
+mod cache;
 mod components;
 mod downloads;
 mod github;
@@ -215,34 +216,13 @@ async fn main() {
         .route(
             "/downloads",
             get(async || {
-                let now = Instant::now();
-                let cache_entry = DOWNLOAD_CACHE.get_cloned();
-                let etag = cache_entry.as_ref().and_then(|entry| entry.etag.clone());
-
-                // Cache with 30s validity
-                let mut await_revalidation = true;
-                if let Some(entry) = &cache_entry {
-                    await_revalidation = false;
-
-                    let cache_age = now.duration_since(entry.cached_at);
-                    if cache_age <= Duration::from_secs(30) {
-                        let props = DownloadsPageProps {
-                            links: ArcDownloadLinks(entry.artifacts.clone()),
-                            commit_info: entry.commit_info.clone(),
-                        };
-                        return dx_route_with_props(DownloadsPage, props).await;
-                    } else if cache_age <= Duration::from_mins(30) {
-                        await_revalidation = false
-                    }
-                }
-
-                let handle = tokio::spawn(async move { load_downloads(etag).await });
-
-                if await_revalidation {
-                    handle.await.unwrap();
-                }
-
-                let entry = DOWNLOAD_CACHE.get_cloned().unwrap();
+                // Serve directly for 30s; any older entry is served stale
+                // while revalidating in the background (builds are heavy to
+                // fetch, so a request never awaits a refresh once primed)
+                let entry = DOWNLOAD_CACHE
+                    .get_or_refresh(Duration::from_secs(30), Duration::MAX, load_downloads)
+                    .await
+                    .unwrap();
                 let props = DownloadsPageProps {
                     links: ArcDownloadLinks(entry.artifacts.clone()),
                     commit_info: entry.commit_info.clone(),
@@ -285,11 +265,13 @@ async fn main() {
     let listener = TcpListener::bind(addr).await.unwrap();
 
     // Prime WPT result and download caches
-    tokio::spawn(async move { load_wpt_results(None).await });
-    tokio::spawn(async move { load_wpt_history(vec!["css".to_string()]).await });
+    tokio::spawn(WPT_REPORT_CACHE.refresh(load_wpt_results));
+    tokio::spawn(
+        WPT_HISTORY_CACHE.refresh(|existing| load_wpt_history(vec!["css".to_string()], existing)),
+    );
 
     if std::env::var("PRECACHE_DOWNLOADS").is_ok() {
-        tokio::spawn(async move { load_downloads(None).await });
+        tokio::spawn(DOWNLOAD_CACHE.refresh(load_downloads));
     }
 
     let msg = format!("Serving blitz-website at http://{addr}").replace("[::]", "localhost");
@@ -305,57 +287,32 @@ async fn main() {
 /// A refresh only revalidates runs.json (all summary files change together),
 /// so cached areas are reused and only missing area files are fetched.
 async fn fresh_wpt_history(areas: Vec<String>) -> Option<ArcWptHistory> {
-    let now = Instant::now();
-
-    let mut await_revalidation = true;
-    if let Some(entry) = WPT_HISTORY_CACHE.get_cloned() {
-        if entry.contains_areas(&areas) {
-            let cache_age = now.duration_since(entry.cached_at);
-            if cache_age <= Duration::from_secs(30) {
-                return Some(entry.merged(&areas));
-            } else if cache_age <= Duration::from_mins(30) {
-                await_revalidation = false
-            }
-        }
-    }
-
-    let handle = {
-        let areas = areas.clone();
-        tokio::spawn(async move { load_wpt_history(areas).await })
-    };
-    if await_revalidation {
-        let _ = handle.await;
-    }
-
-    Some(WPT_HISTORY_CACHE.get_cloned()?.merged(&areas))
+    let entry = WPT_HISTORY_CACHE
+        .get_usable_or_refresh(
+            Duration::from_secs(30),
+            Duration::from_mins(30),
+            |entry| entry.contains_areas(&areas),
+            {
+                let areas = areas.clone();
+                |existing| load_wpt_history(areas, existing)
+            },
+        )
+        .await?;
+    Some(entry.merged(&areas))
 }
 
 /// Get the cached WPT report, revalidating it if it is stale.
 /// Revalidation is awaited if the cache is more than 30 minutes old,
 /// and performed in the background if it is between 30 seconds and 30 minutes old.
-async fn fresh_wpt_cache_entry() -> std::sync::Arc<wpt::WptReportCacheEntry> {
-    let now = Instant::now();
-    let cache_entry = WPT_REPORT_CACHE.get_cloned();
-    let etag = cache_entry.as_ref().and_then(|entry| entry.etag.clone());
-
-    // Cache with 30s validity
-    let mut await_revalidation = true;
-    if let Some(entry) = cache_entry {
-        let cache_age = now.duration_since(entry.cached_at);
-        if cache_age <= Duration::from_secs(30) {
-            return entry;
-        } else if cache_age <= Duration::from_mins(30) {
-            await_revalidation = false
-        }
-    }
-
-    let handle = tokio::spawn(async move { load_wpt_results(etag).await });
-
-    if await_revalidation {
-        handle.await.unwrap();
-    }
-
-    WPT_REPORT_CACHE.get_cloned().unwrap()
+async fn fresh_wpt_cache_entry() -> std::sync::Arc<cache::Cached<wpt::WptReportCacheEntry>> {
+    WPT_REPORT_CACHE
+        .get_or_refresh(
+            Duration::from_secs(30),
+            Duration::from_mins(30),
+            load_wpt_results,
+        )
+        .await
+        .unwrap()
 }
 
 async fn dx_route_cached(render_fn: fn() -> Element) -> impl IntoResponse {

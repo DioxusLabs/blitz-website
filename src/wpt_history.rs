@@ -1,12 +1,9 @@
-use std::{
-    collections::HashMap,
-    sync::{Arc, Mutex},
-    time::Instant,
-};
+use std::{collections::HashMap, sync::Arc};
 
 use reqwest::Client;
 use serde::Deserialize;
 
+use crate::cache::{Cache, Cached, RefreshOutcome};
 use crate::routes::ArcWptHistory;
 
 const SUMMARY_BASE_URL: &str =
@@ -51,16 +48,16 @@ pub struct HistoryRun {
     pub scores: Vec<Option<ScoreTuple>>,
 }
 
-pub static WPT_HISTORY_CACHE: WptHistoryCache = WptHistoryCache::new();
+pub static WPT_HISTORY_CACHE: Cache<WptHistoryCacheEntry> = Cache::new();
 
 /// Cached summary data. All summary files change together (a new run appends
 /// one entry to runs.json and to every area file), so the whole cache is
 /// keyed on runs.json's ETag: while it revalidates as unchanged, every cached
 /// area file is still valid, and area files are only fetched on first use or
 /// when runs.json changes.
+#[derive(Clone)]
 pub struct WptHistoryCacheEntry {
     pub runs_etag: Option<Arc<str>>,
-    pub cached_at: Instant,
     runs: Arc<Vec<RunMeta>>,
     areas: HashMap<String, Arc<Vec<Option<ScoreTuple>>>>,
 }
@@ -92,21 +89,6 @@ impl WptHistoryCacheEntry {
             focus_areas: present.iter().map(|(area, _)| (*area).clone()).collect(),
             runs,
         }))
-    }
-}
-
-pub struct WptHistoryCache(Mutex<Option<Arc<WptHistoryCacheEntry>>>);
-impl WptHistoryCache {
-    const fn new() -> Self {
-        Self(Mutex::new(None))
-    }
-
-    pub fn get_cloned(&self) -> Option<Arc<WptHistoryCacheEntry>> {
-        self.0.lock().unwrap().clone()
-    }
-
-    fn update(&self, entry: WptHistoryCacheEntry) {
-        *self.0.lock().unwrap() = Some(Arc::new(entry));
     }
 }
 
@@ -170,19 +152,21 @@ async fn fetch_areas(
 }
 
 /// Fetch (or revalidate) the history data for a set of areas
-pub async fn load_wpt_history(areas: Vec<String>) {
+pub async fn load_wpt_history(
+    areas: Vec<String>,
+    existing: Option<Arc<Cached<WptHistoryCacheEntry>>>,
+) -> RefreshOutcome<WptHistoryCacheEntry> {
     println!(
         "Checking for new WPT history data ({} areas)...",
         areas.len()
     );
 
-    let existing = WPT_HISTORY_CACHE.get_cloned();
     let runs_etag = existing.as_ref().and_then(|entry| entry.runs_etag.clone());
 
     let client = Client::new();
     let runs_url = format!("{SUMMARY_BASE_URL}/runs.json");
     let Some((runs_etag, runs_body)) = fetch(&client, &runs_url, runs_etag.as_ref()).await else {
-        return;
+        return RefreshOutcome::Failed;
     };
 
     match (runs_body, existing) {
@@ -204,12 +188,11 @@ pub async fn load_wpt_history(areas: Vec<String>) {
             } else {
                 println!("WPT history data unchanged");
             }
-            WPT_HISTORY_CACHE.update(WptHistoryCacheEntry {
+            RefreshOutcome::Updated(WptHistoryCacheEntry {
                 runs_etag,
-                cached_at: Instant::now(),
                 runs: existing.runs.clone(),
                 areas: cached_areas,
-            });
+            })
         }
         // runs.json changed (or first load): all cached area files are
         // stale; refetch the requested areas against the new run list
@@ -218,7 +201,7 @@ pub async fn load_wpt_history(areas: Vec<String>) {
                 Ok(file) => file,
                 Err(err) => {
                     println!("runs.json is not valid JSON: {err}");
-                    return;
+                    return RefreshOutcome::Failed;
                 }
             };
             let cached_areas = fetch_areas(&client, &areas, runs_file.runs.len()).await;
@@ -227,14 +210,13 @@ pub async fn load_wpt_history(areas: Vec<String>) {
                 runs_file.runs.len(),
                 cached_areas.len()
             );
-            WPT_HISTORY_CACHE.update(WptHistoryCacheEntry {
+            RefreshOutcome::Updated(WptHistoryCacheEntry {
                 runs_etag,
-                cached_at: Instant::now(),
                 runs: Arc::new(runs_file.runs),
                 areas: cached_areas,
-            });
+            })
         }
         // 304 without a cache entry shouldn't happen (no etag was sent)
-        (None, None) => {}
+        (None, None) => RefreshOutcome::Failed,
     }
 }
