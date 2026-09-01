@@ -26,33 +26,6 @@ const PRODUCTS: &[&str] = &[
     "ladybird",
 ];
 
-/// Product name for a product spec: the part before any `[label]` suffix
-/// (e.g. "safari[experimental]" -> "safari")
-const fn product_name(spec: &str) -> &str {
-    let bytes = spec.as_bytes();
-    let mut i = 0;
-    while i < bytes.len() {
-        if bytes[i] == b'[' {
-            return spec.split_at(i).0;
-        }
-        i += 1;
-    }
-    spec
-}
-
-/// Product names in comparison-page column order: the wpt.fyi products
-/// (in PRODUCTS order), then Blitz
-const ORDERED_PRODUCTS: [&str; PRODUCTS.len() + 1] = {
-    let mut out = [""; PRODUCTS.len() + 1];
-    let mut i = 0;
-    while i < PRODUCTS.len() {
-        out[i] = product_name(PRODUCTS[i]);
-        i += 1;
-    }
-    out[PRODUCTS.len()] = "blitz";
-    out
-};
-
 const BLITZ_REPORT_URL: &str = "https://dioxuslabs.github.io/blitz/wptreport.json.zst";
 
 pub static WPT_COMPARE_CACHE: Cache<WptCompareCacheEntry> = Cache::new();
@@ -148,8 +121,10 @@ pub async fn load_wpt_compare(
     .await
     .unwrap();
 
+    // Order columns: wpt.fyi products first (in PRODUCTS order), then Blitz
     let mut ordered: Vec<RunRow> = Vec::with_capacity(runs.len());
-    for product in ORDERED_PRODUCTS {
+    for spec in PRODUCTS.iter().copied().chain(["blitz"]) {
+        let product = spec.split('[').next().unwrap();
         ordered.extend(runs.iter().filter(|run| run.product == product).cloned());
     }
 
