@@ -1,10 +1,14 @@
-[
-    "css/CSS2/bidi-text",
-    "css/CSS2/text",
-    "css/css-fonts",
-    "css/css-inline",
-    "css/css-ruby",
-    "css/css-text",
-    "css/css-text-decor",
-    "css/css-writing-modes"
-]
+{
+    "label": "Text",
+    "intro": "This page compares scores on text layout WPT areas (those exercising <a href=\"https://github.com/linebender/parley\" target=\"_blank\">Parley</a>, Blitz's text layout engine — see <a href=\"https://github.com/DioxusLabs/blitz/blob/main/docs/parley.md\" target=\"_blank\">docs/parley.md</a>) across web engines, using the latest master runs from <a href=\"https://wpt.fyi\" target=\"_blank\">wpt.fyi</a> and Blitz's own test runner.",
+    "areas": [
+        "css/CSS2/bidi-text",
+        "css/CSS2/text",
+        "css/css-fonts",
+        "css/css-inline",
+        "css/css-ruby",
+        "css/css-text",
+        "css/css-text-decor",
+        "css/css-writing-modes"
+    ]
+}

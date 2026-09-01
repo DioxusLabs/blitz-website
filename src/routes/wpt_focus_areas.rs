@@ -9,43 +9,39 @@ use crate::{
 };
 
 /// A named set of WPT focus areas with its own summary page at
-/// `/wpt/focus-areas/{slug}`.
+/// `/wpt/focus-areas/{slug}`. Sets are defined by `data/focus_areas/*.json`
+/// files; the slug is the file name.
+#[derive(serde::Deserialize)]
 pub struct FocusAreaSet {
-    pub slug: &'static str,
-    pub label: &'static str,
+    #[serde(skip)]
+    pub slug: String,
+    pub label: String,
     /// Introduction paragraph for the summary page (raw HTML)
-    pub intro: &'static str,
+    pub intro: String,
     pub areas: Vec<String>,
 }
 
 pub static FOCUS_AREA_SETS: LazyLock<Vec<FocusAreaSet>> = LazyLock::new(|| {
-    vec![
-        // Servo's WPT focus areas, as tracked by
-        // <https://github.com/servo/internal-wpt-dashboard>. The empty string
-        // is the full test suite; the dashboard's combined "/css/CSS2/tables/
-        // & /css/css-tables/" entry is split into its two constituent rows.
-        FocusAreaSet {
-            slug: "servo",
-            label: "Servo",
-            intro: r#"
-                This page compares scores on Servo's <a href="https://github.com/servo/internal-wpt-dashboard" target="_blank">WPT focus areas</a>
-                across web engines, using the latest master runs from <a href="https://wpt.fyi" target="_blank">wpt.fyi</a> and Blitz's own test runner."#,
-            areas: serde_json::from_str(include_str!("../../data/focus_areas/servo.json"))
-                .expect("invalid data/focus_areas/servo.json"),
-        },
-        // Text-related WPT areas, as exercised by Blitz's text stack (Parley);
-        // see <https://github.com/DioxusLabs/blitz/blob/main/docs/parley.md>.
-        FocusAreaSet {
-            slug: "text",
-            label: "Text",
-            intro: r#"
-                This page compares scores on text layout WPT areas (those exercising <a href="https://github.com/linebender/parley" target="_blank">Parley</a>,
-                Blitz's text layout engine — see <a href="https://github.com/DioxusLabs/blitz/blob/main/docs/parley.md" target="_blank">docs/parley.md</a>)
-                across web engines, using the latest master runs from <a href="https://wpt.fyi" target="_blank">wpt.fyi</a> and Blitz's own test runner."#,
-            areas: serde_json::from_str(include_str!("../../data/focus_areas/text.json"))
-                .expect("invalid data/focus_areas/text.json"),
-        },
-    ]
+    // Relative to the crate root when run via cargo, or the working
+    // directory for a deployed binary (like the `static` and `data` assets)
+    let root = std::env::var("CARGO_MANIFEST_DIR").unwrap_or_else(|_| ".".to_string());
+    let dir = std::path::Path::new(&root).join("data/focus_areas");
+    let mut sets: Vec<FocusAreaSet> = std::fs::read_dir(&dir)
+        .unwrap_or_else(|err| panic!("cannot read {}: {err}", dir.display()))
+        .filter_map(|entry| entry.ok())
+        .map(|entry| entry.path())
+        .filter(|path| path.extension().is_some_and(|ext| ext == "json"))
+        .map(|path| {
+            let json = std::fs::read_to_string(&path)
+                .unwrap_or_else(|err| panic!("cannot read {}: {err}", path.display()));
+            let mut set: FocusAreaSet = serde_json::from_str(&json)
+                .unwrap_or_else(|err| panic!("invalid {}: {err}", path.display()));
+            set.slug = path.file_stem().unwrap().to_string_lossy().into_owned();
+            set
+        })
+        .collect();
+    sets.sort_by(|a, b| a.slug.cmp(&b.slug));
+    sets
 });
 
 pub fn focus_area_set(slug: &str) -> Option<&'static FocusAreaSet> {

@@ -59,7 +59,7 @@ pub fn WptComparePage(
                         if i > 0 {
                             " | "
                         }
-                        a { href: format!("/wpt/focus-areas/{}", set.slug), {set.label} }
+                        a { href: format!("/wpt/focus-areas/{}", set.slug), "{set.label}" }
                     }
                 }
             }

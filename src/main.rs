@@ -454,8 +454,8 @@ async fn wpt_focus_areas_route(
     .unwrap();
 
     let props = WptFocusAreasPageProps {
-        label: set.label.to_string(),
-        intro: set.intro.to_string(),
+        label: set.label.clone(),
+        intro: set.intro.clone(),
         runs: runs.0.as_ref().clone(),
         scores,
     };
