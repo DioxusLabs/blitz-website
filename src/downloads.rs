@@ -2,13 +2,14 @@ use std::{io::Write as _, path::PathBuf, sync::Arc};
 
 use tempfile::NamedTempFile;
 
-use crate::cache::Cache;
+use crate::cache::{Cache, Cached};
 use crate::github::{CommitInfo, GithubClient};
 
 pub static DOWNLOAD_CACHE: Cache<DownloadCacheEntry> = Cache::new();
 
 #[derive(Clone)]
 pub struct DownloadCacheEntry {
+    #[allow(dead_code)]
     pub etag: Option<Arc<str>>,
     pub artifacts: Arc<[DownloadLink]>,
     pub commit_info: Option<CommitInfo>,
@@ -33,7 +34,7 @@ pub struct DownloadLink {
     pub file_path: PathBuf,
 }
 
-pub async fn load_downloads(_etag: Option<Arc<str>>) {
+pub async fn load_downloads(_existing: Option<Arc<Cached<DownloadCacheEntry>>>) {
     println!("Checking for new Browser UI builds...");
 
     // Request latest WPT report (with etag)

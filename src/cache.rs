@@ -60,13 +60,14 @@ impl<T: Send + Sync + 'static> Cache<T> {
     /// the background; otherwise (including when the cache is empty)
     /// `refresh` is awaited before returning the latest entry.
     ///
-    /// `refresh` is responsible for storing its result via [`Cache::update`]
+    /// `refresh` is passed the current cache entry (if any) and is
+    /// responsible for storing its result via [`Cache::update`]
     /// (or [`Cache::mark_as_fresh`]).
     pub async fn get_or_refresh<Fut>(
         &self,
         fresh_for: Duration,
         stale_for: Duration,
-        refresh: impl FnOnce() -> Fut,
+        refresh: impl FnOnce(Option<Arc<Cached<T>>>) -> Fut,
     ) -> Option<Arc<Cached<T>>>
     where
         Fut: Future<Output = ()> + Send + 'static,
@@ -82,17 +83,18 @@ impl<T: Send + Sync + 'static> Cache<T> {
         fresh_for: Duration,
         stale_for: Duration,
         is_usable: impl Fn(&T) -> bool,
-        refresh: impl FnOnce() -> Fut,
+        refresh: impl FnOnce(Option<Arc<Cached<T>>>) -> Fut,
     ) -> Option<Arc<Cached<T>>>
     where
         Fut: Future<Output = ()> + Send + 'static,
     {
+        let existing = self.get_cloned();
         let mut await_refresh = true;
-        if let Some(entry) = self.get_cloned() {
+        if let Some(entry) = &existing {
             if is_usable(&entry.value) {
                 let age = entry.cached_at.elapsed();
                 if age <= fresh_for {
-                    return Some(entry);
+                    return existing;
                 }
                 if age <= stale_for {
                     await_refresh = false;
@@ -100,7 +102,7 @@ impl<T: Send + Sync + 'static> Cache<T> {
             }
         }
 
-        let handle = tokio::spawn(refresh());
+        let handle = tokio::spawn(refresh(existing));
         if await_refresh {
             let _ = handle.await;
         }

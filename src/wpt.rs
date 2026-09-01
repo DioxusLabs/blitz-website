@@ -6,7 +6,7 @@ use wptreport::{
     wpt_report::{TestStatus, WptReport},
 };
 
-use crate::cache::Cache;
+use crate::cache::{Cache, Cached};
 use crate::github::{CommitInfo, GithubClient};
 use crate::routes::{ArcWptReport, ArcWptScores};
 
@@ -22,8 +22,10 @@ pub struct WptReportCacheEntry {
     pub commit_info: Option<CommitInfo>,
 }
 
-pub async fn load_wpt_results(etag: Option<Arc<str>>) {
+pub async fn load_wpt_results(existing: Option<Arc<Cached<WptReportCacheEntry>>>) {
     println!("Checking for new WPT results...");
+
+    let etag = existing.and_then(|entry| entry.etag.clone());
 
     // Request latest WPT report (with etag)
     let client = Client::new();

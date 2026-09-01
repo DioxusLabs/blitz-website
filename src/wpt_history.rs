@@ -3,7 +3,7 @@ use std::{collections::HashMap, sync::Arc};
 use reqwest::Client;
 use serde::Deserialize;
 
-use crate::cache::Cache;
+use crate::cache::{Cache, Cached};
 use crate::routes::ArcWptHistory;
 
 const SUMMARY_BASE_URL: &str =
@@ -151,13 +151,15 @@ async fn fetch_areas(
 }
 
 /// Fetch (or revalidate) the history data for a set of areas
-pub async fn load_wpt_history(areas: Vec<String>) {
+pub async fn load_wpt_history(
+    areas: Vec<String>,
+    existing: Option<Arc<Cached<WptHistoryCacheEntry>>>,
+) {
     println!(
         "Checking for new WPT history data ({} areas)...",
         areas.len()
     );
 
-    let existing = WPT_HISTORY_CACHE.get_cloned();
     let runs_etag = existing.as_ref().and_then(|entry| entry.runs_etag.clone());
 
     let client = Client::new();

@@ -216,16 +216,11 @@ async fn main() {
         .route(
             "/downloads",
             get(async || {
-                let etag = DOWNLOAD_CACHE
-                    .get_cloned()
-                    .and_then(|entry| entry.etag.clone());
                 // Serve directly for 30s; any older entry is served stale
                 // while revalidating in the background (builds are heavy to
                 // fetch, so a request never awaits a refresh once primed)
                 let entry = DOWNLOAD_CACHE
-                    .get_or_refresh(Duration::from_secs(30), Duration::MAX, || {
-                        load_downloads(etag)
-                    })
+                    .get_or_refresh(Duration::from_secs(30), Duration::MAX, load_downloads)
                     .await
                     .unwrap();
                 let props = DownloadsPageProps {
@@ -271,7 +266,7 @@ async fn main() {
 
     // Prime WPT result and download caches
     tokio::spawn(async move { load_wpt_results(None).await });
-    tokio::spawn(async move { load_wpt_history(vec!["css".to_string()]).await });
+    tokio::spawn(async move { load_wpt_history(vec!["css".to_string()], None).await });
 
     if std::env::var("PRECACHE_DOWNLOADS").is_ok() {
         tokio::spawn(async move { load_downloads(None).await });
@@ -297,7 +292,7 @@ async fn fresh_wpt_history(areas: Vec<String>) -> Option<ArcWptHistory> {
             |entry| entry.contains_areas(&areas),
             {
                 let areas = areas.clone();
-                || load_wpt_history(areas)
+                |existing| load_wpt_history(areas, existing)
             },
         )
         .await?;
@@ -308,13 +303,12 @@ async fn fresh_wpt_history(areas: Vec<String>) -> Option<ArcWptHistory> {
 /// Revalidation is awaited if the cache is more than 30 minutes old,
 /// and performed in the background if it is between 30 seconds and 30 minutes old.
 async fn fresh_wpt_cache_entry() -> std::sync::Arc<cache::Cached<wpt::WptReportCacheEntry>> {
-    let etag = WPT_REPORT_CACHE
-        .get_cloned()
-        .and_then(|entry| entry.etag.clone());
     WPT_REPORT_CACHE
-        .get_or_refresh(Duration::from_secs(30), Duration::from_mins(30), || {
-            load_wpt_results(etag)
-        })
+        .get_or_refresh(
+            Duration::from_secs(30),
+            Duration::from_mins(30),
+            load_wpt_results,
+        )
         .await
         .unwrap()
 }
