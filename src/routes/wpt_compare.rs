@@ -1,5 +1,3 @@
-use std::sync::LazyLock;
-
 use dioxus::prelude::*;
 
 use crate::{
@@ -8,17 +6,10 @@ use crate::{
     wpt_db::{status_str, AreaScore, AreaSort, RunRow, SubtestRow, TestDetail, TestRow, TestRunResult},
 };
 
-/// Servo's WPT focus areas, as tracked by
-/// <https://github.com/servo/internal-wpt-dashboard>. The empty string is
-/// the full test suite; the dashboard's combined "/css/CSS2/tables/ &
-/// /css/css-tables/" entry is split into its two constituent rows.
-pub static SERVO_FOCUS_AREAS: LazyLock<Vec<String>> = LazyLock::new(|| {
-    serde_json::from_str(include_str!("../../data/focus_areas/servo.json"))
-        .expect("invalid data/focus_areas/servo.json")
-});
+use super::wpt_focus_areas::FOCUS_AREA_SETS;
 
 /// Display name for a product identifier (e.g. "chrome" -> "Chrome")
-fn product_label(product: &str) -> String {
+pub(super) fn product_label(product: &str) -> String {
     let mut chars = product.chars();
     match chars.next() {
         Some(first) => first.to_uppercase().collect::<String>() + chars.as_str(),
@@ -63,7 +54,13 @@ pub fn WptComparePage(
             if area.is_empty() {
                 p {
                     font_size: "smaller",
-                    a { href: "/wpt/focus-areas/servo", "Servo focus areas summary" }
+                    b { "Focus areas: " }
+                    for (i, set) in FOCUS_AREA_SETS.iter().enumerate() {
+                        if i > 0 {
+                            " | "
+                        }
+                        a { href: format!("/wpt/focus-areas/{}", set.slug), "{set.label}" }
+                    }
                 }
             }
             WptCompareBreadcrumb { area: area.clone() }
@@ -99,46 +96,6 @@ pub fn WptComparePage(
                     }
                     for test in &tests {
                         CompareTestRow { test: test.clone() }
-                    }
-                }
-            }
-        }
-    }
-}
-
-#[component]
-pub fn WptFocusAreasPage(
-    runs: Vec<RunRow>,
-    scores: Vec<(String, Vec<Option<AreaScore>>)>,
-) -> Element {
-    rsx! {
-        Page { title: "WPT: Servo focus areas".into(),
-            h1 { "WPT" }
-            p {
-                class: "introduction",
-                dangerous_inner_html: r#"
-                This page compares scores on Servo's <a href="https://github.com/servo/internal-wpt-dashboard" target="_blank">WPT focus areas</a>
-                across web engines, using the latest master runs from <a href="https://wpt.fyi" target="_blank">wpt.fyi</a> and Blitz's own test runner."#
-            }
-            hr {}
-            p {
-                a { href: "/wpt", "wpt" }
-                " / focus areas"
-            }
-            RunInfoDisplay { runs: runs.clone() }
-            table {
-                width: "100%",
-                tr {
-                    th { width: "min-content", "Focus area" }
-                    for run in &runs {
-                        th { text_align: "center", {product_label(&run.product)} }
-                    }
-                }
-                for (area, area_scores) in &scores {
-                    if area.is_empty() {
-                        {compare_area_row("All WPT tests".to_string(), Some("/wpt".to_string()), area_scores)}
-                    } else {
-                        {compare_area_row(format!("/{area}/"), Some(format!("/wpt/{area}")), area_scores)}
                     }
                 }
             }
@@ -192,7 +149,7 @@ fn SpecInfoDisplay(area: String) -> Element {
 }
 
 #[component]
-fn RunInfoDisplay(runs: Vec<RunRow>) -> Element {
+pub(super) fn RunInfoDisplay(runs: Vec<RunRow>) -> Element {
     rsx! {
         p {
             font_size: "smaller",
@@ -238,7 +195,11 @@ pub fn WptCompareBreadcrumb(area: String) -> Element {
     )
 }
 
-fn compare_area_row(label: String, href: Option<String>, scores: &[Option<AreaScore>]) -> Element {
+pub(super) fn compare_area_row(
+    label: String,
+    href: Option<String>,
+    scores: &[Option<AreaScore>],
+) -> Element {
     rsx!(
         tr {
             td {
