@@ -265,11 +265,13 @@ async fn main() {
     let listener = TcpListener::bind(addr).await.unwrap();
 
     // Prime WPT result and download caches
-    tokio::spawn(async move { load_wpt_results(None).await });
-    tokio::spawn(async move { load_wpt_history(vec!["css".to_string()], None).await });
+    tokio::spawn(WPT_REPORT_CACHE.refresh(load_wpt_results));
+    tokio::spawn(
+        WPT_HISTORY_CACHE.refresh(|existing| load_wpt_history(vec!["css".to_string()], existing)),
+    );
 
     if std::env::var("PRECACHE_DOWNLOADS").is_ok() {
-        tokio::spawn(async move { load_downloads(None).await });
+        tokio::spawn(DOWNLOAD_CACHE.refresh(load_downloads));
     }
 
     let msg = format!("Serving blitz-website at http://{addr}").replace("[::]", "localhost");

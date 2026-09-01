@@ -3,7 +3,7 @@ use std::{collections::HashMap, sync::Arc};
 use reqwest::Client;
 use serde::Deserialize;
 
-use crate::cache::{Cache, Cached};
+use crate::cache::{Cache, Cached, RefreshOutcome};
 use crate::routes::ArcWptHistory;
 
 const SUMMARY_BASE_URL: &str =
@@ -55,6 +55,7 @@ pub static WPT_HISTORY_CACHE: Cache<WptHistoryCacheEntry> = Cache::new();
 /// keyed on runs.json's ETag: while it revalidates as unchanged, every cached
 /// area file is still valid, and area files are only fetched on first use or
 /// when runs.json changes.
+#[derive(Clone)]
 pub struct WptHistoryCacheEntry {
     pub runs_etag: Option<Arc<str>>,
     runs: Arc<Vec<RunMeta>>,
@@ -154,7 +155,7 @@ async fn fetch_areas(
 pub async fn load_wpt_history(
     areas: Vec<String>,
     existing: Option<Arc<Cached<WptHistoryCacheEntry>>>,
-) {
+) -> RefreshOutcome<WptHistoryCacheEntry> {
     println!(
         "Checking for new WPT history data ({} areas)...",
         areas.len()
@@ -165,7 +166,7 @@ pub async fn load_wpt_history(
     let client = Client::new();
     let runs_url = format!("{SUMMARY_BASE_URL}/runs.json");
     let Some((runs_etag, runs_body)) = fetch(&client, &runs_url, runs_etag.as_ref()).await else {
-        return;
+        return RefreshOutcome::Failed;
     };
 
     match (runs_body, existing) {
@@ -187,11 +188,11 @@ pub async fn load_wpt_history(
             } else {
                 println!("WPT history data unchanged");
             }
-            WPT_HISTORY_CACHE.update(WptHistoryCacheEntry {
+            RefreshOutcome::Updated(WptHistoryCacheEntry {
                 runs_etag,
                 runs: existing.runs.clone(),
                 areas: cached_areas,
-            });
+            })
         }
         // runs.json changed (or first load): all cached area files are
         // stale; refetch the requested areas against the new run list
@@ -200,7 +201,7 @@ pub async fn load_wpt_history(
                 Ok(file) => file,
                 Err(err) => {
                     println!("runs.json is not valid JSON: {err}");
-                    return;
+                    return RefreshOutcome::Failed;
                 }
             };
             let cached_areas = fetch_areas(&client, &areas, runs_file.runs.len()).await;
@@ -209,13 +210,13 @@ pub async fn load_wpt_history(
                 runs_file.runs.len(),
                 cached_areas.len()
             );
-            WPT_HISTORY_CACHE.update(WptHistoryCacheEntry {
+            RefreshOutcome::Updated(WptHistoryCacheEntry {
                 runs_etag,
                 runs: Arc::new(runs_file.runs),
                 areas: cached_areas,
-            });
+            })
         }
         // 304 without a cache entry shouldn't happen (no etag was sent)
-        (None, None) => {}
+        (None, None) => RefreshOutcome::Failed,
     }
 }

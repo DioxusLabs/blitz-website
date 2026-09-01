@@ -2,7 +2,7 @@ use std::{io::Write as _, path::PathBuf, sync::Arc};
 
 use tempfile::NamedTempFile;
 
-use crate::cache::{Cache, Cached};
+use crate::cache::{Cache, Cached, RefreshOutcome};
 use crate::github::{CommitInfo, GithubClient};
 
 pub static DOWNLOAD_CACHE: Cache<DownloadCacheEntry> = Cache::new();
@@ -34,7 +34,9 @@ pub struct DownloadLink {
     pub file_path: PathBuf,
 }
 
-pub async fn load_downloads(_existing: Option<Arc<Cached<DownloadCacheEntry>>>) {
+pub async fn load_downloads(
+    _existing: Option<Arc<Cached<DownloadCacheEntry>>>,
+) -> RefreshOutcome<DownloadCacheEntry> {
     println!("Checking for new Browser UI builds...");
 
     // Request latest WPT report (with etag)
@@ -74,7 +76,7 @@ pub async fn load_downloads(_existing: Option<Arc<Cached<DownloadCacheEntry>>>) 
     });
 
     let Some(latest_build_workflow) = latest_build_workflow else {
-        return;
+        return RefreshOutcome::Failed;
     };
 
     let workflow_artifact_response = client
@@ -153,11 +155,11 @@ pub async fn load_downloads(_existing: Option<Arc<Cached<DownloadCacheEntry>>>) 
             })
         });
 
-    DOWNLOAD_CACHE.update(DownloadCacheEntry {
+    println!("New Browser build links processed and cached.");
+
+    RefreshOutcome::Updated(DownloadCacheEntry {
         etag: None,
         artifacts: Arc::from(artifacts),
         commit_info,
-    });
-
-    println!("New Browser build links processed and cached.");
+    })
 }

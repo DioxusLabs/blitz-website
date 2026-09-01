@@ -6,7 +6,7 @@ use wptreport::{
     wpt_report::{TestStatus, WptReport},
 };
 
-use crate::cache::{Cache, Cached};
+use crate::cache::{Cache, Cached, RefreshOutcome};
 use crate::github::{CommitInfo, GithubClient};
 use crate::routes::{ArcWptReport, ArcWptScores};
 
@@ -22,7 +22,9 @@ pub struct WptReportCacheEntry {
     pub commit_info: Option<CommitInfo>,
 }
 
-pub async fn load_wpt_results(existing: Option<Arc<Cached<WptReportCacheEntry>>>) {
+pub async fn load_wpt_results(
+    existing: Option<Arc<Cached<WptReportCacheEntry>>>,
+) -> RefreshOutcome<WptReportCacheEntry> {
     println!("Checking for new WPT results...");
 
     let etag = existing.and_then(|entry| entry.etag.clone());
@@ -38,8 +40,7 @@ pub async fn load_wpt_results(existing: Option<Arc<Cached<WptReportCacheEntry>>>
 
     if result.status() == 304 {
         println!("WPT results unchanged");
-        WPT_REPORT_CACHE.mark_as_fresh();
-        return;
+        return RefreshOutcome::Unchanged;
     }
 
     let etag = result
@@ -93,13 +94,13 @@ pub async fn load_wpt_results(existing: Option<Arc<Cached<WptReportCacheEntry>>>
     let scores = ArcWptScores(Arc::new(scores));
     let test_index = Arc::new(test_index);
 
-    WPT_REPORT_CACHE.update(WptReportCacheEntry {
+    println!("New WPT results processed and cached.");
+
+    RefreshOutcome::Updated(WptReportCacheEntry {
         etag,
-        report: report.clone(),
-        scores: scores.clone(),
+        report,
+        scores,
         test_index,
         commit_info,
-    });
-
-    println!("New WPT results processed and cached.");
+    })
 }

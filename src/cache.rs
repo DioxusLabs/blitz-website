@@ -17,6 +17,16 @@ impl<T> std::ops::Deref for Cached<T> {
     }
 }
 
+/// The result of a refresh: how the cache should be updated.
+pub enum RefreshOutcome<T> {
+    /// A new value was fetched.
+    Updated(T),
+    /// Upstream revalidated the current value as unchanged (e.g. via a 304).
+    Unchanged,
+    /// The refresh failed; the current value is left untouched.
+    Failed,
+}
+
 /// A process-global cache slot holding a single (atomically replaced) value.
 pub struct Cache<T>(Mutex<Option<Arc<Cached<T>>>>);
 
@@ -53,24 +63,38 @@ impl<T> Cache<T> {
     }
 }
 
-impl<T: Send + Sync + 'static> Cache<T> {
+impl<T: Clone + Send + Sync + 'static> Cache<T> {
+    /// Run `refresh` with the current cache entry and apply its outcome:
+    /// [`RefreshOutcome::Updated`] replaces the cached value,
+    /// [`RefreshOutcome::Unchanged`] re-timestamps the current entry, and
+    /// [`RefreshOutcome::Failed`] leaves the cache untouched.
+    pub async fn refresh<Fut>(&self, refresh: impl FnOnce(Option<Arc<Cached<T>>>) -> Fut)
+    where
+        Fut: Future<Output = RefreshOutcome<T>>,
+    {
+        match refresh(self.get_cloned()).await {
+            RefreshOutcome::Updated(value) => self.update(value),
+            RefreshOutcome::Unchanged => self.mark_as_fresh(),
+            RefreshOutcome::Failed => {}
+        }
+    }
+
     /// Get the cached value, refreshing it with a stale-while-revalidate
     /// policy: an entry younger than `fresh_for` is returned directly; an
     /// entry younger than `stale_for` is returned while `refresh` runs in
     /// the background; otherwise (including when the cache is empty)
     /// `refresh` is awaited before returning the latest entry.
     ///
-    /// `refresh` is passed the current cache entry (if any) and is
-    /// responsible for storing its result via [`Cache::update`]
-    /// (or [`Cache::mark_as_fresh`]).
+    /// `refresh` is passed the current cache entry (if any) and returns a
+    /// [`RefreshOutcome`], which the cache applies (see [`Cache::refresh`]).
     pub async fn get_or_refresh<Fut>(
-        &self,
+        &'static self,
         fresh_for: Duration,
         stale_for: Duration,
-        refresh: impl FnOnce(Option<Arc<Cached<T>>>) -> Fut,
+        refresh: impl FnOnce(Option<Arc<Cached<T>>>) -> Fut + Send + 'static,
     ) -> Option<Arc<Cached<T>>>
     where
-        Fut: Future<Output = ()> + Send + 'static,
+        Fut: Future<Output = RefreshOutcome<T>> + Send + 'static,
     {
         self.get_usable_or_refresh(fresh_for, stale_for, |_| true, refresh)
             .await
@@ -79,14 +103,14 @@ impl<T: Send + Sync + 'static> Cache<T> {
     /// Like [`Cache::get_or_refresh`], but a cached entry only counts as usable if
     /// `is_usable` returns true (e.g. it contains the data the caller needs).
     pub async fn get_usable_or_refresh<Fut>(
-        &self,
+        &'static self,
         fresh_for: Duration,
         stale_for: Duration,
         is_usable: impl Fn(&T) -> bool,
-        refresh: impl FnOnce(Option<Arc<Cached<T>>>) -> Fut,
+        refresh: impl FnOnce(Option<Arc<Cached<T>>>) -> Fut + Send + 'static,
     ) -> Option<Arc<Cached<T>>>
     where
-        Fut: Future<Output = ()> + Send + 'static,
+        Fut: Future<Output = RefreshOutcome<T>> + Send + 'static,
     {
         let existing = self.get_cloned();
         let mut await_refresh = true;
@@ -102,7 +126,7 @@ impl<T: Send + Sync + 'static> Cache<T> {
             }
         }
 
-        let handle = tokio::spawn(refresh(existing));
+        let handle = tokio::spawn(self.refresh(refresh));
         if await_refresh {
             let _ = handle.await;
         }
