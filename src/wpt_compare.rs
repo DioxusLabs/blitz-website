@@ -5,7 +5,6 @@
 //! and stream-ingested into the SQLite database. Blitz's own report is
 //! fetched from its published location and ingested alongside them.
 
-use std::io::Read;
 use std::sync::{Arc, Mutex};
 use std::time::Instant;
 
@@ -13,6 +12,7 @@ use reqwest::Client;
 use serde::Deserialize;
 
 use crate::wpt_db::{self, RunMeta, RunRow, WPT_COMPARE_DB};
+use crate::wpt_fyi;
 
 /// Engines compared against Blitz, in display order. The experimental
 /// channels match wpt.fyi's default dashboard (the stable Safari runs in
@@ -68,17 +68,6 @@ impl std::ops::Deref for ArcRunRows {
     }
 }
 
-#[derive(Deserialize)]
-struct FyiRun {
-    id: i64,
-    browser_name: String,
-    browser_version: String,
-    os_name: Option<String>,
-    full_revision_hash: String,
-    time_end: Option<String>,
-    raw_results_url: String,
-}
-
 /// Process-global lock ensuring only one refresh runs at a time (repeated
 /// page visits during a slow ingest would otherwise start concurrent ones)
 static REFRESH_LOCK: tokio::sync::Mutex<()> = tokio::sync::Mutex::const_new(());
@@ -99,7 +88,7 @@ pub async fn load_wpt_compare() {
 
     let mut ingested_any = false;
 
-    match fetch_fyi_runs(&client).await {
+    match wpt_fyi::fetch_latest_runs(&client, PRODUCTS).await {
         Ok(runs) => {
             for run in runs {
                 let meta = RunMeta {
@@ -158,16 +147,6 @@ pub async fn load_wpt_compare() {
     println!("WPT comparison runs refreshed.");
 }
 
-async fn fetch_fyi_runs(
-    client: &Client,
-) -> Result<Vec<FyiRun>, Box<dyn std::error::Error + Send + Sync>> {
-    let url = format!(
-        "https://wpt.fyi/api/runs?label=master&products={}&max-count=1",
-        PRODUCTS.join(",")
-    );
-    Ok(client.get(url).send().await?.json::<Vec<FyiRun>>().await?)
-}
-
 /// Download and ingest a wpt.fyi raw report if it hasn't been ingested yet.
 /// Returns whether a new run was ingested.
 async fn ingest_fyi_run(
@@ -189,16 +168,7 @@ async fn ingest_fyi_run(
 
     println!("Downloading {product} WPT report...");
     let t0 = Instant::now();
-    // The raw reports are stored gzip-encoded (~17-20 MB); download the
-    // compressed bytes and decompress while stream-ingesting.
-    let compressed = client
-        .get(raw_results_url)
-        .header("Accept-Encoding", "gzip")
-        .send()
-        .await?
-        .error_for_status()?
-        .bytes()
-        .await?;
+    let compressed = wpt_fyi::fetch_raw_report(client, raw_results_url).await?;
     println!(
         "Downloaded {product} WPT report ({} bytes) in {:.1}s",
         compressed.len(),
@@ -207,12 +177,7 @@ async fn ingest_fyi_run(
 
     tokio::task::spawn_blocking(move || {
         let t0 = Instant::now();
-        let reader: Box<dyn Read> = if compressed.starts_with(&[0x1f, 0x8b]) {
-            Box::new(flate2::read::GzDecoder::new(&compressed[..]))
-        } else {
-            // Already decompressed by the HTTP client
-            Box::new(&compressed[..])
-        };
+        let reader = wpt_fyi::report_reader(&compressed);
         WPT_COMPARE_DB
             .with(|conn| wpt_db::ingest_report(conn, &meta, reader))
             .map(|_| ())

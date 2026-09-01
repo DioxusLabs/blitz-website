@@ -47,6 +47,7 @@ mod routes;
 mod wpt;
 mod wpt_compare;
 mod wpt_db;
+mod wpt_fyi;
 mod wpt_history;
 mod wpt_source;
 mod wpt_spec_meta;
