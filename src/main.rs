@@ -232,7 +232,10 @@ async fn main() {
                 wpt_compare_route(String::new(), query.sort).await
             }),
         )
-        .route("/wpt/focus-areas/servo", get(wpt_focus_areas_route))
+        .route(
+            "/wpt/focus-areas/{set}",
+            get(async |Path(set): Path<String>| wpt_focus_areas_route(set).await),
+        )
         .route(
             "/wpt/{*area}",
             get(
@@ -421,7 +424,15 @@ async fn wpt_compare_route(
     }
 }
 
-async fn wpt_focus_areas_route() -> Result<(StatusCode, Html<String>), (StatusCode, String)> {
+async fn wpt_focus_areas_route(
+    set: String,
+) -> Result<(StatusCode, Html<String>), (StatusCode, String)> {
+    let Some(set) = routes::focus_area_set(&set) else {
+        return Err((
+            StatusCode::NOT_FOUND,
+            format!("Unknown focus area set: {set}"),
+        ));
+    };
     let Some(entry) = get_wpt_comparison_run_list().await else {
         return Err((
             StatusCode::INTERNAL_SERVER_ERROR,
@@ -433,7 +444,7 @@ async fn wpt_focus_areas_route() -> Result<(StatusCode, Html<String>), (StatusCo
 
     let scores = tokio::task::spawn_blocking(move || {
         WPT_COMPARE_DB.with(|conn| {
-            routes::SERVO_FOCUS_AREAS
+            set.areas
                 .iter()
                 .map(|area| (area.clone(), wpt_db::area_score(conn, &run_ids, area)))
                 .collect::<Vec<_>>()
@@ -443,6 +454,8 @@ async fn wpt_focus_areas_route() -> Result<(StatusCode, Html<String>), (StatusCo
     .unwrap();
 
     let props = WptFocusAreasPageProps {
+        label: set.label.to_string(),
+        intro: set.intro.to_string(),
         runs: runs.0.as_ref().clone(),
         scores,
     };

@@ -8,14 +8,49 @@ use crate::{
     wpt_db::{status_str, AreaScore, AreaSort, RunRow, SubtestRow, TestDetail, TestRow, TestRunResult},
 };
 
-/// Servo's WPT focus areas, as tracked by
-/// <https://github.com/servo/internal-wpt-dashboard>. The empty string is
-/// the full test suite; the dashboard's combined "/css/CSS2/tables/ &
-/// /css/css-tables/" entry is split into its two constituent rows.
-pub static SERVO_FOCUS_AREAS: LazyLock<Vec<String>> = LazyLock::new(|| {
-    serde_json::from_str(include_str!("../../data/focus_areas/servo.json"))
-        .expect("invalid data/focus_areas/servo.json")
+/// A named set of WPT focus areas with its own summary page at
+/// `/wpt/focus-areas/{slug}`.
+pub struct FocusAreaSet {
+    pub slug: &'static str,
+    pub label: &'static str,
+    /// Introduction paragraph for the summary page (raw HTML)
+    pub intro: &'static str,
+    pub areas: Vec<String>,
+}
+
+pub static FOCUS_AREA_SETS: LazyLock<Vec<FocusAreaSet>> = LazyLock::new(|| {
+    vec![
+        // Servo's WPT focus areas, as tracked by
+        // <https://github.com/servo/internal-wpt-dashboard>. The empty string
+        // is the full test suite; the dashboard's combined "/css/CSS2/tables/
+        // & /css/css-tables/" entry is split into its two constituent rows.
+        FocusAreaSet {
+            slug: "servo",
+            label: "Servo",
+            intro: r#"
+                This page compares scores on Servo's <a href="https://github.com/servo/internal-wpt-dashboard" target="_blank">WPT focus areas</a>
+                across web engines, using the latest master runs from <a href="https://wpt.fyi" target="_blank">wpt.fyi</a> and Blitz's own test runner."#,
+            areas: serde_json::from_str(include_str!("../../data/focus_areas/servo.json"))
+                .expect("invalid data/focus_areas/servo.json"),
+        },
+        // Text-related WPT areas, as exercised by Blitz's text stack (Parley);
+        // see <https://github.com/DioxusLabs/blitz/blob/main/docs/parley.md>.
+        FocusAreaSet {
+            slug: "text",
+            label: "Text",
+            intro: r#"
+                This page compares scores on text layout WPT areas (those exercising <a href="https://github.com/linebender/parley" target="_blank">Parley</a>,
+                Blitz's text layout engine — see <a href="https://github.com/DioxusLabs/blitz/blob/main/docs/parley.md" target="_blank">docs/parley.md</a>)
+                across web engines, using the latest master runs from <a href="https://wpt.fyi" target="_blank">wpt.fyi</a> and Blitz's own test runner."#,
+            areas: serde_json::from_str(include_str!("../../data/focus_areas/text.json"))
+                .expect("invalid data/focus_areas/text.json"),
+        },
+    ]
 });
+
+pub fn focus_area_set(slug: &str) -> Option<&'static FocusAreaSet> {
+    FOCUS_AREA_SETS.iter().find(|set| set.slug == slug)
+}
 
 /// Display name for a product identifier (e.g. "chrome" -> "Chrome")
 fn product_label(product: &str) -> String {
@@ -63,7 +98,13 @@ pub fn WptComparePage(
             if area.is_empty() {
                 p {
                     font_size: "smaller",
-                    a { href: "/wpt/focus-areas/servo", "Servo focus areas summary" }
+                    b { "Focus areas: " }
+                    for (i, set) in FOCUS_AREA_SETS.iter().enumerate() {
+                        if i > 0 {
+                            " | "
+                        }
+                        a { href: format!("/wpt/focus-areas/{}", set.slug), {set.label} }
+                    }
                 }
             }
             WptCompareBreadcrumb { area: area.clone() }
@@ -108,22 +149,22 @@ pub fn WptComparePage(
 
 #[component]
 pub fn WptFocusAreasPage(
+    label: String,
+    intro: String,
     runs: Vec<RunRow>,
     scores: Vec<(String, Vec<Option<AreaScore>>)>,
 ) -> Element {
     rsx! {
-        Page { title: "WPT: Servo focus areas".into(),
+        Page { title: format!("WPT: {label} focus areas").into(),
             h1 { "WPT" }
             p {
                 class: "introduction",
-                dangerous_inner_html: r#"
-                This page compares scores on Servo's <a href="https://github.com/servo/internal-wpt-dashboard" target="_blank">WPT focus areas</a>
-                across web engines, using the latest master runs from <a href="https://wpt.fyi" target="_blank">wpt.fyi</a> and Blitz's own test runner."#
+                dangerous_inner_html: intro,
             }
             hr {}
             p {
                 a { href: "/wpt", "wpt" }
-                " / focus areas"
+                " / focus areas / {label}"
             }
             RunInfoDisplay { runs: runs.clone() }
             table {
