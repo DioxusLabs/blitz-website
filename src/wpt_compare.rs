@@ -84,7 +84,7 @@ pub async fn load_wpt_compare(
                     run_time: run.time_end.clone(),
                     source_run_id: Some(run.id),
                 };
-                match ingest_fyi_run(&client, meta, &run.raw_results_url).await {
+                match ingest_wpt_fyi_run(&client, meta, &run.raw_results_url).await {
                     Ok(true) => ingested_any = true,
                     Ok(false) => {}
                     Err(err) => {
@@ -137,7 +137,7 @@ pub async fn load_wpt_compare(
 
 /// Download and ingest a wpt.fyi raw report if it hasn't been ingested yet.
 /// Returns whether a new run was ingested.
-async fn ingest_fyi_run(
+async fn ingest_wpt_fyi_run(
     client: &Client,
     meta: RunMeta,
     raw_results_url: &str,
