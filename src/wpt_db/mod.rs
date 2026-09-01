@@ -20,7 +20,7 @@ use serde::Deserialize;
 /// (all data is re-ingestable from upstream sources).
 const DB_VERSION: i64 = 3;
 
-const SCHEMA: &str = include_str!("wpt_schema.sql");
+const SCHEMA: &str = include_str!("schema.sql");
 
 /// The directory data files (SQLite databases) are stored in: the
 /// `WPT_DATA_DIR` env var if set, otherwise a `.data` directory in the
