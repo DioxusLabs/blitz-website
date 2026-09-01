@@ -9,7 +9,7 @@ pub type Error = Box<dyn std::error::Error + Send + Sync>;
 
 /// A test run record from the wpt.fyi runs API.
 #[derive(Deserialize)]
-pub struct FyiRun {
+pub struct WptFyiRun {
     pub id: i64,
     pub browser_name: String,
     pub browser_version: String,
@@ -21,12 +21,20 @@ pub struct FyiRun {
 
 /// Fetch the latest master run for each of the given products
 /// (e.g. `"safari[experimental]"`).
-pub async fn fetch_latest_runs(client: &Client, products: &[&str]) -> Result<Vec<FyiRun>, Error> {
+pub async fn fetch_latest_runs(
+    client: &Client,
+    products: &[&str],
+) -> Result<Vec<WptFyiRun>, Error> {
     let url = format!(
         "https://wpt.fyi/api/runs?label=master&products={}&max-count=1",
         products.join(",")
     );
-    Ok(client.get(url).send().await?.json::<Vec<FyiRun>>().await?)
+    Ok(client
+        .get(url)
+        .send()
+        .await?
+        .json::<Vec<WptFyiRun>>()
+        .await?)
 }
 
 /// Download a run's raw wptreport.json. The reports are stored gzip-encoded
