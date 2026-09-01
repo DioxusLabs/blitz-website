@@ -296,7 +296,15 @@ async fn main() {
     tokio::spawn(
         WPT_HISTORY_CACHE.refresh(|existing| load_wpt_history(vec!["css".to_string()], existing)),
     );
-    tokio::spawn(WPT_COMPARE_CACHE.refresh(load_wpt_compare));
+    // Refresh WPT comparison data on startup and every 15 minutes (the first
+    // tick fires immediately), so new runs are ingested off the request path
+    tokio::spawn(async {
+        let mut interval = tokio::time::interval(Duration::from_mins(15));
+        loop {
+            interval.tick().await;
+            WPT_COMPARE_CACHE.refresh(load_wpt_compare).await;
+        }
+    });
 
     if std::env::var("PRECACHE_DOWNLOADS").is_ok() {
         tokio::spawn(DOWNLOAD_CACHE.refresh(load_downloads));
