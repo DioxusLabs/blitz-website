@@ -7,4 +7,5 @@ mod about;              pub use about::*;
 mod nlnet_instructions; pub use nlnet_instructions::*;
 mod wpt;                pub use wpt::*;
 mod wpt_compare;        pub use wpt_compare::*;
+mod wpt_focus_areas;    pub use wpt_focus_areas::*;
 mod wpt_history;        pub use wpt_history::*;
