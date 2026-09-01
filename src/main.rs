@@ -240,16 +240,6 @@ async fn main() {
             ),
         )
         .route(
-            "/status/wpt-compare",
-            get(|| async { Redirect::permanent("/wpt") }),
-        )
-        .route(
-            "/status/wpt-compare/{*area}",
-            get(async |Path(area): Path<String>| {
-                Redirect::permanent(&format!("/wpt/{}", area.trim_matches('/')))
-            }),
-        )
-        .route(
             "/downloads",
             get(async || {
                 // Serve directly for 30s; any older entry is served stale
