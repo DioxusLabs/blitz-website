@@ -439,26 +439,13 @@ async fn wpt_focus_areas_route() -> Result<(StatusCode, Html<String>), (StatusCo
 
 /// Get the cached WPT comparison run list, revalidating (checking wpt.fyi
 /// for new runs and ingesting them) if it is stale. Revalidation is awaited
-/// if the cache is missing, and performed in the background if it is between
-/// 30 minutes and 24 hours old (new runs only appear roughly daily).
-async fn fresh_wpt_compare_entry() -> Option<std::sync::Arc<wpt_compare::WptCompareCacheEntry>> {
-    let now = Instant::now();
-
-    let mut await_revalidation = true;
-    if let Some(entry) = WPT_COMPARE_CACHE.get_cloned() {
-        let cache_age = now.duration_since(entry.cached_at);
-        if cache_age <= Duration::from_mins(30) {
-            return Some(entry);
-        }
-        await_revalidation = false;
-    }
-
-    let handle = tokio::spawn(async move { load_wpt_compare().await });
-    if await_revalidation {
-        let _ = handle.await;
-    }
-
-    WPT_COMPARE_CACHE.get_cloned()
+/// if the cache is missing, and performed in the background otherwise
+/// (new runs only appear roughly daily, so stale data is always usable).
+async fn fresh_wpt_compare_entry(
+) -> Option<std::sync::Arc<cache::Cached<wpt_compare::WptCompareCacheEntry>>> {
+    WPT_COMPARE_CACHE
+        .fresh(Duration::from_mins(30), Duration::MAX, load_wpt_compare)
+        .await
 }
 
 /// Get the cached WPT report, revalidating it if it is stale.

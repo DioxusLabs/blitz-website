@@ -5,12 +5,13 @@
 //! and stream-ingested into the SQLite database. Blitz's own report is
 //! fetched from its published location and ingested alongside them.
 
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
 use std::time::Instant;
 
 use reqwest::Client;
 use serde::Deserialize;
 
+use crate::cache::Cache;
 use crate::wpt_db::{self, RunMeta, RunRow, WPT_COMPARE_DB};
 use crate::wpt_fyi;
 
@@ -27,29 +28,9 @@ const PRODUCTS: &[&str] = &[
 
 const BLITZ_REPORT_URL: &str = "https://dioxuslabs.github.io/blitz/wptreport.json.zst";
 
-pub static WPT_COMPARE_CACHE: WptCompareCache = WptCompareCache::new();
-
-pub struct WptCompareCache(Mutex<Option<Arc<WptCompareCacheEntry>>>);
-
-impl WptCompareCache {
-    const fn new() -> Self {
-        Self(Mutex::new(None))
-    }
-
-    pub fn get_cloned(&self) -> Option<Arc<WptCompareCacheEntry>> {
-        (*self.0.lock().unwrap()).clone()
-    }
-
-    fn update(&self, runs: Vec<RunRow>) {
-        *self.0.lock().unwrap() = Some(Arc::new(WptCompareCacheEntry {
-            cached_at: Instant::now(),
-            runs: ArcRunRows(Arc::new(runs)),
-        }));
-    }
-}
+pub static WPT_COMPARE_CACHE: Cache<WptCompareCacheEntry> = Cache::new();
 
 pub struct WptCompareCacheEntry {
-    pub cached_at: Instant,
     /// The latest run for each product (column order for comparison pages)
     pub runs: ArcRunRows,
 }
@@ -143,7 +124,9 @@ pub async fn load_wpt_compare() {
         ordered.extend(runs.iter().filter(|run| run.product == product).cloned());
     }
 
-    WPT_COMPARE_CACHE.update(ordered);
+    WPT_COMPARE_CACHE.update(WptCompareCacheEntry {
+        runs: ArcRunRows(Arc::new(ordered)),
+    });
     println!("WPT comparison runs refreshed.");
 }
 
