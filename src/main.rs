@@ -21,10 +21,11 @@ use downloads::{load_downloads, DOWNLOAD_CACHE};
 use routes::child_areas;
 use routes::{
     AboutPage, ArcDownloadLinks, ArcWptHistory, ChartRange, CssSupportPage, DownloadsPage,
-    DownloadsPageProps, ElementSupportPage, EventSupportPage, GettingStartedPage, HomePage,
-    NLNetInstructionsPage, TestPageTab, WptComparePage, WptComparePageProps, WptCompareTestPage,
-    WptCompareTestPageProps, WptFocusAreasPage, WptFocusAreasPageProps, WptHistoryPage,
-    WptHistoryPageProps, WptResultsPage, WptResultsPageProps, WptTestPage, WptTestPageProps,
+    DownloadsPageProps, DownloadsUnavailablePage, ElementSupportPage, EventSupportPage,
+    GettingStartedPage, HomePage, NLNetInstructionsPage, TestPageTab, WptComparePage,
+    WptComparePageProps, WptCompareTestPage, WptCompareTestPageProps, WptFocusAreasPage,
+    WptFocusAreasPageProps, WptHistoryPage, WptHistoryPageProps, WptResultsPage,
+    WptResultsPageProps, WptTestPage, WptTestPageProps,
 };
 use serde::Deserialize;
 use std::{
@@ -250,10 +251,8 @@ async fn main() {
                     .get_or_refresh(Duration::from_secs(30), Duration::MAX, load_downloads)
                     .await
                 else {
-                    return (
-                        StatusCode::SERVICE_UNAVAILABLE,
-                        Html("Downloads are currently unavailable".to_string()),
-                    );
+                    let (_, html) = dx_route_with_props(DownloadsUnavailablePage, ()).await;
+                    return (StatusCode::SERVICE_UNAVAILABLE, html);
                 };
                 let props = DownloadsPageProps {
                     links: ArcDownloadLinks(entry.artifacts.clone()),
