@@ -21,10 +21,11 @@ use downloads::{load_downloads, DOWNLOAD_CACHE};
 use routes::child_areas;
 use routes::{
     AboutPage, ArcDownloadLinks, ArcWptHistory, ChartRange, CssSupportPage, DownloadsPage,
-    DownloadsPageProps, ElementSupportPage, EventSupportPage, GettingStartedPage, HomePage,
-    NLNetInstructionsPage, TestPageTab, WptComparePage, WptComparePageProps, WptCompareTestPage,
-    WptCompareTestPageProps, WptFocusAreasPage, WptFocusAreasPageProps, WptHistoryPage,
-    WptHistoryPageProps, WptResultsPage, WptResultsPageProps, WptTestPage, WptTestPageProps,
+    DownloadsPageProps, DownloadsUnavailablePage, ElementSupportPage, EventSupportPage,
+    GettingStartedPage, HomePage, NLNetInstructionsPage, TestPageTab, WptComparePage,
+    WptComparePageProps, WptCompareTestPage, WptCompareTestPageProps, WptFocusAreasPage,
+    WptFocusAreasPageProps, WptHistoryPage, WptHistoryPageProps, WptResultsPage,
+    WptResultsPageProps, WptTestPage, WptTestPageProps,
 };
 use serde::Deserialize;
 use std::{
@@ -246,10 +247,13 @@ async fn main() {
                 // Serve directly for 30s; any older entry is served stale
                 // while revalidating in the background (builds are heavy to
                 // fetch, so a request never awaits a refresh once primed)
-                let entry = DOWNLOAD_CACHE
+                let Some(entry) = DOWNLOAD_CACHE
                     .get_or_refresh(Duration::from_secs(30), Duration::MAX, load_downloads)
                     .await
-                    .unwrap();
+                else {
+                    let (_, html) = dx_route_with_props(DownloadsUnavailablePage, ()).await;
+                    return (StatusCode::SERVICE_UNAVAILABLE, html);
+                };
                 let props = DownloadsPageProps {
                     links: ArcDownloadLinks(entry.artifacts.clone()),
                     commit_info: entry.commit_info.clone(),

@@ -22,11 +22,11 @@ const DB_VERSION: i64 = 3;
 
 const SCHEMA: &str = include_str!("schema.sql");
 
-/// The directory data files (SQLite databases) are stored in: the
-/// `WPT_DATA_DIR` env var if set, otherwise a `.data` directory in the
-/// repo root when run via cargo, falling back to `.data` in the current
-/// working directory.
-fn data_dir() -> std::path::PathBuf {
+/// The directory data files (SQLite databases, downloaded build
+/// artifacts) are stored in: the `WPT_DATA_DIR` env var if set, otherwise
+/// a `.data` directory in the repo root when run via cargo, falling back
+/// to `.data` in the current working directory.
+pub fn data_dir() -> std::path::PathBuf {
     if let Ok(dir) = std::env::var("WPT_DATA_DIR") {
         return dir.into();
     }

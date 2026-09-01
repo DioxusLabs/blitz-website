@@ -39,6 +39,20 @@ pub fn DownloadsPage(links: ArcDownloadLinks, commit_info: Option<CommitInfo>) -
     }
 }
 #[component]
+pub fn DownloadsUnavailablePage() -> Element {
+    rsx! {
+        Page { title: "Downloads".into(),
+            h1 {
+                "Downloads"
+            }
+            p {
+                "Downloads are currently unavailable"
+            }
+        }
+    }
+}
+
+#[component]
 pub fn DownloadsTable(links: ArcDownloadLinks) -> Element {
     rsx!(
         table {
