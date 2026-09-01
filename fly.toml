@@ -9,6 +9,11 @@ HOST = "::"
 PORT = 3333
 RUST_LOG = "debug"
 PRECACHE_DOWNLOADS = "true"
+WPT_DATA_DIR = "/data"
+
+[mounts]
+  source = "wpt_data"
+  destination = "/data"
 
 [experimental]
   allowed_public_ports = []
