@@ -1,9 +1,4 @@
-use std::{
-    collections::BTreeMap,
-    io::Cursor,
-    sync::{Arc, Mutex, MutexGuard},
-    time::Instant,
-};
+use std::{collections::BTreeMap, io::Cursor, sync::Arc};
 
 use reqwest::Client;
 use wptreport::{
@@ -11,64 +6,15 @@ use wptreport::{
     wpt_report::{TestStatus, WptReport},
 };
 
+use crate::cache::Cache;
 use crate::github::{CommitInfo, GithubClient};
 use crate::routes::{ArcWptReport, ArcWptScores};
 
-pub static WPT_REPORT_CACHE: WptReportCache = WptReportCache::new();
+pub static WPT_REPORT_CACHE: Cache<WptReportCacheEntry> = Cache::new();
 
-pub struct WptReportCache(Mutex<Option<Arc<WptReportCacheEntry>>>);
-impl WptReportCache {
-    const fn new() -> Self {
-        Self(Mutex::new(None))
-    }
-
-    pub fn get_cloned(&self) -> Option<Arc<WptReportCacheEntry>> {
-        (*self.0.lock().unwrap()).clone()
-    }
-
-    #[allow(dead_code)]
-    pub fn get_mut(&self) -> MutexGuard<'_, Option<Arc<WptReportCacheEntry>>> {
-        self.0.lock().unwrap()
-    }
-
-    pub fn update(
-        &self,
-        etag: Option<Arc<str>>,
-        report: ArcWptReport,
-        scores: ArcWptScores,
-        test_index: Arc<BTreeMap<String, usize>>,
-        commit_info: Option<CommitInfo>,
-    ) {
-        let cached_at = Instant::now();
-        *self.0.lock().unwrap() = Some(Arc::new(WptReportCacheEntry {
-            etag,
-            cached_at,
-            report,
-            scores,
-            test_index,
-            commit_info,
-        }));
-    }
-
-    pub fn mark_as_fresh(&self) {
-        let cached_at = Instant::now();
-        let mut inner = self.0.lock().unwrap();
-        if let Some(entry) = inner.take() {
-            *inner = Some(Arc::new(WptReportCacheEntry {
-                cached_at,
-                etag: entry.etag.clone(),
-                report: entry.report.clone(),
-                scores: entry.scores.clone(),
-                test_index: entry.test_index.clone(),
-                commit_info: entry.commit_info.clone(),
-            }));
-        }
-    }
-}
-
+#[derive(Clone)]
 pub struct WptReportCacheEntry {
     pub etag: Option<Arc<str>>,
-    pub cached_at: Instant,
     pub report: ArcWptReport,
     pub scores: ArcWptScores,
     /// Maps test name to index within `report.results`
@@ -145,13 +91,13 @@ pub async fn load_wpt_results(etag: Option<Arc<str>>) {
     let scores = ArcWptScores(Arc::new(scores));
     let test_index = Arc::new(test_index);
 
-    WPT_REPORT_CACHE.update(
+    WPT_REPORT_CACHE.update(WptReportCacheEntry {
         etag,
-        report.clone(),
-        scores.clone(),
+        report: report.clone(),
+        scores: scores.clone(),
         test_index,
         commit_info,
-    );
+    });
 
     println!("New WPT results processed and cached.");
 }

@@ -1,12 +1,9 @@
-use std::{
-    collections::HashMap,
-    sync::{Arc, Mutex},
-    time::Instant,
-};
+use std::{collections::HashMap, sync::Arc};
 
 use reqwest::Client;
 use serde::Deserialize;
 
+use crate::cache::Cache;
 use crate::routes::ArcWptHistory;
 
 const SUMMARY_BASE_URL: &str =
@@ -51,7 +48,7 @@ pub struct HistoryRun {
     pub scores: Vec<Option<ScoreTuple>>,
 }
 
-pub static WPT_HISTORY_CACHE: WptHistoryCache = WptHistoryCache::new();
+pub static WPT_HISTORY_CACHE: Cache<WptHistoryCacheEntry> = Cache::new();
 
 /// Cached summary data. All summary files change together (a new run appends
 /// one entry to runs.json and to every area file), so the whole cache is
@@ -60,7 +57,6 @@ pub static WPT_HISTORY_CACHE: WptHistoryCache = WptHistoryCache::new();
 /// when runs.json changes.
 pub struct WptHistoryCacheEntry {
     pub runs_etag: Option<Arc<str>>,
-    pub cached_at: Instant,
     runs: Arc<Vec<RunMeta>>,
     areas: HashMap<String, Arc<Vec<Option<ScoreTuple>>>>,
 }
@@ -92,21 +88,6 @@ impl WptHistoryCacheEntry {
             focus_areas: present.iter().map(|(area, _)| (*area).clone()).collect(),
             runs,
         }))
-    }
-}
-
-pub struct WptHistoryCache(Mutex<Option<Arc<WptHistoryCacheEntry>>>);
-impl WptHistoryCache {
-    const fn new() -> Self {
-        Self(Mutex::new(None))
-    }
-
-    pub fn get_cloned(&self) -> Option<Arc<WptHistoryCacheEntry>> {
-        self.0.lock().unwrap().clone()
-    }
-
-    fn update(&self, entry: WptHistoryCacheEntry) {
-        *self.0.lock().unwrap() = Some(Arc::new(entry));
     }
 }
 
@@ -206,7 +187,6 @@ pub async fn load_wpt_history(areas: Vec<String>) {
             }
             WPT_HISTORY_CACHE.update(WptHistoryCacheEntry {
                 runs_etag,
-                cached_at: Instant::now(),
                 runs: existing.runs.clone(),
                 areas: cached_areas,
             });
@@ -229,7 +209,6 @@ pub async fn load_wpt_history(areas: Vec<String>) {
             );
             WPT_HISTORY_CACHE.update(WptHistoryCacheEntry {
                 runs_etag,
-                cached_at: Instant::now(),
                 runs: Arc::new(runs_file.runs),
                 areas: cached_areas,
             });
