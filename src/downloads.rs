@@ -1,9 +1,9 @@
-use std::{io::Write as _, path::PathBuf, sync::Arc};
-
-use tempfile::NamedTempFile;
+use std::collections::HashSet;
+use std::{path::PathBuf, sync::Arc};
 
 use crate::cache::{Cache, Cached, RefreshOutcome};
 use crate::github::{CommitInfo, GithubClient};
+use crate::wpt_db::data_dir;
 
 pub static DOWNLOAD_CACHE: Cache<DownloadCacheEntry> = Cache::new();
 
@@ -29,9 +29,16 @@ pub struct DownloadLink {
     /// The bundle format (DMG, AppImage, etc)
     #[allow(dead_code)]
     pub bundle_format: String,
-    pub _file: NamedTempFile,
-    /// The file content
+    /// The artifact zip on disk (under `<data dir>/downloads`)
     pub file_path: PathBuf,
+}
+
+/// The on-disk file name for an artifact: its name plus a digest prefix,
+/// so a re-run of the same workflow with different content gets a new file.
+fn artifact_file_name(name: &str, digest: &str) -> String {
+    let digest = digest.split(':').next_back().unwrap_or(digest);
+    let digest = &digest[..digest.len().min(16)];
+    format!("{name}-{digest}.zip")
 }
 
 pub async fn load_downloads(
@@ -40,7 +47,10 @@ pub async fn load_downloads(
     println!("Checking for new Browser UI builds...");
 
     // Request latest WPT report (with etag)
-    let token = std::env::var("GITHUB_TOKEN").expect("GITHUB_TOKEN environment variable not found");
+    let Ok(token) = std::env::var("GITHUB_TOKEN") else {
+        println!("GITHUB_TOKEN not set: browser build downloads are unavailable");
+        return RefreshOutcome::Failed;
+    };
     let client = GithubClient::new(Some(&token));
 
     // if let Some(etag) = etag.as_ref() {
@@ -84,6 +94,12 @@ pub async fn load_downloads(
         .await;
     // dbg!(&workflow_artifact_response.artifacts);
 
+    let downloads_dir = data_dir().join("downloads");
+    if let Err(err) = std::fs::create_dir_all(&downloads_dir) {
+        println!("Failed to create downloads directory: {err}");
+        return RefreshOutcome::Failed;
+    }
+
     let mut artifacts: Vec<DownloadLink> =
         Vec::with_capacity(workflow_artifact_response.artifacts.len());
 
@@ -110,10 +126,13 @@ pub async fn load_downloads(
         .to_string();
         println!("{}", &artifact.name);
 
-        let file_content = client.get_bytes(&artifact.archive_download_url).await;
-        let mut file = NamedTempFile::new().unwrap();
-        file.write_all(&file_content).unwrap();
-        let file_path = file.path().to_path_buf();
+        let file_path = downloads_dir.join(artifact_file_name(&artifact.name, &artifact.digest));
+        if !file_path.exists() {
+            let file_content = client.get_bytes(&artifact.archive_download_url).await;
+            let tmp_path = file_path.with_extension("zip.part");
+            std::fs::write(&tmp_path, &file_content).unwrap();
+            std::fs::rename(&tmp_path, &file_path).unwrap();
+        }
 
         artifacts.push(DownloadLink {
             // url: format!(
@@ -128,9 +147,19 @@ pub async fn load_downloads(
             platform,
             arch,
             bundle_format,
-            _file: file,
             file_path,
         });
+    }
+
+    // Remove files from superseded builds
+    let keep: HashSet<&std::path::Path> = artifacts.iter().map(|a| a.file_path.as_path()).collect();
+    if let Ok(entries) = std::fs::read_dir(&downloads_dir) {
+        for entry in entries.flatten() {
+            let path = entry.path();
+            if !keep.contains(path.as_path()) {
+                let _ = std::fs::remove_file(&path);
+            }
+        }
     }
 
     artifacts.sort_by(|a, b| {
