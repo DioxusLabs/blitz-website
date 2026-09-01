@@ -63,7 +63,7 @@ pub fn WptComparePage(
             if area.is_empty() {
                 p {
                     font_size: "smaller",
-                    a { href: "/wpt/focus-areas", "Servo focus areas summary" }
+                    a { href: "/wpt/focus-areas/servo", "Servo focus areas summary" }
                 }
             }
             WptCompareBreadcrumb { area: area.clone() }

@@ -231,7 +231,7 @@ async fn main() {
                 wpt_compare_route(String::new(), query.sort).await
             }),
         )
-        .route("/wpt/focus-areas", get(wpt_focus_areas_route))
+        .route("/wpt/focus-areas/servo", get(wpt_focus_areas_route))
         .route(
             "/wpt/{*area}",
             get(
