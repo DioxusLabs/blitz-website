@@ -391,6 +391,24 @@ impl<'de> Visitor<'de> for ReportSeed<'_, '_> {
     }
 }
 
+/// Fill in the run time of an already-ingested run that was stored without one.
+pub fn backfill_run_time(conn: &Connection, meta: &RunMeta) -> rusqlite::Result<()> {
+    if let Some(run_time) = &meta.run_time {
+        conn.execute(
+            "UPDATE runs SET run_time = ?1
+             WHERE product = ?2 AND browser_version = ?3 AND wpt_revision = ?4
+               AND run_time IS NULL",
+            params![
+                run_time,
+                meta.product,
+                meta.browser_version,
+                meta.wpt_revision
+            ],
+        )?;
+    }
+    Ok(())
+}
+
 /// True if a run matching this metadata has already been ingested.
 pub fn run_exists(conn: &Connection, meta: &RunMeta) -> bool {
     if let Some(source_run_id) = meta.source_run_id {
