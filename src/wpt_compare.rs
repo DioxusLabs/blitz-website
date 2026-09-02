@@ -103,7 +103,7 @@ pub async fn load_wpt_compare(
     }
 
     let runs = tokio::task::spawn_blocking(move || {
-        WPT_COMPARE_DB.with(|conn| {
+        WPT_COMPARE_DB.with_writer(|conn| {
             if ingested_any {
                 let t0 = Instant::now();
                 wpt_db::recompute_area_scores(conn);
@@ -146,7 +146,7 @@ async fn ingest_wpt_fyi_run(
     let exists = {
         let meta = meta.clone();
         tokio::task::spawn_blocking(move || {
-            WPT_COMPARE_DB.with(|conn| wpt_db::run_exists(conn, &meta))
+            WPT_COMPARE_DB.with_reader(|conn| wpt_db::run_exists(conn, &meta))
         })
         .await?
     };
@@ -167,7 +167,7 @@ async fn ingest_wpt_fyi_run(
         let t0 = Instant::now();
         let reader = wpt_fyi::report_reader(&compressed);
         WPT_COMPARE_DB
-            .with(|conn| wpt_db::ingest_report(conn, &meta, reader))
+            .with_writer(|conn| wpt_db::ingest_report(conn, &meta, reader))
             .map(|_| ())
             .map_err(|err| -> Box<dyn std::error::Error + Send + Sync> { err })?;
         println!(
@@ -216,7 +216,7 @@ async fn ingest_blitz_run(
             run_time: None,
             source_run_id: None,
         };
-        WPT_COMPARE_DB.with(|conn| {
+        WPT_COMPARE_DB.with_writer(|conn| {
             if wpt_db::run_exists(conn, &meta) {
                 return Ok(false);
             }
