@@ -190,20 +190,9 @@ fn iso_datetime_from_epoch(timestamp: u64) -> String {
         timestamp / 1000
     } else {
         timestamp
-    };
-    let (days, rem) = (secs / 86400, secs % 86400);
-    let (h, min, s) = (rem / 3600, (rem % 3600) / 60, rem % 60);
-    // Civil-from-days algorithm (Howard Hinnant)
-    let z = days as i64 + 719_468;
-    let era = z.div_euclid(146_097);
-    let doe = z.rem_euclid(146_097);
-    let yoe = (doe - doe / 1460 + doe / 36_524 - doe / 146_096) / 365;
-    let doy = doe - (365 * yoe + yoe / 4 - yoe / 100);
-    let mp = (5 * doy + 2) / 153;
-    let d = doy - (153 * mp + 2) / 5 + 1;
-    let m = if mp < 10 { mp + 3 } else { mp - 9 };
-    let y = yoe + era * 400 + i64::from(m <= 2);
-    format!("{y:04}-{m:02}-{d:02}T{h:02}:{min:02}:{s:02}Z")
+    } as i64;
+    let ts = jiff::Timestamp::from_second(secs).unwrap_or_default();
+    ts.strftime("%Y-%m-%dT%H:%M:%SZ").to_string()
 }
 
 /// Fetch Blitz's published report and ingest it if it is a new run.
