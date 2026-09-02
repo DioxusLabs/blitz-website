@@ -22,8 +22,8 @@ const PRODUCTS: &[&str] = &[
     "chrome[experimental]",
     "firefox[experimental]",
     "safari[experimental]",
-    "servo",
     "ladybird",
+    "servo",
 ];
 
 const BLITZ_REPORT_URL: &str = "https://dioxuslabs.github.io/blitz/wptreport.json.zst";
