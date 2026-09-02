@@ -32,6 +32,7 @@ dashmap = "6.1.0"
 serde_json5 = "0.2.1"
 foldhash = "0.2.0"
 humansize = "2.1.3"
+jiff = { version = "0.2.35", default-features = false, features = ["std"] }
 
 # WPT report ingestion is ~5x slower unoptimized: lightly optimize our own
 # code and fully optimize the hot dependencies (bundled SQLite, JSON stream

@@ -148,6 +148,23 @@ fn SpecInfoDisplay(area: String) -> Element {
     }
 }
 
+/// Parenthesised WPT revision and run date, e.g. " (wpt@1234abcde, 2026-09-01)"
+fn run_details(run: &RunRow) -> String {
+    let mut details: Vec<String> = Vec::new();
+    if !run.wpt_revision.is_empty() {
+        let short_rev = &run.wpt_revision[..run.wpt_revision.len().min(9)];
+        details.push(format!("wpt@{short_rev}"));
+    }
+    if let Some(date) = run.run_time.as_deref().and_then(|t| t.get(..10)) {
+        details.push(date.to_string());
+    }
+    if details.is_empty() {
+        String::new()
+    } else {
+        format!(" ({})", details.join(", "))
+    }
+}
+
 #[component]
 pub(super) fn RunInfoDisplay(runs: Vec<RunRow>) -> Element {
     rsx! {
@@ -161,9 +178,7 @@ pub(super) fn RunInfoDisplay(runs: Vec<RunRow>) -> Element {
                 {product_label(&run.product)}
                 " "
                 {short_version(&run.browser_version)}
-                if !run.wpt_revision.is_empty() {
-                    {format!(" (wpt@{})", &run.wpt_revision[..run.wpt_revision.len().min(9)])}
-                }
+                {run_details(run)}
             }
         }
     }

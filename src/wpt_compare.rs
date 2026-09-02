@@ -181,6 +181,20 @@ async fn ingest_wpt_fyi_run(
     Ok(true)
 }
 
+/// Format an epoch timestamp (seconds, or milliseconds as the wptreport
+/// format specifies) as an ISO 8601 UTC datetime string, matching the format
+/// of wpt.fyi's run timestamps.
+fn iso_datetime_from_epoch(timestamp: u64) -> String {
+    const MS_THRESHOLD: u64 = 100_000_000_000;
+    let secs = if timestamp >= MS_THRESHOLD {
+        timestamp / 1000
+    } else {
+        timestamp
+    } as i64;
+    let ts = jiff::Timestamp::from_second(secs).unwrap_or_default();
+    ts.strftime("%Y-%m-%dT%H:%M:%SZ").to_string()
+}
+
 /// Fetch Blitz's published report and ingest it if it is a new run.
 /// Returns whether a new run was ingested.
 async fn ingest_blitz_run(
@@ -195,6 +209,7 @@ async fn ingest_blitz_run(
     #[derive(Deserialize)]
     struct BlitzReportHead {
         run_info: BlitzRunInfo,
+        time_end: Option<u64>,
     }
 
     let compressed = client
@@ -213,11 +228,12 @@ async fn ingest_blitz_run(
             browser_version: head.run_info.browser_version.unwrap_or_default(),
             os: head.run_info.os,
             wpt_revision: head.run_info.revision.unwrap_or_default(),
-            run_time: None,
+            run_time: head.time_end.map(iso_datetime_from_epoch),
             source_run_id: None,
         };
         WPT_COMPARE_DB.with_writer(|conn| {
             if wpt_db::run_exists(conn, &meta) {
+                wpt_db::backfill_run_time(conn, &meta)?;
                 return Ok(false);
             }
             let t0 = Instant::now();
