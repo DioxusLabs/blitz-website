@@ -9,9 +9,10 @@
 use std::collections::HashMap;
 use std::fmt;
 use std::io::{BufReader, Read};
-use std::sync::Mutex;
+use std::path::{Path, PathBuf};
+use std::sync::{Mutex, OnceLock};
 
-use rusqlite::{params, Connection, Transaction};
+use rusqlite::{params, Connection, OpenFlags, Transaction};
 use serde::de::{DeserializeSeed, IgnoredAny, MapAccess, SeqAccess, Visitor};
 use serde::Deserialize;
 
@@ -36,34 +37,78 @@ pub fn data_dir() -> std::path::PathBuf {
 
 pub static WPT_COMPARE_DB: WptDb = WptDb::new();
 
-pub struct WptDb(Mutex<Option<Connection>>);
+/// A WAL-mode SQLite database with a single writer connection and a pool of
+/// read-only connections. Writes (ingestion, score recomputation) are
+/// serialized through the writer; reads use their own connections so page
+/// requests see the last committed state instead of waiting behind a
+/// long-running ingest transaction.
+pub struct WptDb {
+    path: OnceLock<PathBuf>,
+    writer: Mutex<Option<Connection>>,
+    readers: Mutex<Vec<Connection>>,
+}
 
 impl WptDb {
     const fn new() -> Self {
-        Self(Mutex::new(None))
+        Self {
+            path: OnceLock::new(),
+            writer: Mutex::new(None),
+            readers: Mutex::new(Vec::new()),
+        }
     }
 
-    /// Run `f` with the (lazily opened) database connection.
-    /// Should be called from a blocking context (`spawn_blocking`).
-    pub fn with<T>(&self, f: impl FnOnce(&mut Connection) -> T) -> T {
-        let mut guard = self.0.lock().unwrap();
-        let conn = guard.get_or_insert_with(|| {
+    /// Open the writer connection (creating/migrating the database) on first
+    /// use, so readers never observe a missing or outdated schema.
+    fn init(&self) -> &Path {
+        self.path.get_or_init(|| {
             let dir = data_dir();
             std::fs::create_dir_all(&dir).expect("failed to create WPT data directory");
             let path = dir.join("wpt-compare.db");
             let conn = open_versioned(&path)
                 .unwrap_or_else(|err| panic!("failed to open wpt-compare database: {err}"));
             conn.execute_batch(SCHEMA).unwrap();
-            conn
-        });
-        f(conn)
+            *self.writer.lock().unwrap() = Some(conn);
+            path
+        })
     }
+
+    /// Run `f` with the (lazily opened) writer connection.
+    /// Should be called from a blocking context (`spawn_blocking`).
+    pub fn with_writer<T>(&self, f: impl FnOnce(&mut Connection) -> T) -> T {
+        self.init();
+        let mut guard = self.writer.lock().unwrap();
+        f(guard.as_mut().expect("writer connection initialized"))
+    }
+
+    /// Run `f` with a read-only connection from the pool (opening a new one
+    /// if none is idle). Should be called from a blocking context.
+    pub fn with_reader<T>(&self, f: impl FnOnce(&Connection) -> T) -> T {
+        let path = self.init();
+        let conn = self.readers.lock().unwrap().pop();
+        let conn = conn.unwrap_or_else(|| {
+            open_reader(path)
+                .unwrap_or_else(|err| panic!("failed to open wpt-compare read connection: {err}"))
+        });
+        let result = f(&conn);
+        self.readers.lock().unwrap().push(conn);
+        result
+    }
+}
+
+fn open_reader(path: &Path) -> rusqlite::Result<Connection> {
+    let conn = Connection::open_with_flags(
+        path,
+        OpenFlags::SQLITE_OPEN_READ_ONLY | OpenFlags::SQLITE_OPEN_NO_MUTEX,
+    )?;
+    conn.busy_timeout(std::time::Duration::from_secs(5))?;
+    Ok(conn)
 }
 
 /// Open the database at `path`, deleting and recreating it if its stored
 /// format version (SQLite `user_version`) doesn't match [`DB_VERSION`].
-fn open_versioned(path: &std::path::Path) -> rusqlite::Result<Connection> {
+fn open_versioned(path: &Path) -> rusqlite::Result<Connection> {
     let conn = Connection::open(path)?;
+    conn.busy_timeout(std::time::Duration::from_secs(5))?;
     let version: i64 = conn.query_row("PRAGMA user_version", [], |row| row.get(0))?;
     let has_tables: bool = conn.query_row(
         "SELECT EXISTS (SELECT 1 FROM sqlite_master WHERE type = 'table')",
@@ -79,13 +124,14 @@ fn open_versioned(path: &std::path::Path) -> rusqlite::Result<Connection> {
         for suffix in ["", "-wal", "-shm"] {
             let mut sidecar = path.as_os_str().to_owned();
             sidecar.push(suffix);
-            match std::fs::remove_file(std::path::Path::new(&sidecar)) {
+            match std::fs::remove_file(Path::new(&sidecar)) {
                 Ok(()) => {}
                 Err(err) if err.kind() == std::io::ErrorKind::NotFound => {}
                 Err(err) => panic!("failed to remove outdated wpt-compare database: {err}"),
             }
         }
         let conn = Connection::open(path)?;
+        conn.busy_timeout(std::time::Duration::from_secs(5))?;
         conn.pragma_update(None, "user_version", DB_VERSION)?;
         return Ok(conn);
     }

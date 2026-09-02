@@ -377,7 +377,7 @@ async fn wpt_compare_route(
     let data = {
         let area = area.clone();
         tokio::task::spawn_blocking(move || {
-            WPT_COMPARE_DB.with(|conn| {
+            WPT_COMPARE_DB.with_reader(|conn| {
                 if wpt_db::area_exists(conn, &area) {
                     PageData::Area {
                         total: wpt_db::area_score(conn, &run_ids, &area),
@@ -443,7 +443,7 @@ async fn wpt_focus_areas_route(
     let run_ids: Vec<i64> = runs.iter().map(|run| run.id).collect();
 
     let scores = tokio::task::spawn_blocking(move || {
-        WPT_COMPARE_DB.with(|conn| {
+        WPT_COMPARE_DB.with_reader(|conn| {
             set.areas
                 .iter()
                 .map(|area| (area.clone(), wpt_db::area_score(conn, &run_ids, area)))
