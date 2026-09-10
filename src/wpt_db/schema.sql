@@ -40,6 +40,7 @@ CREATE TABLE IF NOT EXISTS results (
     message       TEXT,
     PRIMARY KEY (run_id, test_id)
 ) WITHOUT ROWID;
+CREATE INDEX IF NOT EXISTS results_test ON results(test_id);
 
 CREATE TABLE IF NOT EXISTS subtests (
     id      INTEGER PRIMARY KEY,
@@ -55,6 +56,7 @@ CREATE TABLE IF NOT EXISTS subtest_results (
     message    TEXT,
     PRIMARY KEY (run_id, subtest_id)
 ) WITHOUT ROWID;
+CREATE INDEX IF NOT EXISTS subtest_results_subtest ON subtest_results(subtest_id);
 
 CREATE TABLE IF NOT EXISTS area_scores (
     run_id            INTEGER NOT NULL REFERENCES runs(id),
