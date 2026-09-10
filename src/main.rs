@@ -34,7 +34,11 @@ use std::{
     time::{Duration, Instant},
 };
 use tokio::net::TcpListener;
-use tower_http::{services::ServeDir, trace::TraceLayer};
+use tower_http::{
+    services::{ServeDir, ServeFile},
+    trace::{DefaultOnResponse, TraceLayer},
+};
+use tracing::Level;
 use wpt::{load_wpt_results, WPT_REPORT_CACHE};
 use wpt_compare::{load_wpt_compare, WPT_COMPARE_CACHE};
 use wpt_db::WPT_COMPARE_DB;
@@ -283,7 +287,27 @@ async fn main() {
             get(|| dx_route_cached(|| html!(<GettingStartedPage />))),
         )
         .nest_service("/static", get_service(ServeDir::new("static")))
-        .layer(TraceLayer::new_for_http());
+        .route_service("/robots.txt", ServeFile::new("static/robots.txt"))
+        // One line per response at info level, including the user agent so
+        // crawler traffic can be identified from the logs
+        .layer(
+            TraceLayer::new_for_http()
+                .make_span_with(|request: &axum::http::Request<Body>| {
+                    let user_agent = request
+                        .headers()
+                        .get(header::USER_AGENT)
+                        .and_then(|value| value.to_str().ok())
+                        .unwrap_or("-");
+                    tracing::info_span!(
+                        "request",
+                        method = %request.method(),
+                        uri = %request.uri(),
+                        user_agent,
+                    )
+                })
+                .on_request(())
+                .on_response(DefaultOnResponse::new().level(Level::INFO)),
+        );
 
     // run our app with hyper
     // `axum::Server` is a re-export of `hyper::Server`

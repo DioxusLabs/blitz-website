@@ -1,0 +1,27 @@
+# The WPT area pages (e.g. /wpt/css/css-grid) are cheap to serve and worth
+# indexing. The per-test pages are not: there are ~120k of them, every visit
+# is a live database query (and, for /status/wpt, a fetch of the test source
+# from GitHub), and the content is much better served by wpt.fyi and wpt.live
+# themselves. Query-string variants (?sort=, ?tab=, ?range=, test variants)
+# only duplicate the canonical pages.
+
+User-agent: *
+Disallow: /wpt/*.html$
+Disallow: /wpt/*.htm$
+Disallow: /wpt/*.xht$
+Disallow: /wpt/*.xhtml$
+Disallow: /wpt/*.xml$
+Disallow: /wpt/*.svg$
+Disallow: /wpt/*.js$
+Disallow: /wpt/*.py$
+Disallow: /status/wpt/*.html$
+Disallow: /status/wpt/*.htm$
+Disallow: /status/wpt/*.xht$
+Disallow: /status/wpt/*.xhtml$
+Disallow: /status/wpt/*.xml$
+Disallow: /status/wpt/*.svg$
+Disallow: /status/wpt/*.js$
+Disallow: /status/wpt/*.py$
+Disallow: /*?
+Disallow: /downloads/file
+Crawl-delay: 10
