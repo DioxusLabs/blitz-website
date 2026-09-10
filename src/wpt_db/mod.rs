@@ -10,7 +10,7 @@ use std::collections::HashMap;
 use std::fmt;
 use std::io::{BufReader, Read};
 use std::path::{Path, PathBuf};
-use std::sync::{Mutex, OnceLock};
+use std::sync::{Condvar, Mutex, MutexGuard, OnceLock};
 
 use rusqlite::{params, Connection, OpenFlags, Transaction};
 use serde::de::{DeserializeSeed, IgnoredAny, MapAccess, SeqAccess, Visitor};
@@ -37,6 +37,12 @@ pub fn data_dir() -> std::path::PathBuf {
 
 pub static WPT_COMPARE_DB: WptDb = WptDb::new();
 
+/// Maximum number of concurrently open read-only connections. Each reader
+/// costs a blocking thread plus its own page cache and allocator arena, so
+/// an unbounded pool lets a burst of requests (e.g. a crawler) exhaust the
+/// machine's memory; excess readers queue for a connection instead.
+const MAX_READERS: usize = 4;
+
 /// A WAL-mode SQLite database with a single writer connection and a pool of
 /// read-only connections. Writes (ingestion, score recomputation) are
 /// serialized through the writer; reads use their own connections so page
@@ -45,7 +51,20 @@ pub static WPT_COMPARE_DB: WptDb = WptDb::new();
 pub struct WptDb {
     path: OnceLock<PathBuf>,
     writer: Mutex<Option<Connection>>,
-    readers: Mutex<Vec<Connection>>,
+    readers: Mutex<ReaderPool>,
+    reader_available: Condvar,
+}
+
+struct ReaderPool {
+    idle: Vec<Connection>,
+    open: usize,
+}
+
+/// Lock a mutex, recovering the guard if a previous holder panicked (the
+/// connections stay usable; a poisoned lock would otherwise take the whole
+/// database down for the rest of the process lifetime).
+fn lock_unpoisoned<T>(mutex: &Mutex<T>) -> MutexGuard<'_, T> {
+    mutex.lock().unwrap_or_else(|err| err.into_inner())
 }
 
 impl WptDb {
@@ -53,7 +72,11 @@ impl WptDb {
         Self {
             path: OnceLock::new(),
             writer: Mutex::new(None),
-            readers: Mutex::new(Vec::new()),
+            readers: Mutex::new(ReaderPool {
+                idle: Vec::new(),
+                open: 0,
+            }),
+            reader_available: Condvar::new(),
         }
     }
 
@@ -67,7 +90,7 @@ impl WptDb {
             let conn = open_versioned(&path)
                 .unwrap_or_else(|err| panic!("failed to open wpt-compare database: {err}"));
             conn.execute_batch(SCHEMA).unwrap();
-            *self.writer.lock().unwrap() = Some(conn);
+            *lock_unpoisoned(&self.writer) = Some(conn);
             path
         })
     }
@@ -76,22 +99,49 @@ impl WptDb {
     /// Should be called from a blocking context (`spawn_blocking`).
     pub fn with_writer<T>(&self, f: impl FnOnce(&mut Connection) -> T) -> T {
         self.init();
-        let mut guard = self.writer.lock().unwrap();
+        let mut guard = lock_unpoisoned(&self.writer);
         f(guard.as_mut().expect("writer connection initialized"))
     }
 
-    /// Run `f` with a read-only connection from the pool (opening a new one
-    /// if none is idle). Should be called from a blocking context.
+    /// Run `f` with a read-only connection from the pool, opening a new one
+    /// if none is idle and fewer than [`MAX_READERS`] are open, and otherwise
+    /// waiting for one to be returned. Should be called from a blocking
+    /// context.
     pub fn with_reader<T>(&self, f: impl FnOnce(&Connection) -> T) -> T {
         let path = self.init();
-        let conn = self.readers.lock().unwrap().pop();
-        let conn = conn.unwrap_or_else(|| {
-            open_reader(path)
-                .unwrap_or_else(|err| panic!("failed to open wpt-compare read connection: {err}"))
-        });
-        let result = f(&conn);
-        self.readers.lock().unwrap().push(conn);
-        result
+        let conn = {
+            let mut pool = lock_unpoisoned(&self.readers);
+            loop {
+                if let Some(conn) = pool.idle.pop() {
+                    break conn;
+                }
+                if pool.open < MAX_READERS {
+                    pool.open += 1;
+                    drop(pool);
+                    break open_reader(path).unwrap_or_else(|err| {
+                        lock_unpoisoned(&self.readers).open -= 1;
+                        panic!("failed to open wpt-compare read connection: {err}")
+                    });
+                }
+                pool = self
+                    .reader_available
+                    .wait(pool)
+                    .unwrap_or_else(|err| err.into_inner());
+            }
+        };
+        // Return the connection even if `f` panics, so a failed query can't
+        // permanently shrink the pool
+        struct Return<'a>(&'a WptDb, Option<Connection>);
+        impl Drop for Return<'_> {
+            fn drop(&mut self) {
+                lock_unpoisoned(&self.0.readers)
+                    .idle
+                    .push(self.1.take().unwrap());
+                self.0.reader_available.notify_one();
+            }
+        }
+        let guard = Return(self, Some(conn));
+        f(guard.1.as_ref().unwrap())
     }
 }
 
