@@ -56,15 +56,13 @@ static REFRESH_LOCK: tokio::sync::Mutex<()> = tokio::sync::Mutex::const_new(());
 
 /// Check for new runs on wpt.fyi (and a new Blitz report), ingest any that
 /// are missing, and refresh the cached run list. Only one refresh runs at a
-/// time; calls that arrive while one is in flight wait for it and return
-/// without doing their own.
+/// time; calls that arrive while one is in flight return immediately and
+/// leave its result in place (nothing awaits a refresh: requests that find
+/// no cached data render an "unavailable" page instead).
 pub async fn load_wpt_compare(
     _existing: Option<Arc<Cached<WptCompareCacheEntry>>>,
 ) -> RefreshOutcome<WptCompareCacheEntry> {
     let Ok(_guard) = REFRESH_LOCK.try_lock() else {
-        // A refresh is already running: wait for it to finish, then leave
-        // its result in place instead of doing our own
-        let _ = REFRESH_LOCK.lock().await;
         return RefreshOutcome::Unchanged;
     };
 

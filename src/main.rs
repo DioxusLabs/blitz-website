@@ -2,7 +2,7 @@ use axum::{
     body::{Body, Bytes},
     extract::{Path, Query},
     http::{header, StatusCode},
-    response::{AppendHeaders, Html, IntoResponse, Redirect},
+    response::{AppendHeaders, Html, IntoResponse, Redirect, Response},
     routing::{get, get_service},
     Router,
 };
@@ -25,7 +25,7 @@ use routes::{
     GettingStartedPage, HomePage, NLNetInstructionsPage, TestPageTab, WptComparePage,
     WptComparePageProps, WptCompareTestPage, WptCompareTestPageProps, WptFocusAreasPage,
     WptFocusAreasPageProps, WptHistoryPage, WptHistoryPageProps, WptResultsPage,
-    WptResultsPageProps, WptTestPage, WptTestPageProps,
+    WptResultsPageProps, WptTestPage, WptTestPageProps, WptUnavailablePage,
 };
 use serde::Deserialize;
 use std::{
@@ -344,10 +344,7 @@ async fn fresh_wpt_history(areas: Vec<String>) -> Option<ArcWptHistory> {
     Some(entry.merged(&areas))
 }
 
-async fn wpt_compare_route(
-    area: String,
-    sort: Option<String>,
-) -> Result<(StatusCode, Html<String>), (StatusCode, String)> {
+async fn wpt_compare_route(area: String, sort: Option<String>) -> Response {
     // Default: top-level areas by subtest count, deeper levels alphabetical
     let sort = match sort.as_deref() {
         Some("alpha") => wpt_db::AreaSort::Alpha,
@@ -356,10 +353,7 @@ async fn wpt_compare_route(
         _ => wpt_db::AreaSort::Alpha,
     };
     let Some(entry) = get_wpt_comparison_run_list().await else {
-        return Err((
-            StatusCode::INTERNAL_SERVER_ERROR,
-            "WPT comparison data not available".to_string(),
-        ));
+        return wpt_unavailable_response().await;
     };
     let runs = entry.runs.clone();
     let run_ids: Vec<i64> = runs.iter().map(|run| run.id).collect();
@@ -411,33 +405,35 @@ async fn wpt_compare_route(
                 child_areas: children,
                 tests,
             };
-            Ok(dx_route_with_props(WptComparePage, props).await)
+            dx_route_with_props(WptComparePage, props)
+                .await
+                .into_response()
         }
         PageData::Test(detail) => {
             let props = WptCompareTestPageProps {
                 runs: runs.0.as_ref().clone(),
                 detail,
             };
-            Ok(dx_route_with_props(WptCompareTestPage, props).await)
+            dx_route_with_props(WptCompareTestPage, props)
+                .await
+                .into_response()
         }
-        PageData::NotFound => Err((StatusCode::NOT_FOUND, format!("Unknown WPT area: {area}"))),
+        PageData::NotFound => {
+            (StatusCode::NOT_FOUND, format!("Unknown WPT area: {area}")).into_response()
+        }
     }
 }
 
-async fn wpt_focus_areas_route(
-    set: String,
-) -> Result<(StatusCode, Html<String>), (StatusCode, String)> {
+async fn wpt_focus_areas_route(set: String) -> Response {
     let Some(set) = routes::focus_area_set(&set) else {
-        return Err((
+        return (
             StatusCode::NOT_FOUND,
             format!("Unknown focus area set: {set}"),
-        ));
+        )
+            .into_response();
     };
     let Some(entry) = get_wpt_comparison_run_list().await else {
-        return Err((
-            StatusCode::INTERNAL_SERVER_ERROR,
-            "WPT comparison data not available".to_string(),
-        ));
+        return wpt_unavailable_response().await;
     };
     let runs = entry.runs.clone();
     let run_ids: Vec<i64> = runs.iter().map(|run| run.id).collect();
@@ -459,18 +455,38 @@ async fn wpt_focus_areas_route(
         runs: runs.0.as_ref().clone(),
         scores,
     };
-    Ok(dx_route_with_props(WptFocusAreasPage, props).await)
+    dx_route_with_props(WptFocusAreasPage, props)
+        .await
+        .into_response()
 }
 
 /// Get the cached WPT comparison run list, revalidating (checking wpt.fyi
-/// for new runs and ingesting them) if it is stale. Revalidation is awaited
-/// if the cache is missing, and performed in the background otherwise
-/// (new runs only appear roughly daily, so stale data is always usable).
+/// for new runs and ingesting them) in the background if it is stale (new
+/// runs only appear roughly daily, so stale data is always usable). If the
+/// cache is still empty (the startup refresh hasn't finished, or it is
+/// ingesting new runs, which can take minutes) a refresh is triggered in the
+/// background but not awaited: `None` is returned so the request can fail
+/// fast instead of hanging.
 async fn get_wpt_comparison_run_list(
 ) -> Option<std::sync::Arc<cache::Cached<wpt_compare::WptCompareCacheEntry>>> {
+    if WPT_COMPARE_CACHE.get_cloned().is_none() {
+        tokio::spawn(WPT_COMPARE_CACHE.refresh(load_wpt_compare));
+        return None;
+    }
     WPT_COMPARE_CACHE
         .get_or_refresh(Duration::from_mins(30), Duration::MAX, load_wpt_compare)
         .await
+}
+
+/// The 503 response for WPT comparison pages while no run list is cached
+async fn wpt_unavailable_response() -> Response {
+    let (_, html) = dx_route_with_props(WptUnavailablePage, ()).await;
+    (
+        StatusCode::SERVICE_UNAVAILABLE,
+        [(header::RETRY_AFTER, "30")],
+        html,
+    )
+        .into_response()
 }
 
 /// Get the cached WPT report, revalidating it if it is stale.

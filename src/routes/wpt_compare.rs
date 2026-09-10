@@ -103,6 +103,23 @@ pub fn WptComparePage(
     }
 }
 
+/// Shown while the comparison database has no run list yet (the initial
+/// check for runs, and any ingest of new ones, is still in progress)
+#[component]
+pub fn WptUnavailablePage() -> Element {
+    rsx! {
+        Page { title: "WPT".into(),
+            h1 { "WPT" }
+            p { "The WPT comparison data is still loading. This usually takes a few seconds after the site starts, but can take a few minutes if new test runs are being imported." }
+            p {
+                a { href: "javascript:location.reload()", "Try again" }
+                " | "
+                a { href: "/status/wpt/css", "View the Blitz WPT dashboard" }
+            }
+        }
+    }
+}
+
 #[component]
 fn SortToggle(area: String, sort: AreaSort) -> Element {
     let base = if area.is_empty() {
