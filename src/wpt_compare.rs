@@ -128,6 +128,9 @@ pub async fn load_wpt_compare(
             if let Err(err) = wpt_db::prune_old_runs(conn) {
                 println!("Failed to prune old WPT comparison runs: {err}");
             }
+            if let Err(err) = wpt_db::checkpoint(conn) {
+                println!("Failed to checkpoint WPT comparison database: {err}");
+            }
             wpt_db::latest_runs(conn)
         })
     })

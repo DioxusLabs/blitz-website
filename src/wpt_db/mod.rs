@@ -643,10 +643,16 @@ pub fn prune_old_runs(conn: &mut Connection) -> rusqlite::Result<()> {
     tx.commit()?;
     if pruned > 0 {
         println!("Pruned {pruned} old WPT run(s)");
-        // Keep the WAL file bounded after the bulk delete
-        conn.execute_batch("PRAGMA wal_checkpoint(TRUNCATE);")?;
     }
     Ok(())
+}
+
+/// Fold the WAL into the main database file and truncate it. Without this
+/// the WAL only gets reused, never shrunk, so after an ingest it would sit
+/// at tens (or, after a rebuild, hundreds) of MB on the data volume until
+/// the next write.
+pub fn checkpoint(conn: &Connection) -> rusqlite::Result<()> {
+    conn.execute_batch("PRAGMA wal_checkpoint(TRUNCATE);")
 }
 
 /// The latest run for each product, in ingestion order.
