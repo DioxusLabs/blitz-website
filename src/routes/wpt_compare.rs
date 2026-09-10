@@ -103,14 +103,14 @@ pub fn WptComparePage(
     }
 }
 
-/// Shown while the comparison database has no run list yet (the initial
-/// check for runs, and any ingest of new ones, is still in progress)
+/// Shown when a comparison page can't be served right now (no run list
+/// yet, or too many requests in flight), with `message` explaining why
 #[component]
-pub fn WptUnavailablePage() -> Element {
+pub fn WptUnavailablePage(message: String) -> Element {
     rsx! {
         Page { title: "WPT".into(),
             h1 { "WPT" }
-            p { "The WPT comparison data is still loading. This usually takes a few seconds after the site starts, but can take a few minutes if new test runs are being imported." }
+            p { {message} }
             p {
                 a { href: "javascript:location.reload()", "Try again" }
                 " | "

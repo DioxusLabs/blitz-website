@@ -26,6 +26,7 @@ use routes::{
     WptComparePageProps, WptCompareTestPage, WptCompareTestPageProps, WptFocusAreasPage,
     WptFocusAreasPageProps, WptHistoryPage, WptHistoryPageProps, WptResultsPage,
     WptResultsPageProps, WptTestPage, WptTestPageProps, WptUnavailablePage,
+    WptUnavailablePageProps,
 };
 use serde::Deserialize;
 use std::{
@@ -34,6 +35,7 @@ use std::{
     time::{Duration, Instant},
 };
 use tokio::net::TcpListener;
+use tokio::sync::{Semaphore, SemaphorePermit};
 use tower_http::{
     services::{ServeDir, ServeFile},
     trace::{DefaultOnResponse, TraceLayer},
@@ -377,7 +379,10 @@ async fn wpt_compare_route(area: String, sort: Option<String>) -> Response {
         _ => wpt_db::AreaSort::Alpha,
     };
     let Some(entry) = get_wpt_comparison_run_list().await else {
-        return wpt_unavailable_response().await;
+        return wpt_unavailable_response(WPT_LOADING_MESSAGE).await;
+    };
+    let Some(_slot) = acquire_wpt_db_slot().await else {
+        return wpt_unavailable_response(WPT_BUSY_MESSAGE).await;
     };
     let runs = entry.runs.clone();
     let run_ids: Vec<i64> = runs.iter().map(|run| run.id).collect();
@@ -457,7 +462,10 @@ async fn wpt_focus_areas_route(set: String) -> Response {
             .into_response();
     };
     let Some(entry) = get_wpt_comparison_run_list().await else {
-        return wpt_unavailable_response().await;
+        return wpt_unavailable_response(WPT_LOADING_MESSAGE).await;
+    };
+    let Some(_slot) = acquire_wpt_db_slot().await else {
+        return wpt_unavailable_response(WPT_BUSY_MESSAGE).await;
     };
     let runs = entry.runs.clone();
     let run_ids: Vec<i64> = runs.iter().map(|run| run.id).collect();
@@ -502,9 +510,35 @@ async fn get_wpt_comparison_run_list(
         .await
 }
 
-/// The 503 response for WPT comparison pages while no run list is cached
-async fn wpt_unavailable_response() -> Response {
-    let (_, html) = dx_route_with_props(WptUnavailablePage, ()).await;
+/// Maximum number of WPT comparison requests that may be querying (or
+/// waiting on a reader connection for) the database at once. Each one
+/// occupies a blocking thread, so without a bound a burst of requests parks
+/// hundreds of threads; beyond this they wait briefly as cheap futures and
+/// are then turned away with a 503.
+const WPT_DB_SLOTS: usize = 32;
+static WPT_DB_SLOT_SEMAPHORE: Semaphore = Semaphore::const_new(WPT_DB_SLOTS);
+
+/// Acquire a slot for a database-backed request, waiting up to 2s for one
+/// to free up. `None` means the server is saturated and the request should
+/// be rejected.
+async fn acquire_wpt_db_slot() -> Option<SemaphorePermit<'static>> {
+    tokio::time::timeout(Duration::from_secs(2), WPT_DB_SLOT_SEMAPHORE.acquire())
+        .await
+        .ok()?
+        .ok()
+}
+
+const WPT_LOADING_MESSAGE: &str = "The WPT comparison data is still loading. This usually takes a few seconds after the site starts, but can take a few minutes if new test runs are being imported.";
+const WPT_BUSY_MESSAGE: &str =
+    "The WPT comparison pages are receiving too many requests right now. Please try again in a moment.";
+
+/// The 503 response for WPT comparison pages when they can't be served
+/// right now (no run list cached yet, or too many requests in flight)
+async fn wpt_unavailable_response(message: &'static str) -> Response {
+    let props = WptUnavailablePageProps {
+        message: message.to_string(),
+    };
+    let (_, html) = dx_route_with_props(WptUnavailablePage, props).await;
     (
         StatusCode::SERVICE_UNAVAILABLE,
         [(header::RETRY_AFTER, "30")],
