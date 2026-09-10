@@ -7,7 +7,7 @@ processes = []
 [env]
 HOST = "::"
 PORT = 3333
-RUST_LOG = "debug"
+RUST_LOG = "info"
 PRECACHE_DOWNLOADS = "true"
 WPT_DATA_DIR = "/data"
 
