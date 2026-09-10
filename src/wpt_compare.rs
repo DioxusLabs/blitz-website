@@ -104,7 +104,18 @@ pub async fn load_wpt_compare(
 
     let runs = tokio::task::spawn_blocking(move || {
         WPT_COMPARE_DB.with_writer(|conn| {
-            if ingested_any {
+            // Also recompute if a previous attempt failed and left the
+            // scores without one of the latest runs, so the failure is
+            // retried on the next refresh rather than only on the next
+            // ingest
+            let stale = match wpt_db::area_scores_stale(conn) {
+                Ok(stale) => stale,
+                Err(err) => {
+                    println!("Failed to check WPT comparison area scores: {err}");
+                    false
+                }
+            };
+            if ingested_any || stale {
                 let t0 = Instant::now();
                 match wpt_db::recompute_area_scores(conn) {
                     Ok(()) => println!(

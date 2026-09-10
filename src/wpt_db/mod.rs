@@ -519,6 +519,20 @@ pub fn ingest_report(
     Ok(run_id)
 }
 
+/// True if `area_scores` is missing any latest run (e.g. because the
+/// recomputation after its ingest failed), so it needs recomputing.
+pub fn area_scores_stale(conn: &Connection) -> rusqlite::Result<bool> {
+    conn.query_row(
+        "SELECT EXISTS (
+             SELECT 1 FROM runs r
+             WHERE r.is_latest = 1
+               AND NOT EXISTS (SELECT 1 FROM area_scores s WHERE s.run_id = r.id)
+         )",
+        [],
+        |row| row.get(0),
+    )
+}
+
 /// Recompute `area_scores` for the latest run of each product, using
 /// cross-engine union denominators: for each test the subtest denominator is
 /// the max subtest total across the latest runs, and every test known to any
