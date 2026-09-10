@@ -12,7 +12,7 @@ use std::io::{BufReader, Read};
 use std::path::{Path, PathBuf};
 use std::sync::{Condvar, Mutex, MutexGuard, OnceLock};
 
-use rusqlite::{params, Connection, OpenFlags, Transaction};
+use rusqlite::{params, Connection, OpenFlags, Transaction, TransactionBehavior};
 use serde::de::{DeserializeSeed, IgnoredAny, MapAccess, SeqAccess, Visitor};
 use serde::Deserialize;
 
@@ -523,7 +523,7 @@ pub fn ingest_report(
 /// cross-engine union denominators: for each test the subtest denominator is
 /// the max subtest total across the latest runs, and every test known to any
 /// engine counts against every engine's totals (missing = 0 passes).
-pub fn recompute_area_scores(conn: &mut Connection) {
+pub fn recompute_area_scores(conn: &mut Connection) -> rusqlite::Result<()> {
     #[derive(Default, Clone, Copy)]
     struct Scores {
         tests_pass: u32,
@@ -533,60 +533,44 @@ pub fn recompute_area_scores(conn: &mut Connection) {
         interop_score_sum: u64,
     }
 
-    let tx = conn.transaction().unwrap();
+    // Take the write lock up front (waiting out the busy timeout if needed)
+    // rather than upgrading from a read transaction after the long read
+    // phase, which fails immediately with SQLITE_BUSY if anything else wrote
+    // in the meantime
+    let tx = conn.transaction_with_behavior(TransactionBehavior::Immediate)?;
 
-    let run_ids: Vec<i64> = {
-        let mut stmt = tx
-            .prepare("SELECT id FROM runs WHERE is_latest = 1 ORDER BY id")
-            .unwrap();
-        let ids = stmt
-            .query_map([], |row| row.get(0))
-            .unwrap()
-            .map(|r| r.unwrap())
-            .collect();
-        ids
-    };
+    let run_ids: Vec<i64> = tx
+        .prepare("SELECT id FROM runs WHERE is_latest = 1 ORDER BY id")?
+        .query_map([], |row| row.get(0))?
+        .collect::<rusqlite::Result<_>>()?;
 
     // area_id -> parent area_id
-    let parents: HashMap<i64, Option<i64>> = {
-        let mut stmt = tx.prepare("SELECT id, parent_id FROM areas").unwrap();
-        let map = stmt
-            .query_map([], |row| Ok((row.get(0)?, row.get(1)?)))
-            .unwrap()
-            .map(|r| r.unwrap())
-            .collect();
-        map
-    };
+    let parents: HashMap<i64, Option<i64>> = tx
+        .prepare("SELECT id, parent_id FROM areas")?
+        .query_map([], |row| Ok((row.get(0)?, row.get(1)?)))?
+        .collect::<rusqlite::Result<_>>()?;
 
     // Per-test union denominator and area, across the latest runs.
     // (test_id, area_id, denom)
-    let tests: Vec<(i64, i64, u32)> = {
-        let mut stmt = tx
-            .prepare(
-                "SELECT t.id, t.area_id, MAX(r.subtest_total)
-                 FROM tests t JOIN results r ON r.test_id = t.id
-                 JOIN runs ON runs.id = r.run_id AND runs.is_latest = 1
-                 GROUP BY t.id",
-            )
-            .unwrap();
-        let rows = stmt
-            .query_map([], |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?)))
-            .unwrap()
-            .map(|r| r.unwrap())
-            .collect();
-        rows
-    };
+    let tests: Vec<(i64, i64, u32)> = tx
+        .prepare(
+            "SELECT t.id, t.area_id, MAX(r.subtest_total)
+             FROM tests t JOIN results r ON r.test_id = t.id
+             JOIN runs ON runs.id = r.run_id AND runs.is_latest = 1
+             GROUP BY t.id",
+        )?
+        .query_map([], |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?)))?
+        .collect::<rusqlite::Result<_>>()?;
     let mut scores: HashMap<(i64, i64), Scores> = HashMap::new();
     for &run_id in &run_ids {
         // Seed every known test into this run's rollup (missing = 0 passes)
         let mut per_test: HashMap<i64, u32> = HashMap::new();
         {
-            let mut stmt = tx
-                .prepare("SELECT test_id, subtest_pass FROM results WHERE run_id = ?1")
-                .unwrap();
-            let mut rows = stmt.query(params![run_id]).unwrap();
-            while let Some(row) = rows.next().unwrap() {
-                per_test.insert(row.get(0).unwrap(), row.get(1).unwrap());
+            let mut stmt =
+                tx.prepare("SELECT test_id, subtest_pass FROM results WHERE run_id = ?1")?;
+            let mut rows = stmt.query(params![run_id])?;
+            while let Some(row) = rows.next()? {
+                per_test.insert(row.get(0)?, row.get(1)?);
             }
         }
         for &(test_id, area_id, denom) in &tests {
@@ -607,27 +591,24 @@ pub fn recompute_area_scores(conn: &mut Connection) {
         }
     }
 
-    tx.execute("DELETE FROM area_scores", []).unwrap();
+    tx.execute("DELETE FROM area_scores", [])?;
     {
-        let mut insert = tx
-            .prepare("INSERT INTO area_scores VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)")
-            .unwrap();
+        let mut insert =
+            tx.prepare("INSERT INTO area_scores VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)")?;
         for ((run_id, area_id), s) in &scores {
-            insert
-                .execute(params![
-                    run_id,
-                    area_id,
-                    s.tests_pass,
-                    s.tests_total,
-                    s.subtests_pass,
-                    s.subtests_total,
-                    s.interop_score_sum as i64,
-                ])
-                .unwrap();
+            insert.execute(params![
+                run_id,
+                area_id,
+                s.tests_pass,
+                s.tests_total,
+                s.subtests_pass,
+                s.subtests_total,
+                s.interop_score_sum as i64,
+            ])?;
         }
     }
 
-    tx.commit().unwrap();
+    tx.commit()
 }
 
 /// Delete all non-latest runs and their per-run data, keeping only the
@@ -635,26 +616,23 @@ pub fn recompute_area_scores(conn: &mut Connection) {
 /// are append-only and left in place. Freed pages stay on SQLite's freelist
 /// for reuse by subsequent ingests, so the file size plateaus rather than
 /// growing with history.
-pub fn prune_old_runs(conn: &mut Connection) {
+pub fn prune_old_runs(conn: &mut Connection) -> rusqlite::Result<()> {
     const OLD_RUNS: &str = "SELECT id FROM runs WHERE is_latest = 0";
-    let tx = conn.transaction().unwrap();
+    let tx = conn.transaction_with_behavior(TransactionBehavior::Immediate)?;
     for table in ["subtest_results", "results", "area_scores"] {
         tx.execute(
             &format!("DELETE FROM {table} WHERE run_id IN ({OLD_RUNS})"),
             [],
-        )
-        .unwrap();
+        )?;
     }
-    let pruned = tx
-        .execute(&format!("DELETE FROM runs WHERE id IN ({OLD_RUNS})"), [])
-        .unwrap();
-    tx.commit().unwrap();
+    let pruned = tx.execute(&format!("DELETE FROM runs WHERE id IN ({OLD_RUNS})"), [])?;
+    tx.commit()?;
     if pruned > 0 {
         println!("Pruned {pruned} old WPT run(s)");
         // Keep the WAL file bounded after the bulk delete
-        conn.execute_batch("PRAGMA wal_checkpoint(TRUNCATE);")
-            .unwrap();
+        conn.execute_batch("PRAGMA wal_checkpoint(TRUNCATE);")?;
     }
+    Ok(())
 }
 
 /// The latest run for each product, in ingestion order.

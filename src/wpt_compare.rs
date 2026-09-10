@@ -106,15 +106,19 @@ pub async fn load_wpt_compare(
         WPT_COMPARE_DB.with_writer(|conn| {
             if ingested_any {
                 let t0 = Instant::now();
-                wpt_db::recompute_area_scores(conn);
-                println!(
-                    "Recomputed WPT comparison area scores in {:.0}ms",
-                    t0.elapsed().as_secs_f64() * 1000.0
-                );
+                match wpt_db::recompute_area_scores(conn) {
+                    Ok(()) => println!(
+                        "Recomputed WPT comparison area scores in {:.0}ms",
+                        t0.elapsed().as_secs_f64() * 1000.0
+                    ),
+                    Err(err) => println!("Failed to recompute WPT comparison area scores: {err}"),
+                }
             }
             // Only the latest run per product is kept; a no-op when there
             // are no superseded runs, so run it on every refresh
-            wpt_db::prune_old_runs(conn);
+            if let Err(err) = wpt_db::prune_old_runs(conn) {
+                println!("Failed to prune old WPT comparison runs: {err}");
+            }
             wpt_db::latest_runs(conn)
         })
     })
