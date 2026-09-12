@@ -1,25 +1,80 @@
 //! Fetching (and caching) of WPT test source code from wpt.live
 
-use std::sync::{Arc, LazyLock};
+use std::path::PathBuf;
+use std::sync::atomic::{AtomicU64, Ordering};
+use std::sync::{Arc, LazyLock, Mutex};
 use std::time::Duration;
 
-use dashmap::DashMap;
 use reqwest::Client;
 
 pub type SourceResult = Result<Arc<str>, String>;
 
-static SOURCE_CACHE: LazyLock<DashMap<String, Arc<str>>> = LazyLock::new(DashMap::new);
+/// Fetched sources are cached on disk under the system temp directory, one
+/// file per (revision, path), so a crawler walking tens of thousands of test
+/// pages costs disk and (reclaimable) page cache rather than process heap.
+/// Sources are cheap to refetch, so the cache needn't survive restarts, and
+/// the temp directory is on the machine's root disk rather than a tmpfs (if
+/// it were, this would be RAM again; `TMPDIR` can redirect it).
+static CACHE_DIR: LazyLock<PathBuf> =
+    LazyLock::new(|| std::env::temp_dir().join("blitz-wpt-sources"));
 
-const SOURCE_CACHE_MAX_ENTRIES: usize = 10_000;
+/// The revision whose sources are currently being cached. Only the latest
+/// WPT revision is ever requested (it changes with each new Blitz run), so
+/// when a new one is seen the other revisions' directories are deleted.
+static CACHED_REVISION: Mutex<Option<String>> = Mutex::new(None);
+
+fn cache_path(revision: &str, path: &str) -> PathBuf {
+    // Paths are hashed so the file name is short and free of path syntax; a
+    // 64-bit hash over the ~30k tests of a revision has a negligible
+    // collision probability
+    CACHE_DIR
+        .join(revision)
+        .join(format!("{:016x}", fxhash::hash64(path)))
+}
+
+async fn store_source(revision: &str, file: &PathBuf, source: &str) -> std::io::Result<()> {
+    let stale_dirs = {
+        let mut cached = CACHED_REVISION.lock().unwrap();
+        if cached.as_deref() != Some(revision) {
+            *cached = Some(revision.to_string());
+            true
+        } else {
+            false
+        }
+    };
+    if stale_dirs {
+        if let Ok(mut entries) = tokio::fs::read_dir(&*CACHE_DIR).await {
+            while let Ok(Some(entry)) = entries.next_entry().await {
+                if entry.file_name() != revision {
+                    let _ = tokio::fs::remove_dir_all(entry.path()).await;
+                }
+            }
+        }
+    }
+
+    if let Some(dir) = file.parent() {
+        tokio::fs::create_dir_all(dir).await?;
+    }
+    // Write to a unique temporary name and rename into place, so a
+    // concurrent reader never sees a partially written file
+    static COUNTER: AtomicU64 = AtomicU64::new(0);
+    let tmp = file.with_extension(format!(
+        "tmp{}-{}",
+        std::process::id(),
+        COUNTER.fetch_add(1, Ordering::Relaxed)
+    ));
+    tokio::fs::write(&tmp, source).await?;
+    tokio::fs::rename(&tmp, file).await
+}
 
 /// Fetch the source code of a WPT test file from the web-platform-tests GitHub
 /// repository at the given revision. `path` should be an absolute path like
 /// `/css/css-flexbox/foo.html` (without any query string).
-/// Successful fetches are cached (keyed by revision and path).
+/// Successful fetches are cached on disk (keyed by revision and path).
 pub async fn fetch_test_source(revision: &str, path: &str) -> SourceResult {
-    let cache_key = format!("{revision}{path}");
-    if let Some(entry) = SOURCE_CACHE.get(&cache_key) {
-        return Ok(entry.clone());
+    let file = cache_path(revision, path);
+    if let Ok(text) = tokio::fs::read_to_string(&file).await {
+        return Ok(Arc::from(text));
     }
 
     static CLIENT: LazyLock<Client> = LazyLock::new(|| {
@@ -47,14 +102,11 @@ pub async fn fetch_test_source(revision: &str, path: &str) -> SourceResult {
         Err(err) => return Err(format!("Failed to read response body from {url}: {err}")),
     };
 
-    let source: Arc<str> = Arc::from(text);
-
-    if SOURCE_CACHE.len() >= SOURCE_CACHE_MAX_ENTRIES {
-        SOURCE_CACHE.clear();
+    if let Err(err) = store_source(revision, &file, &text).await {
+        println!("Failed to cache test source {path}: {err}");
     }
-    SOURCE_CACHE.insert(cache_key, source.clone());
 
-    Ok(source)
+    Ok(Arc::from(text))
 }
 
 #[derive(Debug, Clone, PartialEq)]
