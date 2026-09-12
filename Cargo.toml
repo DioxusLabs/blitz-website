@@ -71,7 +71,10 @@ grass = { version = "0.13", default-features = false }
 # OS, so on Linux the process bloats to several times its live data. Enabled
 # in CI release builds via `--all-features`; not needed (and not compiled)
 # for local development.
-mimalloc = ["dep:mimalloc"]
+#
+# `override` also makes mimalloc define malloc/free themselves, so the C
+# dependencies (bundled SQLite, zstd) use it too instead of glibc.
+mimalloc = ["dep:mimalloc", "mimalloc/override"]
 
 # [patch.crates-io]
 # wptreport = { path = "../../../wpt-rs/crates/wptreport" }
