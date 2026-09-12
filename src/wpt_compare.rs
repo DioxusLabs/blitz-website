@@ -34,6 +34,9 @@ pub static WPT_COMPARE_CACHE: Cache<WptCompareCacheEntry> = Cache::new();
 pub struct WptCompareCacheEntry {
     /// The latest run for each product (column order for comparison pages)
     pub runs: ArcRunRows,
+    /// ETag of the last Blitz report fetched, so unchanged reports aren't
+    /// re-downloaded and decompressed on every refresh
+    blitz_report_etag: Option<Arc<str>>,
 }
 
 #[derive(Clone)]
@@ -60,7 +63,7 @@ static REFRESH_LOCK: tokio::sync::Mutex<()> = tokio::sync::Mutex::const_new(());
 /// leave its result in place (nothing awaits a refresh: requests that find
 /// no cached data render an "unavailable" page instead).
 pub async fn load_wpt_compare(
-    _existing: Option<Arc<Cached<WptCompareCacheEntry>>>,
+    existing: Option<Arc<Cached<WptCompareCacheEntry>>>,
 ) -> RefreshOutcome<WptCompareCacheEntry> {
     let Ok(_guard) = REFRESH_LOCK.try_lock() else {
         return RefreshOutcome::Unchanged;
@@ -94,9 +97,14 @@ pub async fn load_wpt_compare(
         Err(err) => println!("Failed to fetch wpt.fyi runs: {err}"),
     }
 
-    match ingest_blitz_run(&client).await {
-        Ok(true) => ingested_any = true,
-        Ok(false) => {}
+    let mut blitz_report_etag = existing
+        .as_ref()
+        .and_then(|entry| entry.blitz_report_etag.clone());
+    match ingest_blitz_run(&client, blitz_report_etag.as_deref()).await {
+        Ok((ingested, etag)) => {
+            ingested_any |= ingested;
+            blitz_report_etag = etag;
+        }
         Err(err) => println!("Failed to ingest Blitz run: {err}"),
     }
 
@@ -148,6 +156,7 @@ pub async fn load_wpt_compare(
 
     RefreshOutcome::Updated(WptCompareCacheEntry {
         runs: ArcRunRows(Arc::new(ordered)),
+        blitz_report_etag,
     })
 }
 
@@ -211,11 +220,18 @@ fn iso_datetime_from_epoch(timestamp: u64) -> String {
     ts.strftime("%Y-%m-%dT%H:%M:%SZ").to_string()
 }
 
-/// Fetch Blitz's published report and ingest it if it is a new run.
-/// Returns whether a new run was ingested.
+/// Fetch Blitz's published report (skipping the download if its ETag still
+/// matches `etag`) and ingest it if it is a new run. Returns whether a new
+/// run was ingested and the report's current ETag.
+///
+/// Skipping unchanged reports matters beyond bandwidth: decompressing the
+/// report allocates its ~32MB zstd window through the C allocator, and
+/// glibc keeps that memory pinned in the arena of whichever blocking thread
+/// ran the decode, so re-decoding on every refresh slowly grows the process.
 async fn ingest_blitz_run(
     client: &Client,
-) -> Result<bool, Box<dyn std::error::Error + Send + Sync>> {
+    etag: Option<&str>,
+) -> Result<(bool, Option<Arc<str>>), Box<dyn std::error::Error + Send + Sync>> {
     #[derive(Deserialize)]
     struct BlitzRunInfo {
         browser_version: Option<String>,
@@ -228,15 +244,23 @@ async fn ingest_blitz_run(
         time_end: Option<u64>,
     }
 
-    let compressed = client
-        .get(BLITZ_REPORT_URL)
-        .send()
-        .await?
-        .error_for_status()?
-        .bytes()
-        .await?;
+    let mut request = client.get(BLITZ_REPORT_URL);
+    if let Some(etag) = etag {
+        request = request.header("If-None-Match", etag);
+    }
+    let response = request.send().await?;
+    if response.status() == reqwest::StatusCode::NOT_MODIFIED {
+        return Ok((false, etag.map(Arc::from)));
+    }
+    let response = response.error_for_status()?;
+    let new_etag = response
+        .headers()
+        .get("etag")
+        .and_then(|value| value.to_str().ok())
+        .map(Arc::from);
+    let compressed = response.bytes().await?;
 
-    tokio::task::spawn_blocking(move || {
+    let ingested = tokio::task::spawn_blocking(move || {
         let decompressed = zstd::decode_all(std::io::Cursor::new(&compressed))?;
         let head: BlitzReportHead = serde_json::from_slice(&decompressed)?;
         let meta = RunMeta {
@@ -258,8 +282,9 @@ async fn ingest_blitz_run(
                 "Ingested blitz WPT report in {:.1}s",
                 t0.elapsed().as_secs_f64()
             );
-            Ok(true)
+            Ok::<_, Box<dyn std::error::Error + Send + Sync>>(true)
         })
     })
-    .await?
+    .await??;
+    Ok((ingested, new_etag))
 }
