@@ -59,6 +59,10 @@ mod wpt_history;
 mod wpt_source;
 mod wpt_spec_meta;
 
+#[cfg(feature = "mimalloc")]
+#[global_allocator]
+static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
+
 #[derive(Deserialize)]
 struct WptPageQuery {
     range: Option<String>,

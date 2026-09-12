@@ -34,6 +34,9 @@ foldhash = "0.2.0"
 humansize = "2.1.3"
 jiff = { version = "0.2.35", default-features = false, features = ["std"] }
 
+# Allocator (production only, see the `mimalloc` feature)
+mimalloc = { version = "0.1.52", optional = true }
+
 # WPT report ingestion is ~5x slower unoptimized: lightly optimize our own
 # code and fully optimize the hot dependencies (bundled SQLite, JSON stream
 # parsing, decompression) even in dev builds
@@ -63,6 +66,12 @@ opt-level = 3
 grass = { version = "0.13", default-features = false }
 
 [features]
+# Use mimalloc as the global allocator. glibc malloc gives every blocking
+# thread its own 64MB arena and never returns freed memory from them to the
+# OS, so on Linux the process bloats to several times its live data. Enabled
+# in CI release builds via `--all-features`; not needed (and not compiled)
+# for local development.
+mimalloc = ["dep:mimalloc"]
 
 # [patch.crates-io]
 # wptreport = { path = "../../../wpt-rs/crates/wptreport" }
