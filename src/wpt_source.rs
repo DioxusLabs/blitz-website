@@ -52,7 +52,7 @@ pub async fn fetch_test_source(revision: &str, path: &str) -> SourceResult {
     if SOURCE_CACHE.len() >= SOURCE_CACHE_MAX_ENTRIES {
         SOURCE_CACHE.clear();
     }
-    SOURCE_CACHE.insert(path.to_string(), source.clone());
+    SOURCE_CACHE.insert(cache_key, source.clone());
 
     Ok(source)
 }
