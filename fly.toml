@@ -10,6 +10,26 @@ PORT = 3333
 RUST_LOG = "info"
 PRECACHE_DOWNLOADS = "true"
 WPT_DATA_DIR = "/data"
+# Allocator tuning: without these the process sits at its high-water mark
+# (several hundred MB) after every traffic burst. Rust allocations go through
+# mimalloc; C allocations (bundled SQLite, zstd) still go through glibc.
+
+# Decommit freed pages immediately (default: after 10ms). The delay is only
+# checked when the owning thread next allocates, so a worker/blocking thread
+# that finishes a ~30MB page render and then idles never purges at all.
+MIMALLOC_PURGE_DELAY = "0"
+
+# glibc serves allocations >= this size with a dedicated mmap that is
+# returned on free, instead of from an arena that never shrinks. Setting it
+# also disables glibc's dynamic threshold, which otherwise ratchets up to
+# 32MB after the first large free, so the 31MB zstd window of each Blitz
+# report decode would be pinned in a different thread's arena every time.
+MALLOC_MMAP_THRESHOLD_ = "1048576"
+
+# Cap glibc arenas (default: 8 x cores). Each arena keeps its own free lists
+# and slack; C-heavy work is limited to a handful of SQLite threads, so two
+# is plenty and contention isn't a concern.
+MALLOC_ARENA_MAX = "2"
 
 [mounts]
   source = "wpt_data"
