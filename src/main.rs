@@ -519,7 +519,12 @@ async fn get_wpt_comparison_run_list(
 /// occupies a blocking thread, so without a bound a burst of requests parks
 /// hundreds of threads; beyond this they wait briefly as cheap futures and
 /// are then turned away with a 503.
-const WPT_DB_SLOTS: usize = 32;
+///
+/// The slot is held through rendering, and a large page (hundreds of test
+/// rows) has a transient working set of ~30MB, so this also caps the
+/// memory a burst of requests can take: 8 keeps it around 250MB on the
+/// 1GB machine, where 32 let crawler bursts push the process past 600MB.
+const WPT_DB_SLOTS: usize = 8;
 static WPT_DB_SLOT_SEMAPHORE: Semaphore = Semaphore::const_new(WPT_DB_SLOTS);
 
 /// Acquire a slot for a database-backed request, waiting up to 2s for one
