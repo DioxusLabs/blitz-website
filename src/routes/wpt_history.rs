@@ -131,11 +131,16 @@ impl ChartRange {
     /// The earliest date (in fractional epoch-days) included in the range,
     /// measured back from the date of the latest run
     fn min_x(self, history: &WptHistory) -> f64 {
-        let latest = history
-            .runs
-            .last()
-            .and_then(|run| parse_date(&run.date))
-            .unwrap_or(0.0);
+        self.min_x_of(std::iter::once(history))
+    }
+
+    /// As [`ChartRange::min_x`], measured back from the latest run of any
+    /// of the histories
+    fn min_x_of<'a>(self, histories: impl IntoIterator<Item = &'a WptHistory>) -> f64 {
+        let latest = histories
+            .into_iter()
+            .filter_map(|history| parse_date(&history.runs.last()?.date))
+            .fold(0.0, f64::max);
         match self.days() {
             Some(days) => latest - days,
             None => f64::NEG_INFINITY,
@@ -153,10 +158,29 @@ pub struct ChartSeries {
     pub color: &'static str,
 }
 
+/// A line on a history chart together with the run history it is drawn
+/// from, so lines from different products (each with its own runs) can
+/// share a chart
+#[derive(Clone, PartialEq)]
+pub struct ChartLine {
+    pub history: ArcWptHistory,
+    pub series: ChartSeries,
+}
+
 struct Series {
     label: String,
     color: &'static str,
     points: Vec<(f64, f64)>,
+}
+
+/// The run identifier shown in a tooltip: browser versions as-is, long
+/// nightly versions and commit shas shortened
+fn short_revision(revision: &str) -> &str {
+    if revision.len() > 12 {
+        revision.get(..9).unwrap_or(revision)
+    } else {
+        revision
+    }
 }
 
 /// The subtest total of the most recent run with data for this area.
@@ -338,6 +362,8 @@ fn highlight_series() -> Vec<ChartSeries> {
         .collect()
 }
 
+/// Chart several areas of a single history (e.g. Blitz's scores on a set of
+/// focus areas)
 #[component]
 pub fn WptHistoryChart(
     history: ArcWptHistory,
@@ -345,14 +371,79 @@ pub fn WptHistoryChart(
     range: ChartRange,
     #[props(default = 440.0)] height: f64,
 ) -> Element {
+    let lines = series_spec
+        .into_iter()
+        .map(|series| ChartLine {
+            history: history.clone(),
+            series,
+        })
+        .collect();
+    rsx! { HistoryLineChart { lines, range, height } }
+}
+
+/// Per-run tooltip data for one line: the runs from just before the visible
+/// range onwards, with the line's `[passed, total]` subtest counts
+fn tooltip_runs(line: &ChartLine, min_x: f64) -> serde_json::Value {
+    let history = &line.history;
+    let area_idx = history
+        .focus_areas
+        .iter()
+        .position(|a| *a == line.series.area);
+    // Latest subtest total: the denominator for plotted percentages (must
+    // match `area_series`)
+    let latest = area_idx.and_then(|idx| latest_subtest_total(history, idx));
+    // Include the run immediately before the visible range (if any) so the
+    // first visible run's tooltip can show a delta against it
+    let first_visible = history
+        .runs
+        .iter()
+        .position(|run| parse_date(&run.date).is_some_and(|x| x >= min_x))
+        .unwrap_or(0);
+    let start = first_visible.saturating_sub(1);
+    let runs: Vec<serde_json::Value> = history.runs[start..]
+        .iter()
+        .filter_map(|run| {
+            let x = parse_date(&run.date)?;
+            let value = area_idx
+                .and_then(|idx| *run.scores.get(idx)?)
+                .filter(|(_, _, total_subtests, _)| *total_subtests != 0)
+                .map(|(_, _, total_subtests, total_subtests_passed)| {
+                    serde_json::json!([total_subtests_passed, total_subtests])
+                })
+                .unwrap_or(serde_json::Value::Null);
+            Some(serde_json::json!({
+                "x": x,
+                "d": run.date.split('T').next().unwrap_or(&run.date),
+                "rev": short_revision(&run.product_revision),
+                "msg": run.commit_message,
+                "v": value,
+            }))
+        })
+        .collect();
+    serde_json::json!({
+        "name": line.series.label,
+        "color": line.series.color,
+        "latest": latest,
+        "first": first_visible - start,
+        "runs": runs,
+    })
+}
+
+/// Chart one line per [`ChartLine`], each drawn from its own history
+#[component]
+pub fn HistoryLineChart(
+    lines: Vec<ChartLine>,
+    range: ChartRange,
+    #[props(default = 440.0)] height: f64,
+) -> Element {
     const WIDTH: f64 = 900.0;
     let plot: (f64, f64, f64, f64) = (50.0, 15.0, WIDTH - 65.0, height - 55.0);
     let (px, py, pw, ph) = plot;
 
-    let min_x = range.min_x(&history);
-    let series: Vec<Series> = series_spec
+    let min_x = range.min_x_of(lines.iter().map(|line| &*line.history));
+    let series: Vec<Series> = lines
         .iter()
-        .filter_map(|spec| area_series(&history, min_x, spec))
+        .filter_map(|line| area_series(&line.history, min_x, &line.series))
         .collect();
 
     let x_min = series
@@ -372,60 +463,15 @@ pub fn WptHistoryChart(
     let x_range = (x_max - x_min).max(f64::EPSILON);
 
     // Per-run data for the hover tooltip (a JS progressive enhancement)
-    let area_indices: Vec<Option<usize>> = series_spec
-        .iter()
-        .map(|spec| history.focus_areas.iter().position(|a| *a == spec.area))
-        .collect();
-    // Latest subtest total per series: the denominator for plotted
-    // percentages (must match `area_series`)
-    let latest_totals: Vec<Option<u32>> = area_indices
-        .iter()
-        .map(|idx| latest_subtest_total(&history, (*idx)?))
-        .collect();
-    // Include the run immediately before the visible range (if any) so the
-    // first visible run's tooltip can show a delta against it
-    let first_visible = history
-        .runs
-        .iter()
-        .position(|run| parse_date(&run.date).is_some_and(|x| x >= min_x))
-        .unwrap_or(0);
-    let start = first_visible.saturating_sub(1);
-    let runs_json: Vec<serde_json::Value> = history.runs[start..]
-        .iter()
-        .filter_map(|run| {
-            let x = parse_date(&run.date)?;
-            let values: Vec<serde_json::Value> = area_indices
-                .iter()
-                .map(|idx| {
-                    idx.and_then(|idx| *run.scores.get(idx)?)
-                        .filter(|(_, _, total_subtests, _)| *total_subtests != 0)
-                        .map(|(_, _, total_subtests, total_subtests_passed)| {
-                            serde_json::json!([total_subtests_passed, total_subtests])
-                        })
-                        .unwrap_or(serde_json::Value::Null)
-                })
-                .collect();
-            Some(serde_json::json!({
-                "x": x,
-                "d": run.date.split('T').next().unwrap_or(&run.date),
-                "sha": run.product_revision,
-                "msg": run.commit_message,
-                "v": values,
-            }))
-        })
-        .collect();
     let tooltip_data = serde_json::json!({
-        "first": first_visible - start,
         "width": WIDTH,
         "plot": [px, py, pw, ph],
         "xMin": x_min,
         "xMax": x_max,
-        "series": series_spec
+        "series": lines
             .iter()
-            .zip(&latest_totals)
-            .map(|(s, latest)| serde_json::json!({ "name": s.label, "color": s.color, "latest": latest }))
+            .map(|line| tooltip_runs(line, min_x))
             .collect::<Vec<_>>(),
-        "runs": runs_json,
     })
     .to_string()
     // Prevent "</script>" in commit messages from terminating the data block

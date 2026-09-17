@@ -24,15 +24,15 @@ pub struct RunMeta {
 }
 
 #[derive(Deserialize)]
-struct RunsFile {
-    runs: Vec<RunMeta>,
+pub struct RunsFile {
+    pub runs: Vec<RunMeta>,
 }
 
 /// One summary/areas/<area>.json file: `scores` has one entry per run,
 /// index-aligned with runs.json
 #[derive(Deserialize)]
-struct AreaFile {
-    scores: Vec<Option<ScoreTuple>>,
+pub struct AreaFile {
+    pub scores: Vec<Option<ScoreTuple>>,
 }
 
 /// The merged history for a set of areas

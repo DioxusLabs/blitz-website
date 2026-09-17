@@ -20,13 +20,13 @@ use dioxus_html_macro::html;
 use downloads::{load_downloads, DOWNLOAD_CACHE};
 use routes::child_areas;
 use routes::{
-    AboutPage, ArcDownloadLinks, ArcWptHistory, ChartRange, CssSupportPage, DownloadsPage,
-    DownloadsPageProps, DownloadsUnavailablePage, ElementSupportPage, EventSupportPage,
-    GettingStartedPage, HomePage, NLNetInstructionsPage, TestPageTab, WptComparePage,
-    WptComparePageProps, WptCompareTestPage, WptCompareTestPageProps, WptFocusAreasPage,
-    WptFocusAreasPageProps, WptHistoryPage, WptHistoryPageProps, WptResultsPage,
-    WptResultsPageProps, WptTestPage, WptTestPageProps, WptUnavailablePage,
-    WptUnavailablePageProps,
+    product_color, product_label, AboutPage, ArcDownloadLinks, ArcWptHistory, ChartLine,
+    ChartRange, ChartSeries, CssSupportPage, DownloadsPage, DownloadsPageProps,
+    DownloadsUnavailablePage, ElementSupportPage, EventSupportPage, GettingStartedPage, HomePage,
+    NLNetInstructionsPage, TestPageTab, WptComparePage, WptComparePageProps, WptCompareTestPage,
+    WptCompareTestPageProps, WptFocusAreasPage, WptFocusAreasPageProps, WptHistoryPage,
+    WptHistoryPageProps, WptResultsPage, WptResultsPageProps, WptTestPage, WptTestPageProps,
+    WptUnavailablePage, WptUnavailablePageProps,
 };
 use serde::Deserialize;
 use std::{
@@ -42,6 +42,7 @@ use tower_http::{
 };
 use tracing::Level;
 use wpt::{load_wpt_results, WPT_REPORT_CACHE};
+use wpt_browser_history::{load_browser_history, BROWSER_HISTORY_CACHE};
 use wpt_compare::{load_wpt_compare, WPT_COMPARE_CACHE};
 use wpt_db::WPT_COMPARE_DB;
 use wpt_history::{load_wpt_history, WPT_HISTORY_CACHE};
@@ -49,9 +50,11 @@ use wpt_history::{load_wpt_history, WPT_HISTORY_CACHE};
 mod cache;
 mod components;
 mod downloads;
+mod git_mirror;
 mod github;
 mod routes;
 mod wpt;
+mod wpt_browser_history;
 mod wpt_compare;
 mod wpt_db;
 mod wpt_fyi;
@@ -72,6 +75,7 @@ struct WptPageQuery {
 #[derive(Deserialize)]
 struct WptCompareQuery {
     sort: Option<String>,
+    range: Option<String>,
 }
 
 #[derive(Deserialize)]
@@ -239,7 +243,7 @@ async fn main() {
         .route(
             "/wpt",
             get(async |Query(query): Query<WptCompareQuery>| {
-                wpt_compare_route(String::new(), query.sort).await
+                wpt_compare_route(String::new(), query).await
             }),
         )
         .route(
@@ -250,7 +254,7 @@ async fn main() {
             "/wpt/{*area}",
             get(
                 async |Path(area): Path<String>, Query(query): Query<WptCompareQuery>| {
-                    wpt_compare_route(area.trim_matches('/').to_string(), query.sort).await
+                    wpt_compare_route(area.trim_matches('/').to_string(), query).await
                 },
             ),
         )
@@ -333,6 +337,11 @@ async fn main() {
     tokio::spawn(
         WPT_HISTORY_CACHE.refresh(|existing| load_wpt_history(vec!["css".to_string()], existing)),
     );
+    // Clone (or fetch) the browser history repository so the first
+    // comparison page doesn't wait on it
+    tokio::spawn(
+        BROWSER_HISTORY_CACHE.refresh(|existing| load_browser_history(Vec::new(), existing)),
+    );
     // Refresh WPT comparison data on startup and every 15 minutes (the first
     // tick fires immediately), so new runs are ingested off the request path
     tokio::spawn(async {
@@ -374,9 +383,87 @@ async fn fresh_wpt_history(areas: Vec<String>) -> Option<ArcWptHistory> {
     Some(entry.merged(&areas))
 }
 
-async fn wpt_compare_route(area: String, sort: Option<String>) -> Response {
+/// Get the browser score history for a set of `(product, area)` pairs from
+/// the local clone of browser-wpt-results (fetching every 5 minutes; a clone
+/// up to a day old is served while re-fetching in the background). Pairs
+/// not yet cached are read from the clone before returning.
+async fn fresh_browser_history(
+    requests: Vec<(String, String)>,
+) -> Option<std::sync::Arc<cache::Cached<wpt_browser_history::BrowserHistoryCacheEntry>>> {
+    BROWSER_HISTORY_CACHE
+        .get_usable_or_refresh(
+            wpt_browser_history::FETCH_INTERVAL,
+            Duration::from_hours(24),
+            |entry| entry.contains(&requests),
+            {
+                let requests = requests.clone();
+                |existing| load_browser_history(requests, existing)
+            },
+        )
+        .await
+}
+
+/// One history chart line per engine that has results for `area` in the
+/// comparison (`total` is index-aligned with `runs`). Blitz's history comes
+/// from blitz-wpt-results, the browsers' from browser-wpt-results.
+async fn compare_history(
+    runs: &[wpt_db::RunRow],
+    area: &str,
+    total: &[Option<wpt_db::AreaScore>],
+) -> Vec<ChartLine> {
+    // There are no summary files for the root of the tree
+    if area.is_empty() {
+        return Vec::new();
+    }
+    let products: Vec<&str> = runs
+        .iter()
+        .zip(total)
+        .filter(|(_, total)| total.is_some())
+        .map(|(run, _)| run.product.as_str())
+        .collect();
+
+    let browser_requests: Vec<(String, String)> = products
+        .iter()
+        .filter(|product| **product != "blitz")
+        .map(|product| (product.to_string(), area.to_string()))
+        .collect();
+    let browsers = if browser_requests.is_empty() {
+        None
+    } else {
+        fresh_browser_history(browser_requests).await
+    };
+
+    let mut lines = Vec::new();
+    for product in products {
+        let history = if product == "blitz" {
+            fresh_wpt_history(vec![area.to_string()]).await
+        } else {
+            browsers
+                .as_ref()
+                .and_then(|entry| entry.history(product, area))
+        };
+        if let Some(history) = history {
+            lines.push(ChartLine {
+                history,
+                series: ChartSeries {
+                    area: area.to_string(),
+                    label: product_label(product),
+                    color: product_color(product),
+                },
+            });
+        }
+    }
+    lines
+}
+
+async fn wpt_compare_route(area: String, query: WptCompareQuery) -> Response {
+    // Browser history is far shorter than Blitz's, so default to a year
+    let range = match query.range.as_deref() {
+        Some(range) => ChartRange::from_query(Some(range)),
+        None => ChartRange::Year1,
+    };
     // Default: top-level areas by subtest count, deeper levels alphabetical
-    let sort = match sort.as_deref() {
+    let sort = match query.sort.as_deref() {
         Some("alpha") => wpt_db::AreaSort::Alpha,
         Some("subtests") => wpt_db::AreaSort::Subtests,
         _ if area.is_empty() => wpt_db::AreaSort::Subtests,
@@ -430,6 +517,7 @@ async fn wpt_compare_route(area: String, sort: Option<String>) -> Response {
             children,
             tests,
         } => {
+            let history = compare_history(&runs, &area, &total).await;
             let props = WptComparePageProps {
                 runs: runs.0.as_ref().clone(),
                 area,
@@ -437,6 +525,8 @@ async fn wpt_compare_route(area: String, sort: Option<String>) -> Response {
                 total,
                 child_areas: children,
                 tests,
+                history,
+                range,
             };
             dx_route_with_props(WptComparePage, props)
                 .await
