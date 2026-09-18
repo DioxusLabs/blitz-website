@@ -248,7 +248,7 @@ fn TestScoreRow(test: TestRow) -> Element {
             td {
                 background_color: "white",
                 a {
-                    href: format!("/wpt/{}", encode_test_path(&name)),
+                    href: test_page_href(&test),
                     {file_name.to_string()}
                 }
             }
@@ -266,6 +266,17 @@ fn TestScoreRow(test: TestRow) -> Element {
             }
         }
     )
+}
+
+/// The link to a test's page: tests with several subtests open on the
+/// per-subtest results, single-result tests on the rendered test
+pub fn test_page_href(test: &TestRow) -> String {
+    let path = encode_test_path(test.name.trim_start_matches('/'));
+    if test.denom > 1 {
+        format!("/wpt/{path}?tab=results")
+    } else {
+        format!("/wpt/{path}")
+    }
 }
 
 /// Encode a WPT test name (an absolute path, possibly containing a query-string

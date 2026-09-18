@@ -2,7 +2,7 @@ use dioxus::prelude::*;
 
 use crate::{
     components::Page,
-    routes::{encode_test_path, score_color, ChartLine, ChartRange, ChartRangeSelector, HistoryLineChart},
+    routes::{score_color, test_page_href, ChartLine, ChartRange, ChartRangeSelector, HistoryLineChart},
     wpt_db::{status_str, AreaScore, AreaSort, RunRow, TestRow, TestRunResult},
 };
 
@@ -338,7 +338,7 @@ fn CompareTestRow(test: TestRow) -> Element {
             td {
                 background_color: "white",
                 a {
-                    href: format!("/wpt/{}", encode_test_path(test.name.trim_start_matches('/'))),
+                    href: test_page_href(&test),
                     {file_name}
                 }
             }

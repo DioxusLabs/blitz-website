@@ -205,7 +205,8 @@ fn TabPanel(tab: TestPageTab, current_tab: TestPageTab, children: Element) -> El
 fn TestPageTabs(name: String, current_tab: TestPageTab, ref_link: Option<RefLink>) -> Element {
     let base = format!("/wpt/{}", encode_test_path(&name));
 
-    let mut tabs: Vec<(TestPageTab, &str)> = vec![(TestPageTab::Test, "Test")];
+    let mut tabs: Vec<(TestPageTab, &str)> =
+        vec![(TestPageTab::Results, "Results"), (TestPageTab::Test, "Test")];
     if let Some(ref_link) = &ref_link {
         let label = if ref_link.rel == "mismatch" {
             "Ref (mismatch)"
@@ -218,7 +219,6 @@ fn TestPageTabs(name: String, current_tab: TestPageTab, ref_link: Option<RefLink
     if ref_link.is_some() {
         tabs.push((TestPageTab::RefSource, "Ref Source"));
     }
-    tabs.push((TestPageTab::Results, "Results"));
 
     rsx! {
         div {
