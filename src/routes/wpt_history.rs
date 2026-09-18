@@ -461,6 +461,7 @@ pub fn HistoryLineChart(
 
     let ticks = month_ticks(x_min, x_max);
     let x_range = (x_max - x_min).max(f64::EPSILON);
+    let legend_step = (pw / series.len().max(1) as f64).min(140.0);
 
     // Per-run data for the hover tooltip (a JS progressive enhancement)
     let tooltip_data = serde_json::json!({
@@ -539,18 +540,18 @@ pub fn HistoryLineChart(
                 }
             }
 
-            // Legend
+            // Legend, spread across the plot width when there are many series
             for (i, s) in series.iter().enumerate() {
                 line {
-                    x1: "{px + 10.0 + (i as f64) * 140.0}",
-                    x2: "{px + 34.0 + (i as f64) * 140.0}",
+                    x1: "{px + 10.0 + (i as f64) * legend_step}",
+                    x2: "{px + 34.0 + (i as f64) * legend_step}",
                     y1: "{height - 10.0}",
                     y2: "{height - 10.0}",
                     stroke: s.color,
                     stroke_width: "3",
                 }
                 text {
-                    x: "{px + 40.0 + (i as f64) * 140.0}",
+                    x: "{px + 40.0 + (i as f64) * legend_step}",
                     y: "{height - 6.0}",
                     font_size: "12",
                     fill: "#333",

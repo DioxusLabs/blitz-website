@@ -26,6 +26,7 @@ pub fn product_color(product: &str) -> &'static str {
         "safari" => "#64b5f6",
         "ladybird" => "#ba68c8",
         "servo" => "#4db6ac",
+        "flow" => "#8d6e63",
         _ => "#a1887f",
     }
 }
