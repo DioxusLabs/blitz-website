@@ -879,6 +879,8 @@ pub struct SubtestRow {
     pub name: String,
     /// Per run: None if the run didn't report the subtest
     pub statuses: Vec<Option<i64>>,
+    /// Per run: the message reported with the status, where stored
+    pub messages: Vec<Option<String>>,
 }
 
 #[derive(Clone, PartialEq)]
@@ -886,6 +888,8 @@ pub struct TestDetail {
     pub name: String,
     /// Per-run top-level result
     pub results: Vec<Option<TestRunResult>>,
+    /// Per run: the harness message reported for the test, where stored
+    pub messages: Vec<Option<String>>,
     pub subtests: Vec<SubtestRow>,
 }
 
@@ -899,22 +903,25 @@ pub fn test_detail(conn: &Connection, run_ids: &[i64], test_name: &str) -> Optio
         )
         .ok()?;
 
-    let mut by_run: HashMap<i64, TestRunResult> = HashMap::new();
+    let mut by_run: HashMap<i64, (TestRunResult, Option<String>)> = HashMap::new();
     {
         let mut stmt = conn
             .prepare_cached(
-                "SELECT run_id, status, subtest_pass, subtest_total FROM results WHERE test_id = ?1",
+                "SELECT run_id, status, subtest_pass, subtest_total, message FROM results WHERE test_id = ?1",
             )
             .unwrap();
         let mut rows = stmt.query(params![test_id]).unwrap();
         while let Some(row) = rows.next().unwrap() {
             by_run.insert(
                 row.get(0).unwrap(),
-                TestRunResult {
-                    status: row.get(1).unwrap(),
-                    subtest_pass: row.get(2).unwrap(),
-                    subtest_total: row.get(3).unwrap(),
-                },
+                (
+                    TestRunResult {
+                        status: row.get(1).unwrap(),
+                        subtest_pass: row.get(2).unwrap(),
+                        subtest_total: row.get(3).unwrap(),
+                    },
+                    row.get(4).unwrap(),
+                ),
             );
         }
     }
@@ -931,6 +938,7 @@ pub fn test_detail(conn: &Connection, run_ids: &[i64], test_name: &str) -> Optio
                 SubtestRow {
                     name: row.get(1).unwrap(),
                     statuses: vec![None; run_ids.len()],
+                    messages: vec![None; run_ids.len()],
                 },
             ));
         }
@@ -948,7 +956,7 @@ pub fn test_detail(conn: &Connection, run_ids: &[i64], test_name: &str) -> Optio
     {
         let mut stmt = conn
             .prepare_cached(
-                "SELECT sr.subtest_id, sr.run_id, sr.status
+                "SELECT sr.subtest_id, sr.run_id, sr.status, sr.message
                  FROM subtest_results sr JOIN subtests s ON s.id = sr.subtest_id
                  WHERE s.test_id = ?1",
             )
@@ -958,106 +966,25 @@ pub fn test_detail(conn: &Connection, run_ids: &[i64], test_name: &str) -> Optio
             let subtest_id: i64 = row.get(0).unwrap();
             let run_id: i64 = row.get(1).unwrap();
             let status: i64 = row.get(2).unwrap();
+            let message: Option<String> = row.get(3).unwrap();
             if let (Some(&sidx), Some(&ridx)) = (index_of.get(&subtest_id), run_index.get(&run_id))
             {
                 subtests[sidx].1.statuses[ridx] = Some(status);
+                subtests[sidx].1.messages[ridx] = message;
             }
         }
     }
 
     Some(TestDetail {
         name: test_name.to_string(),
-        results: run_ids.iter().map(|id| by_run.get(id).copied()).collect(),
+        results: run_ids
+            .iter()
+            .map(|id| by_run.get(id).map(|(result, _)| *result))
+            .collect(),
+        messages: run_ids
+            .iter()
+            .map(|id| by_run.get(id).and_then(|(_, message)| message.clone()))
+            .collect(),
         subtests: subtests.into_iter().map(|(_, row)| row).collect(),
-    })
-}
-
-/// A single run's result for one test, including the messages the report
-/// carried (if they were stored for the run's product)
-#[derive(Clone, PartialEq)]
-pub struct RunTestDetail {
-    pub name: String,
-    pub status: i64,
-    pub duration_ms: Option<i64>,
-    pub message: Option<String>,
-    pub subtest_pass: u32,
-    /// The cross-engine union subtest denominator
-    pub denom: u32,
-    pub subtests: Vec<RunSubtestResult>,
-}
-
-#[derive(Clone, PartialEq)]
-pub struct RunSubtestResult {
-    pub name: String,
-    pub status: i64,
-    pub message: Option<String>,
-}
-
-/// The result of a single run for a single test, or `None` if the test is
-/// unknown or the run didn't run it
-pub fn run_test_detail(conn: &Connection, run_id: i64, test_name: &str) -> Option<RunTestDetail> {
-    let (test_id, status, duration_ms, message, subtest_pass): (
-        i64,
-        i64,
-        Option<i64>,
-        Option<String>,
-        u32,
-    ) = conn
-        .query_row(
-            "SELECT t.id, r.status, r.duration_ms, r.message, r.subtest_pass
-             FROM tests t JOIN results r ON r.test_id = t.id
-             WHERE t.name = ?1 AND r.run_id = ?2",
-            params![test_name, run_id],
-            |row| {
-                Ok((
-                    row.get(0)?,
-                    row.get(1)?,
-                    row.get(2)?,
-                    row.get(3)?,
-                    row.get(4)?,
-                ))
-            },
-        )
-        .ok()?;
-
-    let denom: u32 = conn
-        .query_row(
-            "SELECT MAX(r.subtest_total) FROM results r JOIN runs ON runs.id = r.run_id
-             WHERE r.test_id = ?1 AND runs.is_latest = 1",
-            params![test_id],
-            |row| row.get::<_, Option<u32>>(0),
-        )
-        .ok()
-        .flatten()
-        .unwrap_or(1);
-
-    let mut stmt = conn
-        .prepare_cached(
-            "SELECT s.name, sr.status, sr.message
-             FROM subtests s JOIN subtest_results sr ON sr.subtest_id = s.id
-             WHERE s.test_id = ?1 AND sr.run_id = ?2
-             ORDER BY s.id",
-        )
-        .unwrap();
-    let subtests = stmt
-        .query_map(params![test_id, run_id], |row| {
-            Ok(RunSubtestResult {
-                name: row.get(0)?,
-                status: row.get(1)?,
-                message: row.get(2)?,
-            })
-        })
-        .unwrap()
-        .map(|r| r.unwrap())
-        .collect();
-
-    Some(RunTestDetail {
-        name: test_name.to_string(),
-        status,
-        duration_ms,
-        message,
-        subtest_pass,
-        denom,
-        subtests,
     })
 }
