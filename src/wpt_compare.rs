@@ -58,6 +58,35 @@ impl std::ops::Deref for ArcRunRows {
 /// page visits during a slow ingest would otherwise start concurrent ones)
 static REFRESH_LOCK: tokio::sync::Mutex<()> = tokio::sync::Mutex::const_new(());
 
+/// Seed the cache with the runs already in the database (from a previous
+/// process), so comparison pages can be served immediately after startup
+/// while the first refresh checks wpt.fyi for new runs. A no-op when the
+/// database is empty. Blocking: call from `spawn_blocking`.
+pub fn seed_from_db() {
+    let runs = WPT_COMPARE_DB.with_reader(wpt_db::latest_runs);
+    if runs.is_empty() {
+        return;
+    }
+    println!(
+        "Seeded WPT comparison run list from database ({} runs)",
+        runs.len()
+    );
+    WPT_COMPARE_CACHE.update(WptCompareCacheEntry {
+        runs: ArcRunRows(Arc::new(order_runs(runs))),
+        blitz_report_etag: None,
+    });
+}
+
+/// Order columns: wpt.fyi products first (in `PRODUCTS` order), then Blitz
+fn order_runs(runs: Vec<RunRow>) -> Vec<RunRow> {
+    let mut ordered: Vec<RunRow> = Vec::with_capacity(runs.len());
+    for spec in PRODUCTS.iter().copied().chain(["blitz"]) {
+        let product = spec.split('[').next().unwrap();
+        ordered.extend(runs.iter().filter(|run| run.product == product).cloned());
+    }
+    ordered
+}
+
 /// Check for new runs on wpt.fyi (and a new Blitz report), ingest any that
 /// are missing, and refresh the cached run list. Only one refresh runs at a
 /// time; calls that arrive while one is in flight return immediately and
@@ -146,17 +175,10 @@ pub async fn load_wpt_compare(
     .await
     .unwrap();
 
-    // Order columns: wpt.fyi products first (in PRODUCTS order), then Blitz
-    let mut ordered: Vec<RunRow> = Vec::with_capacity(runs.len());
-    for spec in PRODUCTS.iter().copied().chain(["blitz"]) {
-        let product = spec.split('[').next().unwrap();
-        ordered.extend(runs.iter().filter(|run| run.product == product).cloned());
-    }
-
     println!("WPT comparison runs refreshed.");
 
     RefreshOutcome::Updated(WptCompareCacheEntry {
-        runs: ArcRunRows(Arc::new(ordered)),
+        runs: ArcRunRows(Arc::new(order_runs(runs))),
         blitz_report_etag,
     })
 }
