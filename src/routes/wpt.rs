@@ -74,13 +74,6 @@ pub fn WptResultsPage(
                 dangerous_inner_html: r#"
                 This page documents Blitz's scores on the "css" subsuite of the <a href="https://github.com/web-platform-tests/wpt" target="_blank">Web Platform Tests</a>."#
             }
-            p {
-                font_size: "smaller",
-                "Note: As it does not have a JavaScript engine, Blitz can only run about 20% of the total subtests. Tests that Blitz can't run count as failures
-                in the numbers below, as they do on the "
-                a { href: "/wpt/{area}", "comparison pages" }
-                "."
-            }
             hr {}
             WptBreadcrumb { area: area.clone() }
             FolderHistoryChart {
