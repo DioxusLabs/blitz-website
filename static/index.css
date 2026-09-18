@@ -452,6 +452,52 @@ table td {
   flex-grow: 0;
 }
 
+.wpt-message + .wpt-message {
+  margin-top: 2px;
+}
+
+.wpt-message__assertion {
+  font-family: monospace;
+  font-size: 11px;
+  color: #666;
+}
+
+.wpt-message__label {
+  color: #666;
+}
+
+.wpt-message code {
+  font-size: 12px;
+  padding: 0 3px;
+  border-radius: 3px;
+  white-space: pre-wrap;
+}
+
+.wpt-message__expected {
+  background: #dcedc8;
+}
+
+.wpt-message__actual {
+  background: #ffcdd2;
+}
+
+.wpt-message__html {
+  display: inline-block;
+  vertical-align: top;
+}
+
+.wpt-message__html summary {
+  cursor: pointer;
+  color: #666;
+}
+
+.wpt-message__html pre {
+  margin: 4px 0;
+  font-size: 11px;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
 .wpt-source pre {
   padding: 12px;
   border: 1px solid #CCC;
