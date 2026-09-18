@@ -136,7 +136,10 @@ fn CompareHistoryChart(area: String, history: Vec<ChartLine>, range: ChartRange)
                 percentage is relative to the subtest count of its own latest run, so lines are
                 not distorted by tests being added to WPT (Blitz only runs the subtests it can)."
             }
-            ChartRangeSelector { current_range: range, base_path: format!("/wpt/{area}") }
+            ChartRangeSelector {
+                current_range: range,
+                base_path: if area.is_empty() { "/wpt".to_string() } else { format!("/wpt/{area}") },
+            }
             HistoryLineChart { lines: history, range, height: 320.0 }
         }
     }

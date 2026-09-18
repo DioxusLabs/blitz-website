@@ -392,16 +392,13 @@ async fn fresh_wpt_history(areas: Vec<String>) -> Option<ArcWptHistory> {
 }
 
 /// One history chart line per engine that has results for `area` in the
-/// comparison (`total` is index-aligned with `runs`)
+/// comparison (`total` is index-aligned with `runs`). The empty area is the
+/// whole-run total.
 async fn compare_history(
     runs: &[wpt_db::RunRow],
     area: &str,
     total: &[Option<wpt_db::AreaScore>],
 ) -> Vec<ChartLine> {
-    // There are no summary files for the root of the tree
-    if area.is_empty() {
-        return Vec::new();
-    }
     let products: Vec<&str> = runs
         .iter()
         .zip(total)

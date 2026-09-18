@@ -168,7 +168,12 @@ fn load_blocking(
             missing.insert(key);
             continue;
         };
-        let path = format!("summary/{product}/areas/{area}.json");
+        // The empty area is the whole-run total, stored beside runs.json
+        let path = if area.is_empty() {
+            format!("summary/{product}/total.json")
+        } else {
+            format!("summary/{product}/areas/{area}.json")
+        };
         match snapshot.read_file(&path) {
             Ok(Some(body)) => match serde_json::from_slice::<AreaFile>(&body) {
                 Ok(file) if file.scores.len() == product_runs.len() => {
