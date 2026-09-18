@@ -352,13 +352,326 @@ fn SubtestResultsRow(runs: Vec<RunRow>, subtest: SubtestRow, has_messages: bool)
                             if messages.len() > 1 {
                                 b { "{product}: " }
                             }
-                            {message.clone()}
+                            FormattedMessage { message: message.clone() }
                         }
                     }
                 }
             }
         }
     )
+}
+
+/// One piece of a parsed testharness message
+#[derive(Debug, PartialEq)]
+enum MessagePart {
+    /// The `assert_*` (or `promise_test`, ...) name the line starts with
+    Assertion(String),
+    Text(String),
+    Expected(String),
+    Actual(String),
+    /// A dumped HTML element (check-layout tests print the failing
+    /// element's outerHTML)
+    Html(String),
+}
+
+/// Split a testharness.js message into lines of structured parts.
+///
+/// Handles the standard assertion phrasings:
+/// - `assert_equals: <desc> expected <E> but got <A>`
+/// - `assert_approx_equals: expected <E> +/- <eps> but got <A>`
+/// - `<desc> expected <E> got <A>` (check-layout `data-expected-*`)
+/// - `assert_true: <desc> expected true got false` (the tautological
+///   expected/got is dropped)
+/// - `Colors do not match.\nActual: <A>\nExpected: <E>.\nError: ...`
+///
+/// Anything else is passed through as text.
+fn parse_message(message: &str) -> Vec<Vec<MessagePart>> {
+    let mut lines: Vec<Vec<MessagePart>> = Vec::new();
+    for line in message.lines().filter(|line| !line.trim().is_empty()) {
+        let parts = parse_message_line(line);
+        // `Actual: …` / `Expected: …` on consecutive lines are shown as one
+        // expected/got line, expected first
+        if let ([MessagePart::Expected(_)], Some([MessagePart::Actual(_)])) =
+            (parts.as_slice(), lines.last().map(Vec::as_slice))
+        {
+            let mut previous = lines.pop().unwrap();
+            previous.splice(0..0, parts);
+            lines.push(previous);
+            continue;
+        }
+        lines.push(parts);
+    }
+    lines
+}
+
+fn parse_message_line(line: &str) -> Vec<MessagePart> {
+    let line = line.trim();
+    if line.starts_with('<') {
+        return vec![MessagePart::Html(line.to_string())];
+    }
+    if let Some(actual) = line.strip_prefix("Actual:") {
+        return vec![MessagePart::Actual(actual.trim().to_string())];
+    }
+    if let Some(expected) = line.strip_prefix("Expected:") {
+        let expected = expected.trim().trim_end_matches('.');
+        return vec![MessagePart::Expected(expected.to_string())];
+    }
+    let line = line.strip_prefix("Error: ").unwrap_or(line);
+
+    let is_assertion_name = |name: &str| {
+        !name.is_empty()
+            && name
+                .chars()
+                .all(|c| c.is_ascii_lowercase() || c == '_' || c.is_ascii_digit())
+    };
+    let mut parts = Vec::new();
+    let mut body = line;
+    // `assert_equals: ...`, `promise_test: ...` (or just `assert_equals:`
+    // when the rest of the message is on the following lines)
+    if let Some(name) = line.strip_suffix(':').filter(|name| is_assertion_name(name)) {
+        return vec![MessagePart::Assertion(name.to_string())];
+    }
+    if let Some((name, rest)) = line.split_once(": ") {
+        if is_assertion_name(name) {
+            parts.push(MessagePart::Assertion(name.to_string()));
+            body = rest;
+        }
+    }
+
+    for tautology in ["expected true got false", "expected false got true"] {
+        if let Some(desc) = body.strip_suffix(tautology) {
+            let desc = desc.trim();
+            if !desc.is_empty() {
+                parts.push(MessagePart::Text(desc.to_string()));
+            }
+            return parts;
+        }
+    }
+
+    // `<desc> expected <E> but got <A>` or `<desc> expected <E> got <A>`
+    let split = body
+        .rfind(" but got ")
+        .map(|idx| (idx, " but got ".len()))
+        .or_else(|| body.rfind(" got ").map(|idx| (idx, " got ".len())));
+    if let Some((got_idx, got_len)) = split {
+        let (before, actual) = (&body[..got_idx], &body[got_idx + got_len..]);
+        let expected_idx = if let Some(rest) = before.strip_prefix("expected ") {
+            Some((0, rest))
+        } else {
+            before
+                .rfind(" expected ")
+                .map(|idx| (idx, &before[idx + " expected ".len()..]))
+        };
+        if let Some((desc_end, expected)) = expected_idx {
+            let desc = before[..desc_end].trim();
+            if !desc.is_empty() {
+                parts.push(MessagePart::Text(desc.to_string()));
+            }
+            parts.push(MessagePart::Expected(expected.trim().to_string()));
+            parts.push(MessagePart::Actual(actual.trim().to_string()));
+            return parts;
+        }
+    }
+
+    parts.push(MessagePart::Text(body.to_string()));
+    parts
+}
+
+/// A testharness message with its expected/actual values and dumped
+/// markup set apart from the description
+#[component]
+fn FormattedMessage(message: String) -> Element {
+    let lines = parse_message(&message);
+    rsx! {
+        for parts in lines {
+            div {
+                class: "wpt-message",
+                for part in parts {
+                    match part {
+                        MessagePart::Assertion(name) => rsx! {
+                            span { class: "wpt-message__assertion", {name} }
+                            " "
+                        },
+                        MessagePart::Text(text) => rsx! {
+                            span { {text} }
+                            " "
+                        },
+                        MessagePart::Expected(value) => rsx! {
+                            span { class: "wpt-message__label", "expected " }
+                            code { class: "wpt-message__expected", {value} }
+                            " "
+                        },
+                        MessagePart::Actual(value) => rsx! {
+                            span { class: "wpt-message__label", "got " }
+                            code { class: "wpt-message__actual", {value} }
+                            " "
+                        },
+                        MessagePart::Html(html) => rsx! {
+                            details {
+                                class: "wpt-message__html wpt-source",
+                                summary { "element markup" }
+                                div { dangerous_inner_html: highlight_source(&indent_html(&html), "dump.html") }
+                            }
+                        },
+                    }
+                }
+            }
+        }
+    }
+}
+
+/// Re-flow a single-line HTML dump with one tag (or text run) per line,
+/// indented by nesting depth. Good enough for testharness element dumps;
+/// not a full parser.
+fn indent_html(html: &str) -> String {
+    const VOID: &[&str] = &[
+        "area", "base", "br", "col", "embed", "hr", "img", "input", "link", "meta", "source",
+        "track", "wbr",
+    ];
+    let mut out = String::new();
+    let mut depth: usize = 0;
+    let mut push_line = |depth: usize, text: &str| {
+        if !out.is_empty() {
+            out.push('\n');
+        }
+        out.push_str(&"  ".repeat(depth));
+        out.push_str(text);
+    };
+    let mut rest = html;
+    while !rest.is_empty() {
+        let Some(open) = rest.find('<') else {
+            push_line(depth, rest.trim());
+            break;
+        };
+        let text = rest[..open].trim();
+        if !text.is_empty() {
+            push_line(depth, text);
+        }
+        let Some(close) = rest[open..].find('>') else {
+            push_line(depth, rest[open..].trim());
+            break;
+        };
+        let tag = &rest[open..open + close + 1];
+        rest = &rest[open + close + 1..];
+        if tag.starts_with("</") {
+            depth = depth.saturating_sub(1);
+            push_line(depth, tag);
+        } else {
+            push_line(depth, tag);
+            let name: String = tag[1..]
+                .chars()
+                .take_while(|c| c.is_ascii_alphanumeric() || *c == '-')
+                .collect();
+            let self_closing = tag.ends_with("/>") || VOID.contains(&name.as_str());
+            if !self_closing && !tag.starts_with("<!") {
+                depth += 1;
+            }
+        }
+    }
+    out
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{indent_html, parse_message, MessagePart::*};
+
+    #[test]
+    fn indents_dumped_markup() {
+        assert_eq!(
+            indent_html("<div class=\"a\"><div>X<br />XX<span>Y</span></div></div>"),
+            "<div class=\"a\">\n  <div>\n    X\n    <br />\n    XX\n    <span>\n      Y\n    </span>\n  </div>\n</div>"
+        );
+    }
+
+    #[test]
+    fn assert_equals_with_description() {
+        assert_eq!(
+            parse_message("assert_equals: data-offset-x expected 120 got 0"),
+            vec![vec![
+                Assertion("assert_equals".into()),
+                Text("data-offset-x".into()),
+                Expected("120".into()),
+                Actual("0".into()),
+            ]]
+        );
+    }
+
+    #[test]
+    fn assert_equals_but_got() {
+        assert_eq!(
+            parse_message("assert_equals: expected \"a b\" but got \"c got d\""),
+            vec![vec![
+                Assertion("assert_equals".into()),
+                Expected("\"a b\"".into()),
+                Actual("\"c got d\"".into()),
+            ]]
+        );
+    }
+
+    #[test]
+    fn assert_true_drops_tautology() {
+        assert_eq!(
+            parse_message("assert_true: 'auto' value should be supported expected true got false"),
+            vec![vec![
+                Assertion("assert_true".into()),
+                Text("'auto' value should be supported".into()),
+            ]]
+        );
+    }
+
+    #[test]
+    fn approx_equals() {
+        assert_eq!(
+            parse_message("assert_approx_equals: expected 0.88 +/- 0.01 but got 0.47"),
+            vec![vec![
+                Assertion("assert_approx_equals".into()),
+                Expected("0.88 +/- 0.01".into()),
+                Actual("0.47".into()),
+            ]]
+        );
+    }
+
+    #[test]
+    fn colors_do_not_match() {
+        assert_eq!(
+            parse_message(
+                "Colors do not match.\nActual:   color(srgb 0 0 0)\nExpected: hsl(none none none).\nError: assert_array_approx_equals: lengths differ, expected 0 got 3"
+            ),
+            vec![
+                vec![Text("Colors do not match.".into())],
+                vec![
+                    Expected("hsl(none none none)".into()),
+                    Actual("color(srgb 0 0 0)".into())
+                ],
+                vec![
+                    Assertion("assert_array_approx_equals".into()),
+                    Text("lengths differ,".into()),
+                    Expected("0".into()),
+                    Actual("3".into()),
+                ],
+            ]
+        );
+    }
+
+    #[test]
+    fn check_layout_html_dump() {
+        assert_eq!(
+            parse_message("assert_equals: \n<div class=\"grid\">X</div>\nwidth expected 25 but got 50"),
+            vec![
+                vec![Assertion("assert_equals".into())],
+                vec![Html("<div class=\"grid\">X</div>".into())],
+                vec![Text("width".into()), Expected("25".into()), Actual("50".into())],
+            ]
+        );
+    }
+
+    #[test]
+    fn plain_text_passes_through() {
+        assert_eq!(
+            parse_message("not a callable function"),
+            vec![vec![Text("not a callable function".into())]]
+        );
+    }
 }
 
 #[component]
