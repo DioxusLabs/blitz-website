@@ -1,6 +1,6 @@
 use axum::{
     body::{Body, Bytes},
-    extract::{Path, Query},
+    extract::{Path, Query, RawQuery},
     http::{header, StatusCode},
     response::{AppendHeaders, Html, IntoResponse, Redirect, Response},
     routing::{get, get_service},
@@ -20,13 +20,13 @@ use dioxus_html_macro::html;
 use downloads::{load_downloads, DOWNLOAD_CACHE};
 use github::CommitInfo;
 use routes::{
-    product_color, product_label, AboutPage, ArcDownloadLinks, ArcWptHistory, BlitzAreaResults,
-    ChartLine, ChartRange, ChartSeries, CssSupportPage, DownloadsPage, DownloadsPageProps,
-    DownloadsUnavailablePage, ElementSupportPage, EventSupportPage, GettingStartedPage, HomePage,
-    NLNetInstructionsPage, TestPageTab, WptComparePage, WptComparePageProps, WptCompareTestPage,
-    WptCompareTestPageProps, WptFocusAreasPage, WptFocusAreasPageProps, WptHistoryPage,
-    WptHistoryPageProps, WptResultsPage, WptResultsPageProps, WptTestPage, WptTestPageProps,
-    WptUnavailablePage, WptUnavailablePageProps,
+    encode_test_path, product_color, product_label, AboutPage, ArcDownloadLinks, ArcWptHistory,
+    BlitzAreaResults, ChartLine, ChartRange, ChartSeries, CssSupportPage, DownloadsPage,
+    DownloadsPageProps, DownloadsUnavailablePage, ElementSupportPage, EventSupportPage,
+    GettingStartedPage, HomePage, NLNetInstructionsPage, TestPageTab, WptComparePage,
+    WptComparePageProps, WptCompareTestPage, WptCompareTestPageProps, WptFocusAreasPage,
+    WptFocusAreasPageProps, WptHistoryPage, WptHistoryPageProps, WptResultsPage,
+    WptResultsPageProps, WptUnavailablePage, WptUnavailablePageProps,
 };
 use serde::Deserialize;
 use std::{
@@ -66,13 +66,13 @@ static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
 #[derive(Deserialize)]
 struct WptPageQuery {
     range: Option<String>,
-    tab: Option<String>,
 }
 
 #[derive(Deserialize)]
 struct WptCompareQuery {
     sort: Option<String>,
     range: Option<String>,
+    tab: Option<String>,
 }
 
 #[derive(Deserialize)]
@@ -186,13 +186,34 @@ async fn main() {
         .route(
             "/status/wpt/{*area}",
             get(
-                async |Path(area): Path<String>, Query(query): Query<WptPageQuery>| {
+                async |Path(area): Path<String>,
+                       Query(query): Query<WptPageQuery>,
+                       RawQuery(raw_query): RawQuery| {
                     let area = area.trim_matches('/').to_string();
                     let (run, _slot) = match blitz_status_run().await {
                         Ok(run) => run,
                         Err(response) => return *response,
                     };
                     let run_id = run.id;
+
+                    let is_area = {
+                        let area = area.clone();
+                        tokio::task::spawn_blocking(move || {
+                            WPT_COMPARE_DB.with_reader(|conn| wpt_db::area_exists(conn, &area))
+                        })
+                        .await
+                        .unwrap()
+                    };
+                    // Test pages live in the comparison section now; the
+                    // `?tab=` query carries over
+                    if !is_area {
+                        let mut target = format!("/wpt/{}", encode_test_path(&area));
+                        if let Some(raw_query) = raw_query {
+                            target.push('?');
+                            target.push_str(&raw_query);
+                        }
+                        return Redirect::permanent(&target).into_response();
+                    }
 
                     // Folder pages chart a single line for the folder itself;
                     // the history lookup also loads Blitz's run list, which
@@ -241,50 +262,6 @@ async fn main() {
                         };
 
                         return dx_route_with_props(WptResultsPage, props)
-                            .await
-                            .into_response();
-                    }
-
-                    let test = {
-                        let name = format!("/{area}");
-                        tokio::task::spawn_blocking(move || {
-                            WPT_COMPARE_DB
-                                .with_reader(|conn| wpt_db::run_test_detail(conn, run_id, &name))
-                        })
-                        .await
-                        .unwrap()
-                    };
-
-                    if let Some(test) = test {
-                        let tab = TestPageTab::from_query(query.tab.as_deref());
-                        let revision = run.wpt_revision.clone();
-
-                        // Fetch the test source (needed to detect ref tests even when
-                        // the source itself is not being displayed)
-                        let source_path = format!("/{}", area.split('?').next().unwrap());
-                        let source = wpt_source::fetch_test_source(&revision, &source_path).await;
-                        let refs = source
-                            .as_deref()
-                            .map(|source| wpt_source::parse_ref_links(source, &source_path))
-                            .unwrap_or_default();
-
-                        let ref_source = if let Some(ref_link) = refs.first() {
-                            let ref_path = ref_link.href.split('?').next().unwrap();
-                            Some(wpt_source::fetch_test_source(&revision, ref_path).await)
-                        } else {
-                            None
-                        };
-
-                        let props = WptTestPageProps {
-                            test,
-                            commit_info,
-                            tab,
-                            source,
-                            refs,
-                            ref_source,
-                        };
-
-                        return dx_route_with_props(WptTestPage, props)
                             .await
                             .into_response();
                     }
@@ -566,9 +543,39 @@ async fn wpt_compare_route(area: String, query: WptCompareQuery) -> Response {
                 .into_response()
         }
         PageData::Test(detail) => {
+            let tab = TestPageTab::from_query(query.tab.as_deref());
+            // Sources are read at the WPT revision Blitz was run against
+            // (the run whose results are most likely being investigated),
+            // falling back to any run
+            let revision = runs
+                .iter()
+                .find(|run| run.product == "blitz")
+                .or(runs.first())
+                .map(|run| run.wpt_revision.clone())
+                .unwrap_or_default();
+
+            // Fetch the test source (needed to detect ref tests even when
+            // the source itself is not being displayed)
+            let source_path = format!("/{}", area.split('?').next().unwrap());
+            let source = wpt_source::fetch_test_source(&revision, &source_path).await;
+            let refs = source
+                .as_deref()
+                .map(|source| wpt_source::parse_ref_links(source, &source_path))
+                .unwrap_or_default();
+            let ref_source = if let Some(ref_link) = refs.first() {
+                let ref_path = ref_link.href.split('?').next().unwrap();
+                Some(wpt_source::fetch_test_source(&revision, ref_path).await)
+            } else {
+                None
+            };
+
             let props = WptCompareTestPageProps {
                 runs: runs.0.as_ref().clone(),
                 detail,
+                tab,
+                source,
+                refs,
+                ref_source,
             };
             dx_route_with_props(WptCompareTestPage, props)
                 .await

@@ -1,17 +1,13 @@
-use std::sync::LazyLock;
-
 use dioxus::prelude::*;
-use syntect::{highlighting::Theme, parsing::SyntaxSet};
 
 use crate::{
-    components::{BarePage, CommitInfoDisplay, Page},
+    components::{CommitInfoDisplay, Page},
     github::CommitInfo,
     routes::{
         ArcWptHistory, ChartRange, ChartRangeSelector, ChartSeries, StatusHeader, StatusTabs,
         WptHistoryChart, SERIES_COLORS,
     },
-    wpt_db::{status_str, AreaScore, RunTestDetail, TestRow},
-    wpt_source::{RefLink, SourceResult},
+    wpt_db::{status_str, AreaScore, TestRow},
 };
 
 struct Colors(&'static [[u8; 3]]);
@@ -252,7 +248,7 @@ fn TestScoreRow(test: TestRow) -> Element {
             td {
                 background_color: "white",
                 a {
-                    href: format!("/status/wpt/{}", encode_test_path(&name)),
+                    href: test_page_href(&test),
                     {file_name.to_string()}
                 }
             }
@@ -272,356 +268,21 @@ fn TestScoreRow(test: TestRow) -> Element {
     )
 }
 
+/// The link to a test's page: tests with several subtests open on the
+/// per-subtest results, single-result tests on the rendered test
+pub fn test_page_href(test: &TestRow) -> String {
+    let path = encode_test_path(test.name.trim_start_matches('/'));
+    if test.denom > 1 {
+        format!("/wpt/{path}?tab=results")
+    } else {
+        format!("/wpt/{path}")
+    }
+}
+
 /// Encode a WPT test name (an absolute path, possibly containing a query-string
 /// variant) so that it can be used as the path portion of a URL.
 pub fn encode_test_path(name: &str) -> String {
     name.replace('%', "%25")
         .replace('?', "%3F")
         .replace('#', "%23")
-}
-
-#[derive(Copy, Clone, PartialEq, Eq)]
-pub enum TestPageTab {
-    Summary,
-    Test,
-    TestSource,
-    Ref,
-    RefSource,
-}
-
-impl TestPageTab {
-    pub fn from_query(tab: Option<&str>) -> Self {
-        match tab {
-            Some("summary") => Self::Summary,
-            Some("test-source") => Self::TestSource,
-            Some("ref") => Self::Ref,
-            Some("ref-source") => Self::RefSource,
-            _ => Self::Test,
-        }
-    }
-
-    fn query_value(self) -> &'static str {
-        match self {
-            Self::Summary => "summary",
-            Self::Test => "test",
-            Self::TestSource => "test-source",
-            Self::Ref => "ref",
-            Self::RefSource => "ref-source",
-        }
-    }
-}
-
-#[component]
-pub fn WptTestPage(
-    test: RunTestDetail,
-    commit_info: Option<CommitInfo>,
-    tab: TestPageTab,
-    source: SourceResult,
-    refs: Vec<RefLink>,
-    ref_source: Option<SourceResult>,
-) -> Element {
-    let name = test.name.trim_start_matches('/').to_string();
-
-    let file_name = name
-        .rsplit_once('/')
-        .map(|(_, file)| file)
-        .unwrap_or(&name)
-        .to_string();
-
-    // The path used to fetch the source (test name without any query-string variant)
-    let source_path = format!("/{}", name.split('?').next().unwrap_or(&name));
-    let first_ref = refs.first().cloned();
-    let counts = (test.subtest_pass, test.denom.max(1));
-    let show_subtests = test.subtests.len() > 1;
-
-    rsx! {
-        BarePage { title: format!("WPT: {file_name}").into(),
-            div {
-                class: "wpt-test-page",
-                div {
-                    class: "wpt-test-page__breadcrumbs",
-                    WptBreadcrumb { area: name.trim_start_matches('/').to_string() }
-                }
-                div {
-                    class: "wpt-test-page__header",
-                    p {
-                        b { "Status: " }
-                        {status_str(test.status)}
-                        if let Some(duration) = test.duration_ms {
-                            " | "
-                            b { "Duration: " }
-                            {format!("{duration}ms")}
-                        }
-                        " | "
-                        b { "Subtests: " }
-                        {format!("{}/{}", counts.0, counts.1)}
-                        " | "
-                        a {
-                            href: format!("https://wpt.live/{name}"),
-                            target: "_blank",
-                            "Open test on wpt.live"
-                        }
-                        if let Some(ref_link) = &first_ref {
-                            " | "
-                            a {
-                                href: format!("https://wpt.live{}", ref_link.href),
-                                target: "_blank",
-                                "Open ref on wpt.live"
-                            }
-                        }
-                        " | "
-                        a {
-                            href: format!("https://wpt.fyi/results/{name}"),
-                            target: "_blank",
-                            "wpt.fyi"
-                        }
-                    }
-                    TestPageTabs {
-                        name: name.clone(),
-                        current_tab: tab,
-                        ref_link: first_ref.clone(),
-                        counts,
-                        show_subtests,
-                    }
-                }
-                div {
-                    class: "wpt-test-page__content",
-                    if show_subtests {
-                        TabPanel { tab: TestPageTab::Summary, current_tab: tab,
-                            CommitInfoDisplay { commit_info, label: "Data from commit:" }
-                            TestSummary { test: test.clone() }
-                        }
-                    }
-                    TabPanel { tab: TestPageTab::Test, current_tab: tab,
-                        if first_ref.is_none() {
-                            p {
-                                class: "wpt-js-toggle",
-                                label {
-                                    input {
-                                        r#type: "checkbox",
-                                        id: "enable-js-toggle",
-                                    }
-                                    " Enable JavaScript in test iframe"
-                                }
-                            }
-                        }
-                        TestIframe {
-                            path: format!("/{name}"),
-                            fixed_size: first_ref.is_some(),
-                            sandboxed: first_ref.is_none(),
-                        }
-                    }
-                    TabPanel { tab: TestPageTab::TestSource, current_tab: tab,
-                        SourceView { path: source_path.clone(), source: source.clone() }
-                    }
-                    if let Some(ref_link) = &first_ref {
-                        TabPanel { tab: TestPageTab::Ref, current_tab: tab,
-                            TestIframe { path: ref_link.href.clone(), fixed_size: true, sandboxed: false }
-                        }
-                        TabPanel { tab: TestPageTab::RefSource, current_tab: tab,
-                            if let Some(ref_source) = &ref_source {
-                                SourceView { path: ref_link.href.clone(), source: ref_source.clone() }
-                            }
-                        }
-                    }
-                }
-                script { dangerous_inner_html: TAB_SCRIPT }
-            }
-        }
-    }
-}
-
-/// Client-side tab switching. Panels for all tabs are rendered up front
-/// (so iframes keep their state when switching); this toggles which panel is
-/// visible and updates the URL. The `?tab=` links still work without JS.
-/// Also wires up the "enable JavaScript" toggle: the test iframe is sandboxed
-/// without `allow-scripts` by default, and the toggle lifts the sandbox and
-/// reloads the iframe.
-const TAB_SCRIPT: &str = r#"
-document.querySelectorAll('.tab-container a[data-tab]').forEach(function (link) {
-    link.addEventListener('click', function (event) {
-        event.preventDefault();
-        var tab = link.getAttribute('data-tab');
-        document.querySelectorAll('.tab-container a[data-tab]').forEach(function (l) {
-            l.classList.toggle('tab--selected', l === link);
-        });
-        document.querySelectorAll('.wpt-tab-panel').forEach(function (panel) {
-            panel.classList.toggle('wpt-tab-panel--active', panel.getAttribute('data-tab') === tab);
-        });
-        history.replaceState(null, '', link.getAttribute('href'));
-    });
-});
-
-var jsToggle = document.getElementById('enable-js-toggle');
-if (jsToggle) {
-    jsToggle.addEventListener('change', function () {
-        var iframe = document.querySelector('.wpt-tab-panel[data-tab=\"test\"] iframe');
-        if (!iframe) return;
-        // Replace the iframe node rather than resetting src, which would
-        // add a browser history entry.
-        var replacement = iframe.cloneNode();
-        if (jsToggle.checked) {
-            replacement.removeAttribute('sandbox');
-        } else {
-            replacement.setAttribute('sandbox', 'allow-same-origin');
-        }
-        iframe.replaceWith(replacement);
-    });
-}
-"#;
-
-#[component]
-fn TabPanel(tab: TestPageTab, current_tab: TestPageTab, children: Element) -> Element {
-    rsx! {
-        div {
-            class: if tab == current_tab { "wpt-tab-panel wpt-tab-panel--active" } else { "wpt-tab-panel" },
-            "data-tab": tab.query_value(),
-            {children}
-        }
-    }
-}
-
-#[component]
-fn TestPageTabs(
-    name: String,
-    current_tab: TestPageTab,
-    ref_link: Option<RefLink>,
-    counts: (u32, u32),
-    show_subtests: bool,
-) -> Element {
-    let base = format!("/status/wpt/{}", encode_test_path(&name));
-
-    let mut tabs: Vec<(TestPageTab, String)> = vec![(TestPageTab::Test, "Test".to_string())];
-    if let Some(ref_link) = &ref_link {
-        let label = if ref_link.rel == "mismatch" {
-            "Ref (mismatch)"
-        } else {
-            "Ref"
-        };
-        tabs.push((TestPageTab::Ref, label.to_string()));
-    }
-    tabs.push((TestPageTab::TestSource, "Test Source".to_string()));
-    if ref_link.is_some() {
-        tabs.push((TestPageTab::RefSource, "Ref Source".to_string()));
-    }
-    if show_subtests {
-        tabs.push((
-            TestPageTab::Summary,
-            format!("Subtests ({}/{})", counts.0, counts.1),
-        ));
-    }
-
-    rsx! {
-        div {
-            class: "tab-container",
-            for (tab, label) in tabs {
-                a {
-                    class: if tab == current_tab { "tab tab--selected" } else { "tab" },
-                    href: format!("{base}?tab={}", tab.query_value()),
-                    "data-tab": tab.query_value(),
-                    {label}
-                }
-            }
-        }
-    }
-}
-
-#[component]
-fn TestSummary(test: RunTestDetail) -> Element {
-    rsx! {
-        if let Some(message) = &test.message {
-            p { b { "Message: " } {message.clone()} }
-        }
-        if !test.subtests.is_empty() {
-            table {
-                width: "100%",
-                margin_top: "24px",
-                tr {
-                    th { "Subtest" }
-                    th { "Status" }
-                    th { "Message" }
-                }
-                for subtest in &test.subtests {
-                    tr {
-                        td { {subtest.name.clone()} }
-                        td {
-                            background_color: subtest_status_color(subtest.status),
-                            {status_str(subtest.status)}
-                        }
-                        td { {subtest.message.clone().unwrap_or_default()} }
-                    }
-                }
-            }
-        }
-    }
-}
-
-fn subtest_status_color(status: i64) -> &'static str {
-    match status_str(status) {
-        "PASS" => "rgb(129,199,132)",
-        "FAIL" | "ERROR" => "rgb(229,115,115)",
-        _ => "rgb(255,213,79)",
-    }
-}
-
-#[component]
-fn TestIframe(path: String, fixed_size: bool, sandboxed: bool) -> Element {
-    rsx! {
-        iframe {
-            class: if fixed_size { "wpt-test-iframe wpt-test-iframe--fixed" } else { "wpt-test-iframe" },
-            src: format!("https://wpt.live{path}"),
-            "sandbox": if sandboxed { "allow-same-origin" },
-        }
-    }
-}
-
-#[component]
-fn SourceView(path: String, source: SourceResult) -> Element {
-    rsx! {
-        p {
-            a {
-                href: format!("https://wpt.live{path}"),
-                target: "_blank",
-                {path.clone()}
-            }
-        }
-        match &source {
-            Ok(source) => rsx! {
-                div {
-                    class: "wpt-source",
-                    dangerous_inner_html: highlight_source(source, &path),
-                }
-            },
-            Err(err) => rsx! {
-                p { color: "#8c3037", "Failed to load source: {err}" }
-            },
-        }
-    }
-}
-
-static SYNTAX_SET: LazyLock<SyntaxSet> = LazyLock::new(SyntaxSet::load_defaults_newlines);
-static THEME: LazyLock<Theme> = LazyLock::new(|| {
-    syntect::highlighting::ThemeSet::load_defaults()
-        .themes
-        .remove("InspiredGitHub")
-        .unwrap()
-});
-
-fn highlight_source(source: &str, path: &str) -> String {
-    let extension = match path.rsplit('.').next().unwrap_or("html") {
-        "xht" => "xhtml",
-        ext => ext,
-    };
-    let syntax = SYNTAX_SET
-        .find_syntax_by_extension(extension)
-        .unwrap_or_else(|| SYNTAX_SET.find_syntax_plain_text());
-
-    syntect::html::highlighted_html_for_string(source, &SYNTAX_SET, syntax, &THEME)
-        .unwrap_or_else(|_| format!("<pre>{}</pre>", html_escape(source)))
-}
-
-fn html_escape(text: &str) -> String {
-    text.replace('&', "&amp;")
-        .replace('<', "&lt;")
-        .replace('>', "&gt;")
 }
