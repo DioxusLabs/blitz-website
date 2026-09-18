@@ -386,11 +386,22 @@ enum MessagePart {
 ///
 /// Anything else is passed through as text.
 fn parse_message(message: &str) -> Vec<Vec<MessagePart>> {
-    message
-        .lines()
-        .filter(|line| !line.trim().is_empty())
-        .map(parse_message_line)
-        .collect()
+    let mut lines: Vec<Vec<MessagePart>> = Vec::new();
+    for line in message.lines().filter(|line| !line.trim().is_empty()) {
+        let parts = parse_message_line(line);
+        // `Actual: …` / `Expected: …` on consecutive lines are shown as one
+        // expected/got line, expected first
+        if let ([MessagePart::Expected(_)], Some([MessagePart::Actual(_)])) =
+            (parts.as_slice(), lines.last().map(Vec::as_slice))
+        {
+            let mut previous = lines.pop().unwrap();
+            previous.splice(0..0, parts);
+            lines.push(previous);
+            continue;
+        }
+        lines.push(parts);
+    }
+    lines
 }
 
 fn parse_message_line(line: &str) -> Vec<MessagePart> {
@@ -569,8 +580,10 @@ mod tests {
             ),
             vec![
                 vec![Text("Colors do not match.".into())],
-                vec![Actual("color(srgb 0 0 0)".into())],
-                vec![Expected("hsl(none none none)".into())],
+                vec![
+                    Expected("hsl(none none none)".into()),
+                    Actual("color(srgb 0 0 0)".into())
+                ],
                 vec![
                     Assertion("assert_array_approx_equals".into()),
                     Text("lengths differ,".into()),
