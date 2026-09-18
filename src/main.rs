@@ -338,8 +338,12 @@ async fn main() {
     tokio::spawn(WPT_SUMMARY_CACHE.refresh(|existing| {
         load_wpt_summaries(vec![("blitz".to_string(), "css".to_string())], existing)
     }));
-    // Refresh WPT comparison data on startup and every 15 minutes (the first
-    // tick fires immediately), so new runs are ingested off the request path
+    // Serve the runs from the previous process right away, then refresh WPT
+    // comparison data on startup and every 15 minutes (the first tick fires
+    // immediately), so new runs are ingested off the request path
+    tokio::task::spawn_blocking(wpt_compare::seed_from_db)
+        .await
+        .unwrap();
     tokio::spawn(async {
         let mut interval = tokio::time::interval(Duration::from_mins(15));
         loop {
