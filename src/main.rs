@@ -42,10 +42,9 @@ use tower_http::{
 };
 use tracing::Level;
 use wpt::{load_wpt_results, WPT_REPORT_CACHE};
-use wpt_browser_history::{load_browser_history, BROWSER_HISTORY_CACHE};
 use wpt_compare::{load_wpt_compare, WPT_COMPARE_CACHE};
 use wpt_db::WPT_COMPARE_DB;
-use wpt_history::{load_wpt_history, WPT_HISTORY_CACHE};
+use wpt_summaries::{load_wpt_summaries, WPT_SUMMARY_CACHE};
 
 mod cache;
 mod components;
@@ -54,13 +53,13 @@ mod git_mirror;
 mod github;
 mod routes;
 mod wpt;
-mod wpt_browser_history;
 mod wpt_compare;
 mod wpt_db;
 mod wpt_fyi;
 mod wpt_history;
 mod wpt_source;
 mod wpt_spec_meta;
+mod wpt_summaries;
 
 #[cfg(feature = "mimalloc")]
 #[global_allocator]
@@ -334,14 +333,11 @@ async fn main() {
 
     // Prime WPT result and download caches
     tokio::spawn(WPT_REPORT_CACHE.refresh(load_wpt_results));
-    tokio::spawn(
-        WPT_HISTORY_CACHE.refresh(|existing| load_wpt_history(vec!["css".to_string()], existing)),
-    );
-    // Clone (or fetch) the browser history repository so the first
-    // comparison page doesn't wait on it
-    tokio::spawn(
-        BROWSER_HISTORY_CACHE.refresh(|existing| load_browser_history(Vec::new(), existing)),
-    );
+    // Clone (or fetch) the score history repository so the first history
+    // page doesn't wait on it
+    tokio::spawn(WPT_SUMMARY_CACHE.refresh(|existing| {
+        load_wpt_summaries(vec![("blitz".to_string(), "css".to_string())], existing)
+    }));
     // Refresh WPT comparison data on startup and every 15 minutes (the first
     // tick fires immediately), so new runs are ingested off the request path
     tokio::spawn(async {
@@ -364,48 +360,39 @@ async fn main() {
         .unwrap();
 }
 
-/// Get the latest WPT history data for a set of areas, refreshing it if it
-/// is stale (serve directly for 30s; serve stale-while-revalidate for 30min).
-/// A refresh only revalidates runs.json (all summary files change together),
-/// so cached areas are reused and only missing area files are fetched.
-async fn fresh_wpt_history(areas: Vec<String>) -> Option<ArcWptHistory> {
-    let entry = WPT_HISTORY_CACHE
-        .get_usable_or_refresh(
-            Duration::from_secs(30),
-            Duration::from_mins(30),
-            |entry| entry.contains_areas(&areas),
-            {
-                let areas = areas.clone();
-                |existing| load_wpt_history(areas, existing)
-            },
-        )
-        .await?;
-    Some(entry.merged(&areas))
-}
-
-/// Get the browser score history for a set of `(product, area)` pairs from
-/// the local clone of browser-wpt-results (fetching every 5 minutes; a clone
-/// up to a day old is served while re-fetching in the background). Pairs
-/// not yet cached are read from the clone before returning.
-async fn fresh_browser_history(
+/// Get the score history for a set of `(product, area)` pairs from the local
+/// clone of browser-wpt-results (fetching every 5 minutes; a clone up to a
+/// day old is served while re-fetching in the background). Pairs not yet
+/// cached are read from the clone before returning.
+async fn fresh_wpt_summaries(
     requests: Vec<(String, String)>,
-) -> Option<std::sync::Arc<cache::Cached<wpt_browser_history::BrowserHistoryCacheEntry>>> {
-    BROWSER_HISTORY_CACHE
+) -> Option<std::sync::Arc<cache::Cached<wpt_summaries::SummaryCacheEntry>>> {
+    WPT_SUMMARY_CACHE
         .get_usable_or_refresh(
-            wpt_browser_history::FETCH_INTERVAL,
+            wpt_summaries::FETCH_INTERVAL,
             Duration::from_hours(24),
             |entry| entry.contains(&requests),
             {
                 let requests = requests.clone();
-                |existing| load_browser_history(requests, existing)
+                |existing| load_wpt_summaries(requests, existing)
             },
         )
         .await
 }
 
+/// Blitz's score history for a set of areas
+async fn fresh_wpt_history(areas: Vec<String>) -> Option<ArcWptHistory> {
+    let requests = areas
+        .iter()
+        .map(|area| ("blitz".to_string(), area.clone()))
+        .collect();
+    fresh_wpt_summaries(requests)
+        .await?
+        .history("blitz", &areas)
+}
+
 /// One history chart line per engine that has results for `area` in the
-/// comparison (`total` is index-aligned with `runs`). Blitz's history comes
-/// from blitz-wpt-results, the browsers' from browser-wpt-results.
+/// comparison (`total` is index-aligned with `runs`)
 async fn compare_history(
     runs: &[wpt_db::RunRow],
     area: &str,
@@ -422,27 +409,18 @@ async fn compare_history(
         .map(|(run, _)| run.product.as_str())
         .collect();
 
-    let browser_requests: Vec<(String, String)> = products
+    let requests: Vec<(String, String)> = products
         .iter()
-        .filter(|product| **product != "blitz")
         .map(|product| (product.to_string(), area.to_string()))
         .collect();
-    let browsers = if browser_requests.is_empty() {
-        None
-    } else {
-        fresh_browser_history(browser_requests).await
+    let Some(summaries) = fresh_wpt_summaries(requests).await else {
+        return Vec::new();
     };
 
+    let areas = [area.to_string()];
     let mut lines = Vec::new();
     for product in products {
-        let history = if product == "blitz" {
-            fresh_wpt_history(vec![area.to_string()]).await
-        } else {
-            browsers
-                .as_ref()
-                .and_then(|entry| entry.history(product, area))
-        };
-        if let Some(history) = history {
+        if let Some(history) = summaries.history(product, &areas) {
             lines.push(ChartLine {
                 history,
                 series: ChartSeries {

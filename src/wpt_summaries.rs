@@ -1,7 +1,7 @@
-//! Per-area score history for browsers (Chrome, Firefox, Safari, Ladybird,
-//! Servo, ...) from DioxusLabs/browser-wpt-results, which stores one
-//! blitz-wpt-results-style `summary/` dataset per product:
-//! `summary/<product>/{runs.json,areas/<area>.json}`.
+//! Per-area WPT score history for every engine (Blitz, Chrome, Firefox,
+//! Safari, Ladybird, Servo, ...) from DioxusLabs/browser-wpt-results, which
+//! stores one dataset per product: `summary/<product>/{runs.json,areas/<area>.json}`
+//! (see [`crate::wpt_history`] for the format).
 //!
 //! The repository is kept as a bare clone in the data directory and read with
 //! `gix`, so a refresh is one `git fetch` and reading an area is a local
@@ -18,7 +18,7 @@ use crate::wpt_history::{AreaFile, HistoryRun, RunMeta, RunsFile, ScoreTuple, Wp
 
 const REPO_URL: &str = "https://github.com/DioxusLabs/browser-wpt-results.git";
 /// Overrides the repository cloned (e.g. a local path for development)
-const REPO_URL_ENV: &str = "BROWSER_WPT_RESULTS_REPO";
+const REPO_URL_ENV: &str = "WPT_SUMMARIES_REPO";
 
 /// How long a synced clone is trusted before fetching again. Requests for
 /// areas not cached yet within this window are served from the local clone
@@ -32,13 +32,13 @@ static MIRROR: LazyLock<GitMirror> = LazyLock::new(|| {
     )
 });
 
-pub static BROWSER_HISTORY_CACHE: Cache<BrowserHistoryCacheEntry> = Cache::new();
+pub static WPT_SUMMARY_CACHE: Cache<SummaryCacheEntry> = Cache::new();
 
 /// Cached summary data, keyed on the commit it was read from: every update
 /// to the repository is one commit touching all of a product's files, so
 /// while the commit is unchanged every cached file is still valid.
 #[derive(Clone)]
-pub struct BrowserHistoryCacheEntry {
+pub struct SummaryCacheEntry {
     commit: gix::ObjectId,
     synced_at: Instant,
     runs: HashMap<String, Arc<Vec<RunMeta>>>,
@@ -48,7 +48,7 @@ pub struct BrowserHistoryCacheEntry {
     missing: HashSet<(String, String)>,
 }
 
-impl BrowserHistoryCacheEntry {
+impl SummaryCacheEntry {
     /// Whether every request has been looked up (found or not)
     pub fn contains(&self, requests: &[(String, String)]) -> bool {
         requests
@@ -56,23 +56,33 @@ impl BrowserHistoryCacheEntry {
             .all(|request| self.areas.contains_key(request) || self.missing.contains(request))
     }
 
-    /// The history of a single area for a product, or `None` if the product
-    /// has no data for it
-    pub fn history(&self, product: &str, area: &str) -> Option<ArcWptHistory> {
+    /// The merged history of a product for a set of areas (silently dropping
+    /// areas the product has no data file for), or `None` if the product is
+    /// unknown or has none of the areas
+    pub fn history(&self, product: &str, areas: &[String]) -> Option<ArcWptHistory> {
         let runs = self.runs.get(product)?;
-        let scores = self.areas.get(&(product.to_string(), area.to_string()))?;
+        let present: Vec<(&String, &Arc<Vec<Option<ScoreTuple>>>)> = areas
+            .iter()
+            .filter_map(|area| {
+                let scores = self.areas.get(&(product.to_string(), area.clone()))?;
+                Some((area, scores))
+            })
+            .collect();
+        if present.is_empty() {
+            return None;
+        }
         let runs = runs
             .iter()
-            .zip(scores.iter())
-            .map(|(meta, score)| HistoryRun {
+            .enumerate()
+            .map(|(i, meta)| HistoryRun {
                 date: meta.date.clone(),
                 product_revision: meta.product_revision.clone(),
                 commit_message: meta.commit_message.clone(),
-                scores: vec![*score],
+                scores: present.iter().map(|(_, scores)| scores[i]).collect(),
             })
             .collect();
         Some(ArcWptHistory(Arc::new(WptHistory {
-            focus_areas: vec![area.to_string()],
+            focus_areas: present.iter().map(|(area, _)| (*area).clone()).collect(),
             runs,
         })))
     }
@@ -83,10 +93,10 @@ impl BrowserHistoryCacheEntry {
 static SYNC_LOCK: tokio::sync::Mutex<()> = tokio::sync::Mutex::const_new(());
 
 /// Load (or revalidate) the history for a set of `(product, area)` pairs
-pub async fn load_browser_history(
+pub async fn load_wpt_summaries(
     requests: Vec<(String, String)>,
-    existing: Option<Arc<Cached<BrowserHistoryCacheEntry>>>,
-) -> RefreshOutcome<BrowserHistoryCacheEntry> {
+    existing: Option<Arc<Cached<SummaryCacheEntry>>>,
+) -> RefreshOutcome<SummaryCacheEntry> {
     let Ok(_guard) = SYNC_LOCK.try_lock() else {
         return RefreshOutcome::Unchanged;
     };
@@ -103,25 +113,25 @@ pub async fn load_browser_history(
 
 fn load_blocking(
     requests: Vec<(String, String)>,
-    existing: Option<Arc<Cached<BrowserHistoryCacheEntry>>>,
+    existing: Option<Arc<Cached<SummaryCacheEntry>>>,
     fetch: bool,
-) -> RefreshOutcome<BrowserHistoryCacheEntry> {
+) -> RefreshOutcome<SummaryCacheEntry> {
     let mut synced_at = existing
         .as_ref()
         .map(|entry| entry.synced_at)
         .unwrap_or_else(Instant::now);
     if fetch {
-        println!("Syncing browser WPT history repository...");
+        println!("Syncing WPT summaries repository...");
         match MIRROR.sync() {
             Ok(()) => synced_at = Instant::now(),
             // A stale clone is still usable; only a missing one is fatal
-            Err(err) => println!("Failed to sync browser WPT history repository: {err}"),
+            Err(err) => println!("Failed to sync WPT summaries repository: {err}"),
         }
     }
     let snapshot = match MIRROR.head() {
         Ok(snapshot) => snapshot,
         Err(err) => {
-            println!("Browser WPT history repository unavailable: {err}");
+            println!("WPT summaries repository unavailable: {err}");
             return RefreshOutcome::Failed;
         }
     };
@@ -176,12 +186,12 @@ fn load_blocking(
     }
     if read > 0 {
         println!(
-            "Browser WPT history: read {read} area files at {}",
+            "WPT summaries: read {read} area files at {}",
             snapshot.commit
         );
     }
 
-    RefreshOutcome::Updated(BrowserHistoryCacheEntry {
+    RefreshOutcome::Updated(SummaryCacheEntry {
         commit: snapshot.commit,
         synced_at,
         runs,
