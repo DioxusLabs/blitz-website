@@ -437,6 +437,7 @@ async fn wpt_compare_route(area: String, query: WptCompareQuery) -> Response {
         Some(range) => ChartRange::from_query(Some(range)),
         None => ChartRange::Year1,
     };
+    let history_open = query.range.is_some();
     // Default: top-level areas by subtest count, deeper levels alphabetical
     let sort = match query.sort.as_deref() {
         Some("alpha") => wpt_db::AreaSort::Alpha,
@@ -502,6 +503,7 @@ async fn wpt_compare_route(area: String, query: WptCompareQuery) -> Response {
                 tests,
                 history,
                 range,
+                history_open,
             };
             dx_route_with_props(WptComparePage, props)
                 .await

@@ -50,6 +50,9 @@ pub fn WptComparePage(
     tests: Vec<TestRow>,
     history: Vec<ChartLine>,
     range: ChartRange,
+    /// Whether the history chart starts expanded (it does when a range was
+    /// chosen explicitly, so the range buttons don't collapse it)
+    history_open: bool,
 ) -> Element {
     let child_prefix = if area.is_empty() {
         String::new()
@@ -82,7 +85,7 @@ pub fn WptComparePage(
             WptCompareBreadcrumb { area: area.clone() }
             SpecInfoDisplay { area: area.clone() }
             RunInfoDisplay { runs: runs.clone() }
-            CompareHistoryChart { area: area.clone(), history, range }
+            CompareHistoryChart { area: area.clone(), history, range, open: history_open }
             SortToggle { area: area.clone(), sort }
             table {
                 width: "100%",
@@ -122,13 +125,18 @@ pub fn WptComparePage(
 
 /// Score history of an area, one line per engine
 #[component]
-fn CompareHistoryChart(area: String, history: Vec<ChartLine>, range: ChartRange) -> Element {
+fn CompareHistoryChart(
+    area: String,
+    history: Vec<ChartLine>,
+    range: ChartRange,
+    open: bool,
+) -> Element {
     if history.is_empty() {
         return rsx! {};
     }
     rsx! {
         details {
-            open: true,
+            open,
             summary { "Score history" }
             p {
                 font_size: "smaller",
