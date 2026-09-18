@@ -248,10 +248,22 @@ fn TestResults(runs: Vec<RunRow>, detail: TestDetail) -> Element {
         .max()
         .unwrap_or(1)
         .max(1);
-    let has_messages = detail
-        .subtests
+    // The engines with any subtest message stored (messages are only kept
+    // for Blitz's runs, so this is normally just "Blitz"); the message
+    // column is named after them
+    let message_products: Vec<String> = runs
         .iter()
-        .any(|subtest| subtest.messages.iter().any(Option::is_some));
+        .enumerate()
+        .filter(|(idx, _)| {
+            detail
+                .subtests
+                .iter()
+                .any(|subtest| subtest.messages[*idx].is_some())
+        })
+        .map(|(_, run)| product_label(&run.product))
+        .collect();
+    let has_messages = !message_products.is_empty();
+    let message_header = format!("{} error message", message_products.join(" / "));
 
     rsx! {
         table {
@@ -292,7 +304,7 @@ fn TestResults(runs: Vec<RunRow>, detail: TestDetail) -> Element {
                         th { text_align: "center", {product_label(&run.product)} }
                     }
                     if has_messages {
-                        th { "Message" }
+                        th { {message_header.clone()} }
                     }
                 }
                 for subtest in &detail.subtests {
