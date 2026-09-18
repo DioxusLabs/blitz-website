@@ -508,9 +508,9 @@ fn FormattedMessage(message: String) -> Element {
                         },
                         MessagePart::Html(html) => rsx! {
                             details {
-                                class: "wpt-message__html",
+                                class: "wpt-message__html wpt-source",
                                 summary { "element markup" }
-                                pre { {html} }
+                                div { dangerous_inner_html: highlight_source(&indent_html(&html), "dump.html") }
                             }
                         },
                     }
@@ -520,9 +520,68 @@ fn FormattedMessage(message: String) -> Element {
     }
 }
 
+/// Re-flow a single-line HTML dump with one tag (or text run) per line,
+/// indented by nesting depth. Good enough for testharness element dumps;
+/// not a full parser.
+fn indent_html(html: &str) -> String {
+    const VOID: &[&str] = &[
+        "area", "base", "br", "col", "embed", "hr", "img", "input", "link", "meta", "source",
+        "track", "wbr",
+    ];
+    let mut out = String::new();
+    let mut depth: usize = 0;
+    let mut push_line = |depth: usize, text: &str| {
+        if !out.is_empty() {
+            out.push('\n');
+        }
+        out.push_str(&"  ".repeat(depth));
+        out.push_str(text);
+    };
+    let mut rest = html;
+    while !rest.is_empty() {
+        let Some(open) = rest.find('<') else {
+            push_line(depth, rest.trim());
+            break;
+        };
+        let text = rest[..open].trim();
+        if !text.is_empty() {
+            push_line(depth, text);
+        }
+        let Some(close) = rest[open..].find('>') else {
+            push_line(depth, rest[open..].trim());
+            break;
+        };
+        let tag = &rest[open..open + close + 1];
+        rest = &rest[open + close + 1..];
+        if tag.starts_with("</") {
+            depth = depth.saturating_sub(1);
+            push_line(depth, tag);
+        } else {
+            push_line(depth, tag);
+            let name: String = tag[1..]
+                .chars()
+                .take_while(|c| c.is_ascii_alphanumeric() || *c == '-')
+                .collect();
+            let self_closing = tag.ends_with("/>") || VOID.contains(&name.as_str());
+            if !self_closing && !tag.starts_with("<!") {
+                depth += 1;
+            }
+        }
+    }
+    out
+}
+
 #[cfg(test)]
 mod tests {
-    use super::{parse_message, MessagePart::*};
+    use super::{indent_html, parse_message, MessagePart::*};
+
+    #[test]
+    fn indents_dumped_markup() {
+        assert_eq!(
+            indent_html("<div class=\"a\"><div>X<br />XX<span>Y</span></div></div>"),
+            "<div class=\"a\">\n  <div>\n    X\n    <br />\n    XX\n    <span>\n      Y\n    </span>\n  </div>\n</div>"
+        );
+    }
 
     #[test]
     fn assert_equals_with_description() {
