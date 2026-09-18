@@ -1,15 +1,7 @@
-use std::{
-    collections::BTreeMap,
-    ops::Deref,
-    sync::{Arc, LazyLock},
-};
+use std::sync::LazyLock;
 
 use dioxus::prelude::*;
 use syntect::{highlighting::Theme, parsing::SyntaxSet};
-use wptreport::{
-    wpt_report::{SubtestStatus, TestResult, TestStatus, WptReport},
-    AreaScores, SubtestCounts, TestResultIter,
-};
 
 use crate::{
     components::{BarePage, CommitInfoDisplay, Page},
@@ -18,6 +10,7 @@ use crate::{
         ArcWptHistory, ChartRange, ChartRangeSelector, ChartSeries, StatusHeader, StatusTabs,
         WptHistoryChart, SERIES_COLORS,
     },
+    wpt_db::{status_str, AreaScore, RunTestDetail, TestRow},
     wpt_source::{RefLink, SourceResult},
 };
 
@@ -53,45 +46,26 @@ const COLORS: Colors = Colors(&[
     [129, 199, 132],
 ]);
 
-#[derive(Clone)]
-pub struct ArcWptReport(pub Arc<WptReport>);
-impl PartialEq for ArcWptReport {
-    fn eq(&self, other: &Self) -> bool {
-        Arc::ptr_eq(&self.0, &other.0)
-    }
-}
-impl Deref for ArcWptReport {
-    type Target = WptReport;
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
-}
-
-type WptScores = BTreeMap<String, AreaScores>;
-
-#[derive(Clone)]
-pub struct ArcWptScores(pub Arc<WptScores>);
-impl PartialEq for ArcWptScores {
-    fn eq(&self, other: &Self) -> bool {
-        Arc::ptr_eq(&self.0, &other.0)
-    }
-}
-impl Deref for ArcWptScores {
-    type Target = WptScores;
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
+/// Blitz's latest results for one WPT folder, from the comparison database
+#[derive(Clone, PartialEq)]
+pub struct BlitzAreaResults {
+    pub area: String,
+    /// The folder's own score (None if Blitz has no data for it)
+    pub score: Option<AreaScore>,
+    /// Direct child folders, largest first
+    pub child_areas: Vec<(String, Option<AreaScore>)>,
+    /// Tests directly in the folder, with Blitz's result as the only run
+    pub tests: Vec<TestRow>,
 }
 
 #[component]
 pub fn WptResultsPage(
-    report: ArcWptReport,
-    scores: ArcWptScores,
+    results: BlitzAreaResults,
     commit_info: Option<CommitInfo>,
-    area: String,
     history: Option<ArcWptHistory>,
     range: ChartRange,
 ) -> Element {
+    let area = results.area.clone();
     rsx! {
         Page { title: "Status: WPT".into(),
             StatusHeader {}
@@ -99,12 +73,6 @@ pub fn WptResultsPage(
             p {
                 dangerous_inner_html: r#"
                 This page documents Blitz's scores on the "css" subsuite of the <a href="https://github.com/web-platform-tests/wpt" target="_blank">Web Platform Tests</a>."#
-            }
-            p {
-                font_size: "smaller",
-                "Note: As it does not have a JavaScript engine, Blitz can only run about 20% of the total subtests. In the numbers below, tests that Blitz can't run are ignored
-                and percentages are relative to the number of tests run.
-                "
             }
             hr {}
             WptBreadcrumb { area: area.clone() }
@@ -115,24 +83,9 @@ pub fn WptResultsPage(
                 base_path: "/status/wpt/{area}",
             }
             CommitInfoDisplay { commit_info, label: "Data from commit:" }
-            WptAreaResults { report, scores, area }
+            WptAreaResults { results }
         }
     }
-}
-
-/// The direct child areas of a folder, largest (by subtest count) first
-pub fn child_areas(scores: &WptScores, folder: &str) -> Vec<(String, AreaScores)> {
-    let prefix = format!("{folder}/");
-    let mut children: Vec<(String, AreaScores)> = scores
-        .iter()
-        .filter(|(area, _)| {
-            area.strip_prefix(&prefix)
-                .is_some_and(|rest| !rest.contains('/'))
-        })
-        .map(|(area, scores)| (area.clone(), *scores))
-        .collect();
-    children.sort_by_key(|(_, scores)| std::cmp::Reverse(scores.subtests.total));
-    children
 }
 
 /// A short history chart for a folder, showing a single line for the
@@ -193,27 +146,14 @@ pub fn WptBreadcrumb(area: String) -> Element {
 }
 
 #[component]
-pub fn WptAreaResults(report: ArcWptReport, scores: ArcWptScores, area: String) -> Element {
+pub fn WptAreaResults(results: BlitzAreaResults) -> Element {
+    let BlitzAreaResults {
+        area,
+        score,
+        child_areas,
+        tests,
+    } = results;
     let child_prefix = format!("{area}/");
-    let child_areas: Vec<(&String, &AreaScores)> = scores
-        .iter()
-        .filter(|(key, _)| {
-            key.starts_with(&child_prefix) && !key[child_prefix.len()..].contains('/')
-        })
-        .collect();
-
-    let tests: Vec<&TestResult> = report
-        .results
-        .iter()
-        .filter(|test| {
-            test.test
-                .rsplit_once('/')
-                .map(|(dir, _)| dir == area)
-                .unwrap_or(false)
-        })
-        .collect();
-
-    let area_scores = scores.get(&area).copied().unwrap_or_default();
 
     rsx!(
         table {
@@ -226,12 +166,12 @@ pub fn WptAreaResults(report: ArcWptReport, scores: ArcWptScores, area: String) 
                 th { "Subtests" }
                 th { "Subtest %" }
             }
-            {area_score_row("Total".to_string(), None, area_scores)}
+            {area_score_row("Total".to_string(), None, score.unwrap_or_default())}
             for (key, scores) in child_areas {
                 {area_score_row(
                     key[child_prefix.len()..].to_string(),
                     Some(format!("/status/wpt/{key}")),
-                    *scores,
+                    scores.unwrap_or_default(),
                 )}
             }
         }
@@ -246,22 +186,23 @@ pub fn WptAreaResults(report: ArcWptReport, scores: ArcWptScores, area: String) 
                     th { "Status", }
                 }
                 for test in tests {
-                    TestScoreRow { name: test.test.clone(), status: test.status, counts: test.subtest_counts() }
+                    TestScoreRow { test }
                 }
             }
         }
     )
 }
 
-fn area_score_row(label: String, href: Option<String>, scores: AreaScores) -> Element {
-    let tests = scores.tests;
-    let subtests = scores.subtests;
-
-    let color = COLORS.get(subtests.pass_fraction() as f32);
+fn area_score_row(label: String, href: Option<String>, scores: AreaScore) -> Element {
+    let test_fraction = if scores.tests_total == 0 {
+        0.0
+    } else {
+        scores.tests_pass as f32 / scores.tests_total as f32
+    };
 
     rsx!(
         tr {
-            background_color: format!("rgb({},{},{})", color[0], color[1], color[2]),
+            background_color: score_color(scores.subtest_fraction()),
             td {
                 background_color: "white",
                 if let Some(href) = href {
@@ -272,36 +213,42 @@ fn area_score_row(label: String, href: Option<String>, scores: AreaScores) -> El
             }
             td {
                 text_align: "right",
-                {format!("{:.2}%", (scores.interop_score() as f32 / 1000.0) * 100.0)}
+                {format!("{:.2}%", scores.interop_fraction() * 100.0)}
             }
             td {
                 text_align: "right",
-                {format!("({}/{})", tests.pass, tests.total)}
+                {format!("({}/{})", scores.tests_pass, scores.tests_total)}
             }
             td {
                 text_align: "right",
-                {format!("{:.2}%", tests.pass_fraction() * 100.0)}
+                {format!("{:.2}%", test_fraction * 100.0)}
             }
             td {
                 text_align: "right",
-                {format!("({}/{})", subtests.pass, subtests.total)}
+                {format!("({}/{})", scores.subtests_pass, scores.subtests_total)}
             }
             td {
                 text_align: "right",
-                {format!("{:.2}%", subtests.pass_fraction() * 100.0)}
+                {format!("{:.2}%", scores.subtest_fraction() * 100.0)}
             }
         }
     )
 }
 
+/// A test row on the folder page: `test.results` holds Blitz's run only
 #[component]
-fn TestScoreRow(name: String, status: TestStatus, counts: SubtestCounts) -> Element {
-    let color = COLORS.get(counts.pass_fraction() as f32);
+fn TestScoreRow(test: TestRow) -> Element {
+    let name = test.name.trim_start_matches('/').to_string();
     let file_name = name.rsplit_once('/').map(|(_, file)| file).unwrap_or(&name);
+    let result = test.results.first().copied().flatten();
+    let pass = result.map(|result| result.subtest_pass).unwrap_or(0);
+    let denom = test.denom.max(1);
+    let fraction = pass as f32 / denom as f32;
+    let status = result.map(|result| status_str(result.status)).unwrap_or("MISSING");
 
     rsx!(
         tr {
-            background_color: format!("rgb({},{},{})", color[0], color[1], color[2]),
+            background_color: score_color(fraction),
             td {
                 background_color: "white",
                 a {
@@ -311,15 +258,15 @@ fn TestScoreRow(name: String, status: TestStatus, counts: SubtestCounts) -> Elem
             }
             td {
                 text_align: "right",
-                {format!("({}/{})", counts.pass, counts.total)}
+                {format!("({pass}/{denom})")}
             }
             td {
                 text_align: "right",
-                {format!("{:.2}%", counts.pass_fraction() * 100.0)}
+                {format!("{:.2}%", fraction * 100.0)}
             }
             td {
                 text_align: "right",
-                {format!("{status:?}").to_uppercase()}
+                {status}
             }
         }
     )
@@ -366,16 +313,14 @@ impl TestPageTab {
 
 #[component]
 pub fn WptTestPage(
-    report: ArcWptReport,
+    test: RunTestDetail,
     commit_info: Option<CommitInfo>,
-    test_index: usize,
     tab: TestPageTab,
     source: SourceResult,
     refs: Vec<RefLink>,
     ref_source: Option<SourceResult>,
 ) -> Element {
-    let test = &report.results[test_index];
-    let name = test.test.clone();
+    let name = test.name.trim_start_matches('/').to_string();
 
     let file_name = name
         .rsplit_once('/')
@@ -386,7 +331,7 @@ pub fn WptTestPage(
     // The path used to fetch the source (test name without any query-string variant)
     let source_path = format!("/{}", name.split('?').next().unwrap_or(&name));
     let first_ref = refs.first().cloned();
-    let counts = test.subtest_counts();
+    let counts = (test.subtest_pass, test.denom.max(1));
     let show_subtests = test.subtests.len() > 1;
 
     rsx! {
@@ -401,13 +346,15 @@ pub fn WptTestPage(
                     class: "wpt-test-page__header",
                     p {
                         b { "Status: " }
-                        {format!("{:?}", test.status).to_uppercase()}
-                        " | "
-                        b { "Duration: " }
-                        {format!("{}ms", test.duration)}
+                        {status_str(test.status)}
+                        if let Some(duration) = test.duration_ms {
+                            " | "
+                            b { "Duration: " }
+                            {format!("{duration}ms")}
+                        }
                         " | "
                         b { "Subtests: " }
-                        {format!("{}/{}", counts.pass, counts.total)}
+                        {format!("{}/{}", counts.0, counts.1)}
                         " | "
                         a {
                             href: format!("https://wpt.live/{name}"),
@@ -442,7 +389,7 @@ pub fn WptTestPage(
                     if show_subtests {
                         TabPanel { tab: TestPageTab::Summary, current_tab: tab,
                             CommitInfoDisplay { commit_info, label: "Data from commit:" }
-                            TestSummary { report: report.clone(), test_index }
+                            TestSummary { test: test.clone() }
                         }
                     }
                     TabPanel { tab: TestPageTab::Test, current_tab: tab,
@@ -539,7 +486,7 @@ fn TestPageTabs(
     name: String,
     current_tab: TestPageTab,
     ref_link: Option<RefLink>,
-    counts: SubtestCounts,
+    counts: (u32, u32),
     show_subtests: bool,
 ) -> Element {
     let base = format!("/status/wpt/{}", encode_test_path(&name));
@@ -560,7 +507,7 @@ fn TestPageTabs(
     if show_subtests {
         tabs.push((
             TestPageTab::Summary,
-            format!("Subtests ({}/{})", counts.pass, counts.total),
+            format!("Subtests ({}/{})", counts.0, counts.1),
         ));
     }
 
@@ -580,9 +527,7 @@ fn TestPageTabs(
 }
 
 #[component]
-fn TestSummary(report: ArcWptReport, test_index: usize) -> Element {
-    let test = &report.results[test_index];
-
+fn TestSummary(test: RunTestDetail) -> Element {
     rsx! {
         if let Some(message) = &test.message {
             p { b { "Message: " } {message.clone()} }
@@ -601,7 +546,7 @@ fn TestSummary(report: ArcWptReport, test_index: usize) -> Element {
                         td { {subtest.name.clone()} }
                         td {
                             background_color: subtest_status_color(subtest.status),
-                            {format!("{:?}", subtest.status).to_uppercase()}
+                            {status_str(subtest.status)}
                         }
                         td { {subtest.message.clone().unwrap_or_default()} }
                     }
@@ -611,10 +556,10 @@ fn TestSummary(report: ArcWptReport, test_index: usize) -> Element {
     }
 }
 
-fn subtest_status_color(status: SubtestStatus) -> &'static str {
-    match status {
-        SubtestStatus::Pass => "rgb(129,199,132)",
-        SubtestStatus::Fail | SubtestStatus::Error => "rgb(229,115,115)",
+fn subtest_status_color(status: i64) -> &'static str {
+    match status_str(status) {
+        "PASS" => "rgb(129,199,132)",
+        "FAIL" | "ERROR" => "rgb(229,115,115)",
         _ => "rgb(255,213,79)",
     }
 }

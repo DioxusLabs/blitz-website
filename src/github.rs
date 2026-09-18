@@ -39,24 +39,6 @@ impl GithubClient {
             .unwrap()
     }
 
-    pub async fn commit_info(&self, sha: &str) -> Option<CommitInfo> {
-        let response = self
-            .try_get(&format!(
-                "https://api.github.com/repos/dioxuslabs/blitz/commits/{sha}"
-            ))
-            .await
-            .ok()?;
-        if !response.status().is_success() {
-            return None;
-        }
-        let commit: CommitResponse = response.json().await.ok()?;
-        Some(CommitInfo {
-            sha: sha.to_string(),
-            message: Some(commit.commit.message),
-            timestamp: commit.commit.committer.date,
-        })
-    }
-
     #[allow(dead_code)]
     pub async fn list_artifacts(&self, page: usize) -> ArtifactResponse {
         self.get_json::<ArtifactResponse>(&format!(
@@ -152,20 +134,4 @@ pub struct CommitInfo {
     pub sha: String,
     pub message: Option<String>,
     pub timestamp: Option<String>,
-}
-
-#[derive(Debug, Deserialize)]
-struct CommitResponse {
-    commit: CommitDetails,
-}
-
-#[derive(Debug, Deserialize)]
-struct CommitDetails {
-    message: String,
-    committer: Committer,
-}
-
-#[derive(Debug, Deserialize)]
-struct Committer {
-    date: Option<String>,
 }

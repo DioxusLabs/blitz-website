@@ -56,6 +56,16 @@ impl SummaryCacheEntry {
             .all(|request| self.areas.contains_key(request) || self.missing.contains(request))
     }
 
+    /// The metadata of a product's run by its `product_revision` (the commit
+    /// sha for Blitz), if the product's run list has been loaded
+    pub fn run_meta(&self, product: &str, product_revision: &str) -> Option<&RunMeta> {
+        self.runs
+            .get(product)?
+            .iter()
+            .rev()
+            .find(|meta| meta.product_revision == product_revision)
+    }
+
     /// The merged history of a product for a set of areas (silently dropping
     /// areas the product has no data file for), or `None` if the product is
     /// unknown or has none of the areas
