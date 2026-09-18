@@ -1,13 +1,15 @@
 // Hover tooltip for WPT history charts (progressive enhancement): reads run
-// data from each chart's JSON blob and shows the nearest run's commit id,
-// commit message, and pass percentages for the nearest line.
+// data from each chart's JSON blob and shows the nearest run of the nearest
+// line: its revision, commit message, and pass percentage. Each series has
+// its own list of runs (lines for different products are recorded on
+// different dates).
 document.querySelectorAll("script[data-wpt-history-data]").forEach(function (dataEl) {
     if (dataEl.dataset.tooltipInit) return;
     dataEl.dataset.tooltipInit = "1";
     var container = dataEl.parentElement;
     var svg = container.querySelector("svg");
     var data = JSON.parse(dataEl.textContent);
-    if (!svg || !data.runs.length) return;
+    if (!svg || !data.series.some(function (s) { return s.runs.length; })) return;
 
     var tip = document.createElement("div");
     tip.style.cssText =
@@ -31,18 +33,25 @@ document.querySelectorAll("script[data-wpt-history-data]").forEach(function (dat
     dot.style.display = "none";
     svg.appendChild(dot);
 
+    var px = data.plot[0], py = data.plot[1], pw = data.plot[2], ph = data.plot[3];
+    var xRange = data.xMax - data.xMin;
+
     function esc(s) {
         return s.replace(/&/g, "&amp;").replace(/</g, "&lt;");
     }
 
-    // Nearest hoverable run (runs before data.first only serve as deltas)
-    function nearest(x) {
-        var runs = data.runs, lo = data.first, hi = runs.length - 1;
+    function screenX(run) { return px + ((run.x - data.xMin) / xRange) * pw; }
+    function screenY(s, run) { return py + (1 - run.v[0] / s.latest) * ph; }
+
+    // Nearest hoverable run of a series to the x position `x` (in data
+    // units); runs before `s.first` only serve as deltas
+    function nearest(s, x) {
+        var runs = s.runs, lo = s.first, hi = runs.length - 1;
         while (lo < hi) {
             var mid = (lo + hi) >> 1;
             if (runs[mid].x < x) lo = mid + 1; else hi = mid;
         }
-        if (lo > data.first && Math.abs(runs[lo - 1].x - x) < Math.abs(runs[lo].x - x)) lo--;
+        if (lo > s.first && Math.abs(runs[lo - 1].x - x) < Math.abs(runs[lo].x - x)) lo--;
         return lo;
     }
 
@@ -52,106 +61,102 @@ document.querySelectorAll("script[data-wpt-history-data]").forEach(function (dat
         dot.style.display = "none";
     }
 
-    // Only show the series whose line is within this vertical distance
-    // (in viewBox units) of the cursor
+    // Only show a series whose line is within this distance (in viewBox
+    // units) of the cursor
     var Y_THRESHOLD = 12;
+
+    // Distance from the cursor to the series' drawn line. Measured to the
+    // polyline's segments (2D point-to-segment distance) so steep,
+    // near-vertical jumps are hoverable anywhere along their length, not
+    // just near their endpoints.
+    function distToSegment(x, y, x1, y1, x2, y2) {
+        var dx = x2 - x1, dy = y2 - y1;
+        var len2 = dx * dx + dy * dy;
+        var t = len2 ? ((x - x1) * dx + (y - y1) * dy) / len2 : 0;
+        t = Math.max(0, Math.min(1, t));
+        return Math.hypot(x - (x1 + t * dx), y - (y1 + t * dy));
+    }
+    function seriesDist(s, vx, vy) {
+        var runs = s.runs;
+        // Consider only segments within a horizontal window of the cursor
+        var windowPx = Y_THRESHOLD;
+        var dist = Infinity, prev = null;
+        for (var j = s.first; j < runs.length; j++) {
+            var run = runs[j];
+            if (run.v == null) continue;
+            var x = screenX(run), y = screenY(s, run);
+            if (prev && x >= vx - windowPx && screenX(prev) <= vx + windowPx) {
+                dist = Math.min(dist, distToSegment(vx, vy, screenX(prev), screenY(s, prev), x, y));
+            } else if (!prev && Math.abs(x - vx) <= windowPx) {
+                dist = Math.min(dist, Math.hypot(x - vx, y - vy));
+            }
+            if (x > vx + windowPx) break;
+            prev = run;
+        }
+        return dist;
+    }
 
     svg.addEventListener("mousemove", function (ev) {
         var rect = svg.getBoundingClientRect();
         var scale = data.width / rect.width;
         var vx = (ev.clientX - rect.left) * scale;
         var vy = (ev.clientY - rect.top) * scale;
-        var px = data.plot[0], py = data.plot[1], pw = data.plot[2], ph = data.plot[3];
         if (vx < px || vx > px + pw) { hide(); return; }
 
-        var xRange = data.xMax - data.xMin;
-        var runIdx = nearest(data.xMin + ((vx - px) / pw) * xRange);
-        var run = data.runs[runIdx];
-        var prev = runIdx > 0 ? data.runs[runIdx - 1] : null;
-
-        // Pick the single series whose drawn line is nearest the cursor.
-        // Distance is measured to the polyline's segments (2D point-to-segment
-        // distance) so steep, near-vertical jumps are hoverable anywhere along
-        // their length, not just near their endpoints.
-        function distToSegment(x, y, x1, y1, x2, y2) {
-            var dx = x2 - x1, dy = y2 - y1;
-            var len2 = dx * dx + dy * dy;
-            var t = len2 ? ((x - x1) * dx + (y - y1) * dy) / len2 : 0;
-            t = Math.max(0, Math.min(1, t));
-            return Math.hypot(x - (x1 + t * dx), y - (y1 + t * dy));
-        }
-        function seriesDist(i) {
-            var runs = data.runs, latest = data.series[i].latest;
-            function yOf(j) { return py + (1 - runs[j].v[i][0] / latest) * ph; }
-            function xOf(j) { return px + ((runs[j].x - data.xMin) / xRange) * pw; }
-            // Consider only segments within a horizontal window of the cursor
-            var windowPx = Y_THRESHOLD;
-            var dist = Infinity, prevJ = -1;
-            for (var j = data.first; j < runs.length; j++) {
-                if (runs[j].v[i] == null) continue;
-                if (prevJ >= 0 && xOf(j) >= vx - windowPx && xOf(prevJ) <= vx + windowPx) {
-                    dist = Math.min(dist, distToSegment(vx, vy, xOf(prevJ), yOf(prevJ), xOf(j), yOf(j)));
-                } else if (prevJ < 0 && Math.abs(xOf(j) - vx) <= windowPx) {
-                    dist = Math.min(dist, Math.hypot(xOf(j) - vx, yOf(j) - vy));
-                }
-                if (xOf(j) > vx + windowPx) break;
-                prevJ = j;
-            }
-            return dist;
-        }
-        var best = -1, bestDist = Y_THRESHOLD;
+        // Pick the single series whose drawn line is nearest the cursor
+        var s = null, bestDist = Y_THRESHOLD;
         for (var i = 0; i < data.series.length; i++) {
             if (!data.series[i].latest) continue;
-            var dist = seriesDist(i);
-            if (dist < bestDist) { best = i; bestDist = dist; }
+            var dist = seriesDist(data.series[i], vx, vy);
+            if (dist < bestDist) { s = data.series[i]; bestDist = dist; }
         }
-        if (best < 0 || run.v[best] == null) { hide(); return; }
+        if (!s) { hide(); return; }
 
-        // Prefer a nearby commit whose value actually changed for this
-        // series over the strictly-nearest commit
+        var runIdx = nearest(s, data.xMin + ((vx - px) / pw) * xRange);
+        if (s.runs[runIdx].v == null) { hide(); return; }
+
+        // Prefer a nearby run whose value actually changed over the
+        // strictly-nearest run
         var SNAP_PX = 10;
-        function screenX(i) { return px + ((data.runs[i].x - data.xMin) / xRange) * pw; }
         function hasChange(i) {
-            var cur = data.runs[i].v[best];
+            var cur = s.runs[i].v;
             if (cur == null) return false;
-            var p = i > 0 ? data.runs[i - 1].v[best] : null;
+            var p = i > 0 ? s.runs[i - 1].v : null;
             return p == null || cur[0] !== p[0] || cur[1] !== p[1];
         }
         var snapped = -1, snappedDist = SNAP_PX;
-        for (var j = data.first; j < data.runs.length; j++) {
-            var d = Math.abs(screenX(j) - vx);
+        for (var j = s.first; j < s.runs.length; j++) {
+            var d = Math.abs(screenX(s.runs[j]) - vx);
             if (d <= snappedDist && hasChange(j)) { snapped = j; snappedDist = d; }
         }
-        if (snapped >= 0 && !hasChange(runIdx)) {
-            runIdx = snapped;
-            run = data.runs[runIdx];
-            prev = runIdx > 0 ? data.runs[runIdx - 1] : null;
-        }
+        if (snapped >= 0 && !hasChange(runIdx)) runIdx = snapped;
+        var run = s.runs[runIdx];
+        var prev = runIdx > 0 ? s.runs[runIdx - 1] : null;
 
-        var runVx = px + ((run.x - data.xMin) / xRange) * pw;
+        var runVx = screenX(run);
         guide.setAttribute("x1", runVx);
         guide.setAttribute("x2", runVx);
         guide.style.display = "";
 
         dot.setAttribute("cx", runVx);
-        dot.setAttribute("cy", py + (1 - (run.v[best][0] / data.series[best].latest)) * ph);
-        dot.setAttribute("fill", data.series[best].color);
+        dot.setAttribute("cy", screenY(s, run));
+        dot.setAttribute("fill", s.color);
         dot.style.display = "";
 
-        var html = "<div style='font-weight:bold'>" + esc(run.sha.slice(0, 9)) + " (" + esc(run.d) + ")</div>";
+        var html = "<div style='font-weight:bold'>" + esc(run.rev) + " (" + esc(run.d) + ")</div>";
         if (run.msg) {
             html += "<div style='margin-bottom:4px;white-space:nowrap;overflow:hidden;" +
                 "text-overflow:ellipsis'>" + esc(run.msg) + "</div>";
         }
-        var pass = run.v[best][0], total = data.series[best].latest;
-        html += "<div><span style='color:" + data.series[best].color + "'>\u25CF</span> " +
-            esc(data.series[best].name) + ": " + (100 * pass / total).toFixed(1) + "% (" +
+        var pass = run.v[0], total = s.latest;
+        html += "<div><span style='color:" + s.color + "'>\u25CF</span> " +
+            esc(s.name) + ": " + (100 * pass / total).toFixed(1) + "% (" +
             pass.toLocaleString() + "/" + total.toLocaleString() + ")</div>";
 
         // Change relative to the previous run
-        if (prev && prev.v[best] != null) {
-            var dPass = pass - prev.v[best][0];
-            var dPct = 100 * ((pass - prev.v[best][0]) / total);
+        if (prev && prev.v != null) {
+            var dPass = pass - prev.v[0];
+            var dPct = 100 * (dPass / total);
             var sign = dPass > 0 ? "+" : "";
             var color = dPass > 0 ? "#2e7d32" : (dPass < 0 ? "#c62828" : "#666");
             html += "<div style='color:" + color + "'>Change: " + sign +

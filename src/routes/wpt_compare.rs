@@ -2,18 +2,32 @@ use dioxus::prelude::*;
 
 use crate::{
     components::Page,
-    routes::{encode_test_path, score_color},
+    routes::{encode_test_path, score_color, ChartLine, ChartRange, ChartRangeSelector, HistoryLineChart},
     wpt_db::{status_str, AreaScore, AreaSort, RunRow, SubtestRow, TestDetail, TestRow, TestRunResult},
 };
 
 use super::wpt_focus_areas::FOCUS_AREA_SETS;
 
 /// Display name for a product identifier (e.g. "chrome" -> "Chrome")
-pub(super) fn product_label(product: &str) -> String {
+pub fn product_label(product: &str) -> String {
     let mut chars = product.chars();
     match chars.next() {
         Some(first) => first.to_uppercase().collect::<String>() + chars.as_str(),
         None => String::new(),
+    }
+}
+
+/// The colour of a product's line on history charts
+pub fn product_color(product: &str) -> &'static str {
+    match product {
+        "blitz" => "#000000",
+        "chrome" => "#e57373",
+        "firefox" => "#ffb74d",
+        "safari" => "#64b5f6",
+        "ladybird" => "#ba68c8",
+        "servo" => "#4db6ac",
+        "flow" => "#8d6e63",
+        _ => "#a1887f",
     }
 }
 
@@ -34,6 +48,11 @@ pub fn WptComparePage(
     total: Vec<Option<AreaScore>>,
     child_areas: Vec<(String, Vec<Option<AreaScore>>)>,
     tests: Vec<TestRow>,
+    history: Vec<ChartLine>,
+    range: ChartRange,
+    /// Whether the history chart starts expanded (it does when a range was
+    /// chosen explicitly, so the range buttons don't collapse it)
+    history_open: bool,
 ) -> Element {
     let child_prefix = if area.is_empty() {
         String::new()
@@ -66,6 +85,7 @@ pub fn WptComparePage(
             WptCompareBreadcrumb { area: area.clone() }
             SpecInfoDisplay { area: area.clone() }
             RunInfoDisplay { runs: runs.clone() }
+            CompareHistoryChart { area: area.clone(), history, range, open: history_open }
             SortToggle { area: area.clone(), sort }
             table {
                 width: "100%",
@@ -99,6 +119,36 @@ pub fn WptComparePage(
                     }
                 }
             }
+        }
+    }
+}
+
+/// Score history of an area, one line per engine
+#[component]
+fn CompareHistoryChart(
+    area: String,
+    history: Vec<ChartLine>,
+    range: ChartRange,
+    open: bool,
+) -> Element {
+    if history.is_empty() {
+        return rsx! {};
+    }
+    rsx! {
+        details {
+            open,
+            summary { "Score history" }
+            p {
+                font_size: "smaller",
+                "Percentage of subtests passing over time, one master run per day. Each engine's
+                percentage is relative to the subtest count of its own latest run, so lines are
+                not distorted by tests being added to WPT (Blitz only runs the subtests it can)."
+            }
+            ChartRangeSelector {
+                current_range: range,
+                base_path: if area.is_empty() { "/wpt".to_string() } else { format!("/wpt/{area}") },
+            }
+            HistoryLineChart { lines: history, range, height: 320.0 }
         }
     }
 }
