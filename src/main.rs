@@ -18,10 +18,10 @@ use dashmap::DashMap;
 use dioxus::{core::ComponentFunction, prelude::*};
 use dioxus_html_macro::html;
 use downloads::{load_downloads, DOWNLOAD_CACHE};
-use routes::child_areas;
+use github::CommitInfo;
 use routes::{
-    product_color, product_label, AboutPage, ArcDownloadLinks, ArcWptHistory, ChartLine,
-    ChartRange, ChartSeries, CssSupportPage, DownloadsPage, DownloadsPageProps,
+    product_color, product_label, AboutPage, ArcDownloadLinks, ArcWptHistory, BlitzAreaResults,
+    ChartLine, ChartRange, ChartSeries, CssSupportPage, DownloadsPage, DownloadsPageProps,
     DownloadsUnavailablePage, ElementSupportPage, EventSupportPage, GettingStartedPage, HomePage,
     NLNetInstructionsPage, TestPageTab, WptComparePage, WptComparePageProps, WptCompareTestPage,
     WptCompareTestPageProps, WptFocusAreasPage, WptFocusAreasPageProps, WptHistoryPage,
@@ -41,9 +41,8 @@ use tower_http::{
     trace::{DefaultOnResponse, TraceLayer},
 };
 use tracing::Level;
-use wpt::{load_wpt_results, WPT_REPORT_CACHE};
 use wpt_compare::{load_wpt_compare, WPT_COMPARE_CACHE};
-use wpt_db::WPT_COMPARE_DB;
+use wpt_db::{RunRow, WPT_COMPARE_DB};
 use wpt_summaries::{load_wpt_summaries, WPT_SUMMARY_CACHE};
 
 mod cache;
@@ -52,7 +51,6 @@ mod downloads;
 mod git_mirror;
 mod github;
 mod routes;
-mod wpt;
 mod wpt_compare;
 mod wpt_db;
 mod wpt_fyi;
@@ -157,14 +155,21 @@ async fn main() {
                 let range = ChartRange::from_query(query.range.as_deref());
                 // The history page charts "css" plus every one of its
                 // direct children (sparklines show them all)
-                let entry = fresh_wpt_cache_entry().await;
-                let mut areas = vec!["css".to_string()];
-                areas.extend(
-                    child_areas(&entry.scores.0, "css")
-                        .into_iter()
-                        .map(|(area, _)| area),
-                );
-                areas[1..].sort();
+                let (run, _slot) = match blitz_status_run().await {
+                    Ok(run) => run,
+                    Err(response) => return *response,
+                };
+                let mut areas = tokio::task::spawn_blocking(move || {
+                    WPT_COMPARE_DB.with_reader(|conn| {
+                        wpt_db::child_area_scores(conn, &[run.id], "css", wpt_db::AreaSort::Alpha)
+                            .into_iter()
+                            .map(|(area, _)| area)
+                            .collect::<Vec<_>>()
+                    })
+                })
+                .await
+                .unwrap();
+                areas.insert(0, "css".to_string());
                 let Some(history) = fresh_wpt_history(areas).await else {
                     return (
                         StatusCode::INTERNAL_SERVER_ERROR,
@@ -183,28 +188,76 @@ async fn main() {
             get(
                 async |Path(area): Path<String>, Query(query): Query<WptPageQuery>| {
                     let area = area.trim_matches('/').to_string();
-                    let entry = fresh_wpt_cache_entry().await;
+                    let (run, _slot) = match blitz_status_run().await {
+                        Ok(run) => run,
+                        Err(response) => return *response,
+                    };
+                    let run_id = run.id;
 
-                    if entry.scores.contains_key(&area) {
+                    // Folder pages chart a single line for the folder itself;
+                    // the history lookup also loads Blitz's run list, which
+                    // holds the commit message and date for the header
+                    let history = fresh_wpt_history(vec![area.clone()]).await;
+                    let commit_info = blitz_commit_info(&run).await;
+
+                    let results = {
+                        let area = area.clone();
+                        tokio::task::spawn_blocking(move || {
+                            WPT_COMPARE_DB.with_reader(|conn| {
+                                if !wpt_db::area_exists(conn, &area) {
+                                    return None;
+                                }
+                                let run_ids = [run_id];
+                                let score = wpt_db::area_score(conn, &run_ids, &area)[0];
+                                let child_areas = wpt_db::child_area_scores(
+                                    conn,
+                                    &run_ids,
+                                    &area,
+                                    wpt_db::AreaSort::Subtests,
+                                )
+                                .into_iter()
+                                .map(|(name, scores)| (name, scores[0]))
+                                .collect();
+                                let tests = wpt_db::tests_in_area(conn, &run_ids, &area);
+                                Some(BlitzAreaResults {
+                                    area,
+                                    score,
+                                    child_areas,
+                                    tests,
+                                })
+                            })
+                        })
+                        .await
+                        .unwrap()
+                    };
+
+                    if let Some(results) = results {
                         let range = ChartRange::from_query(query.range.as_deref());
-                        // Folder pages chart a single line for the folder
-                        // itself
-                        let history = fresh_wpt_history(vec![area.clone()]).await;
                         let props = WptResultsPageProps {
-                            report: entry.report.clone(),
-                            scores: entry.scores.clone(),
-                            commit_info: entry.commit_info.clone(),
-                            area,
+                            results,
+                            commit_info,
                             history,
                             range,
                         };
 
-                        return Ok(dx_route_with_props(WptResultsPage, props).await);
+                        return dx_route_with_props(WptResultsPage, props)
+                            .await
+                            .into_response();
                     }
 
-                    if let Some(&test_index) = entry.test_index.get(&area) {
+                    let test = {
+                        let name = format!("/{area}");
+                        tokio::task::spawn_blocking(move || {
+                            WPT_COMPARE_DB
+                                .with_reader(|conn| wpt_db::run_test_detail(conn, run_id, &name))
+                        })
+                        .await
+                        .unwrap()
+                    };
+
+                    if let Some(test) = test {
                         let tab = TestPageTab::from_query(query.tab.as_deref());
-                        let revision = entry.report.run_info.revision.clone();
+                        let revision = run.wpt_revision.clone();
 
                         // Fetch the test source (needed to detect ref tests even when
                         // the source itself is not being displayed)
@@ -223,19 +276,20 @@ async fn main() {
                         };
 
                         let props = WptTestPageProps {
-                            report: entry.report.clone(),
-                            commit_info: entry.commit_info.clone(),
-                            test_index,
+                            test,
+                            commit_info,
                             tab,
                             source,
                             refs,
                             ref_source,
                         };
 
-                        return Ok(dx_route_with_props(WptTestPage, props).await);
+                        return dx_route_with_props(WptTestPage, props)
+                            .await
+                            .into_response();
                     }
 
-                    Err((StatusCode::NOT_FOUND, format!("Unknown WPT area: {area}")))
+                    (StatusCode::NOT_FOUND, format!("Unknown WPT area: {area}")).into_response()
                 },
             ),
         )
@@ -331,8 +385,6 @@ async fn main() {
     let addr = SocketAddr::from((host, port));
     let listener = TcpListener::bind(addr).await.unwrap();
 
-    // Prime WPT result and download caches
-    tokio::spawn(WPT_REPORT_CACHE.refresh(load_wpt_results));
     // Clone (or fetch) the score history repository so the first history
     // page doesn't wait on it
     tokio::spawn(WPT_SUMMARY_CACHE.refresh(|existing| {
@@ -627,18 +679,47 @@ async fn wpt_unavailable_response(message: &'static str) -> Response {
         .into_response()
 }
 
-/// Get the cached WPT report, revalidating it if it is stale.
-/// Revalidation is awaited if the cache is more than 30 minutes old,
-/// and performed in the background if it is between 30 seconds and 30 minutes old.
-async fn fresh_wpt_cache_entry() -> std::sync::Arc<cache::Cached<wpt::WptReportCacheEntry>> {
-    WPT_REPORT_CACHE
-        .get_or_refresh(
-            Duration::from_secs(30),
-            Duration::from_mins(30),
-            load_wpt_results,
-        )
-        .await
-        .unwrap()
+/// The latest Blitz run in the comparison database, with a database slot
+/// held for querying it, or the 503 response to send when it isn't
+/// available
+async fn blitz_status_run() -> Result<(RunRow, SemaphorePermit<'static>), Box<Response>> {
+    let Some(entry) = get_wpt_comparison_run_list().await else {
+        return Err(Box::new(
+            wpt_unavailable_response(WPT_LOADING_MESSAGE).await,
+        ));
+    };
+    let Some(run) = entry
+        .runs
+        .iter()
+        .find(|run| run.product == "blitz")
+        .cloned()
+    else {
+        return Err(Box::new(
+            wpt_unavailable_response(WPT_LOADING_MESSAGE).await,
+        ));
+    };
+    let Some(slot) = acquire_wpt_db_slot().await else {
+        return Err(Box::new(wpt_unavailable_response(WPT_BUSY_MESSAGE).await));
+    };
+    Ok((run, slot))
+}
+
+/// The commit a Blitz run was built from: its sha is the run's
+/// `browser_version`; the message and date come from Blitz's run list in
+/// the summaries clone when it has the run
+async fn blitz_commit_info(run: &RunRow) -> Option<CommitInfo> {
+    if run.browser_version.is_empty() {
+        return None;
+    }
+    let entry = fresh_wpt_summaries(vec![("blitz".to_string(), "css".to_string())]).await;
+    let meta = entry
+        .as_ref()
+        .and_then(|entry| entry.run_meta("blitz", &run.browser_version));
+    Some(CommitInfo {
+        sha: run.browser_version.clone(),
+        message: meta.and_then(|meta| meta.commit_message.clone()),
+        timestamp: meta.map(|meta| meta.date.clone()),
+    })
 }
 
 async fn dx_route_cached(render_fn: fn() -> Element) -> impl IntoResponse {

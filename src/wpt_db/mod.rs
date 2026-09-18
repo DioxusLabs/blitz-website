@@ -507,7 +507,9 @@ pub fn ingest_report(
     let mut ctx = IngestCtx {
         tx: &tx,
         run_id,
-        store_messages: false,
+        // Blitz's report is small enough to keep the failure messages its
+        // status pages show; the browser reports are not
+        store_messages: meta.product == "blitz",
         areas: HashMap::new(),
     };
     ctx.load_areas();
@@ -967,5 +969,95 @@ pub fn test_detail(conn: &Connection, run_ids: &[i64], test_name: &str) -> Optio
         name: test_name.to_string(),
         results: run_ids.iter().map(|id| by_run.get(id).copied()).collect(),
         subtests: subtests.into_iter().map(|(_, row)| row).collect(),
+    })
+}
+
+/// A single run's result for one test, including the messages the report
+/// carried (if they were stored for the run's product)
+#[derive(Clone, PartialEq)]
+pub struct RunTestDetail {
+    pub name: String,
+    pub status: i64,
+    pub duration_ms: Option<i64>,
+    pub message: Option<String>,
+    pub subtest_pass: u32,
+    /// The cross-engine union subtest denominator
+    pub denom: u32,
+    pub subtests: Vec<RunSubtestResult>,
+}
+
+#[derive(Clone, PartialEq)]
+pub struct RunSubtestResult {
+    pub name: String,
+    pub status: i64,
+    pub message: Option<String>,
+}
+
+/// The result of a single run for a single test, or `None` if the test is
+/// unknown or the run didn't run it
+pub fn run_test_detail(conn: &Connection, run_id: i64, test_name: &str) -> Option<RunTestDetail> {
+    let (test_id, status, duration_ms, message, subtest_pass): (
+        i64,
+        i64,
+        Option<i64>,
+        Option<String>,
+        u32,
+    ) = conn
+        .query_row(
+            "SELECT t.id, r.status, r.duration_ms, r.message, r.subtest_pass
+             FROM tests t JOIN results r ON r.test_id = t.id
+             WHERE t.name = ?1 AND r.run_id = ?2",
+            params![test_name, run_id],
+            |row| {
+                Ok((
+                    row.get(0)?,
+                    row.get(1)?,
+                    row.get(2)?,
+                    row.get(3)?,
+                    row.get(4)?,
+                ))
+            },
+        )
+        .ok()?;
+
+    let denom: u32 = conn
+        .query_row(
+            "SELECT MAX(r.subtest_total) FROM results r JOIN runs ON runs.id = r.run_id
+             WHERE r.test_id = ?1 AND runs.is_latest = 1",
+            params![test_id],
+            |row| row.get::<_, Option<u32>>(0),
+        )
+        .ok()
+        .flatten()
+        .unwrap_or(1);
+
+    let mut stmt = conn
+        .prepare_cached(
+            "SELECT s.name, sr.status, sr.message
+             FROM subtests s JOIN subtest_results sr ON sr.subtest_id = s.id
+             WHERE s.test_id = ?1 AND sr.run_id = ?2
+             ORDER BY s.id",
+        )
+        .unwrap();
+    let subtests = stmt
+        .query_map(params![test_id, run_id], |row| {
+            Ok(RunSubtestResult {
+                name: row.get(0)?,
+                status: row.get(1)?,
+                message: row.get(2)?,
+            })
+        })
+        .unwrap()
+        .map(|r| r.unwrap())
+        .collect();
+
+    Some(RunTestDetail {
+        name: test_name.to_string(),
+        status,
+        duration_ms,
+        message,
+        subtest_pass,
+        denom,
+        subtests,
     })
 }
