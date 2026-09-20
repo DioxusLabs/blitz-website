@@ -1,6 +1,11 @@
-use std::{fmt::Write, ops::Deref, sync::Arc};
+use std::{
+    fmt::Write,
+    ops::Deref,
+    sync::{Arc, LazyLock},
+};
 
 use dioxus::prelude::*;
+use fxhash::hash32;
 
 use crate::components::Page;
 use crate::routes::{StatusHeader, StatusTabs};
@@ -147,6 +152,11 @@ impl ChartRange {
         }
     }
 }
+
+/// Content hash of the tooltip script, appended to its URL so browsers
+/// don't keep serving a cached copy after it changes (as for index.css)
+static TOOLTIP_SCRIPT_HASH: LazyLock<u32> =
+    LazyLock::new(|| hash32(include_str!("../../static/wpt-history-tooltip.js")));
 
 /// A single line on the history chart
 #[derive(Clone, PartialEq)]
@@ -552,7 +562,7 @@ pub fn HistoryLineChart(
             r#type: "application/json",
             dangerous_inner_html: tooltip_data,
         }
-        script { src: "/static/wpt-history-tooltip.js" }
+        script { src: "/static/wpt-history-tooltip.js?{*TOOLTIP_SCRIPT_HASH}" }
         }
     }
 }
