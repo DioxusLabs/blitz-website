@@ -35,7 +35,36 @@ pub struct AreaFile {
 /// The merged history of one product for a set of areas
 pub struct WptHistory {
     pub focus_areas: Vec<String>,
+    /// One entry per focus area: the cross-engine union subtest total of
+    /// the area from the WPT comparison database, when known
+    pub union_totals: Vec<Option<u32>>,
     pub runs: Vec<HistoryRun>,
+}
+
+impl WptHistory {
+    /// The subtest total percentages for an area are computed against: the
+    /// union subtest total across all engines' latest runs, so every
+    /// engine's line is on the same scale, falling back to the product's
+    /// own most recent subtest total. Either way a fixed total keeps
+    /// tests being added to WPT from distorting historical pass rates.
+    pub fn subtest_total(&self, area_idx: usize) -> Option<u32> {
+        self.union_totals
+            .get(area_idx)
+            .copied()
+            .flatten()
+            .filter(|total| *total != 0)
+            .or_else(|| self.latest_subtest_total(area_idx))
+    }
+
+    /// The subtest total of the most recent run with data for this area
+    fn latest_subtest_total(&self, area_idx: usize) -> Option<u32> {
+        self.runs
+            .iter()
+            .rev()
+            .filter_map(|run| *run.scores.get(area_idx)?)
+            .map(|(_, _, total_subtests, _)| total_subtests)
+            .find(|total| *total != 0)
+    }
 }
 
 pub struct HistoryRun {

@@ -159,18 +159,25 @@ async fn main() {
                     Ok(run) => run,
                     Err(response) => return *response,
                 };
-                let mut areas = tokio::task::spawn_blocking(move || {
-                    WPT_COMPARE_DB.with_reader(|conn| {
-                        wpt_db::child_area_scores(conn, &[run.id], "css", wpt_db::AreaSort::Alpha)
-                            .into_iter()
-                            .map(|(area, _)| area)
-                            .collect::<Vec<_>>()
+                let (areas, union_totals): (Vec<String>, Vec<Option<u32>>) =
+                    tokio::task::spawn_blocking(move || {
+                        WPT_COMPARE_DB.with_reader(|conn| {
+                            let run_ids = [run.id];
+                            let css = wpt_db::area_score(conn, &run_ids, "css");
+                            std::iter::once(("css".to_string(), css))
+                                .chain(wpt_db::child_area_scores(
+                                    conn,
+                                    &run_ids,
+                                    "css",
+                                    wpt_db::AreaSort::Alpha,
+                                ))
+                                .map(|(area, scores)| (area, union_subtest_total(&scores)))
+                                .unzip()
+                        })
                     })
-                })
-                .await
-                .unwrap();
-                areas.insert(0, "css".to_string());
-                let Some(history) = fresh_wpt_history(areas).await else {
+                    .await
+                    .unwrap();
+                let Some(history) = fresh_wpt_history(areas, union_totals).await else {
                     return (
                         StatusCode::INTERNAL_SERVER_ERROR,
                         Html("History data not available".to_string()),
@@ -215,12 +222,6 @@ async fn main() {
                         return Redirect::permanent(&target).into_response();
                     }
 
-                    // Folder pages chart a single line for the folder itself;
-                    // the history lookup also loads Blitz's run list, which
-                    // holds the commit message and date for the header
-                    let history = fresh_wpt_history(vec![area.clone()]).await;
-                    let commit_info = blitz_commit_info(&run).await;
-
                     let results = {
                         let area = area.clone();
                         tokio::task::spawn_blocking(move || {
@@ -251,6 +252,15 @@ async fn main() {
                         .await
                         .unwrap()
                     };
+
+                    // Folder pages chart a single line for the folder itself;
+                    // the history lookup also loads Blitz's run list, which
+                    // holds the commit message and date for the header
+                    let subtest_total = results
+                        .as_ref()
+                        .and_then(|results| union_subtest_total(&[results.score]));
+                    let history = fresh_wpt_history(vec![area.clone()], vec![subtest_total]).await;
+                    let commit_info = blitz_commit_info(&run).await;
 
                     if let Some(results) = results {
                         let range = ChartRange::from_query(query.range.as_deref());
@@ -413,15 +423,33 @@ async fn fresh_wpt_summaries(
         .await
 }
 
-/// Blitz's score history for a set of areas
-async fn fresh_wpt_history(areas: Vec<String>) -> Option<ArcWptHistory> {
+/// Blitz's score history for a set of areas; `union_totals` is
+/// index-aligned with `areas` (see [`wpt_history::WptHistory::subtest_total`])
+async fn fresh_wpt_history(
+    areas: Vec<String>,
+    union_totals: Vec<Option<u32>>,
+) -> Option<ArcWptHistory> {
     let requests = areas
         .iter()
         .map(|area| ("blitz".to_string(), area.clone()))
         .collect();
     fresh_wpt_summaries(requests)
         .await?
-        .history("blitz", &areas)
+        .history("blitz", &areas, &union_totals)
+}
+
+/// The cross-engine union subtest total of an area from its per-run
+/// comparison scores. `area_scores` counts every test known to any engine
+/// against every engine with the max subtest total, so the total is the
+/// same for every run that has a score; take the largest in case a run's
+/// scores predate the others.
+fn union_subtest_total(scores: &[Option<wpt_db::AreaScore>]) -> Option<u32> {
+    scores
+        .iter()
+        .flatten()
+        .map(|score| score.subtests_total)
+        .filter(|total| *total != 0)
+        .max()
 }
 
 /// One history chart line per engine that has results for `area` in the
@@ -448,9 +476,10 @@ async fn compare_history(
     };
 
     let areas = [area.to_string()];
+    let union_totals = [union_subtest_total(total)];
     let mut lines = Vec::new();
     for product in products {
-        if let Some(history) = summaries.history(product, &areas) {
+        if let Some(history) = summaries.history(product, &areas, &union_totals) {
             lines.push(ChartLine {
                 history,
                 series: ChartSeries {

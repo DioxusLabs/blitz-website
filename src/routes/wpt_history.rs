@@ -183,37 +183,24 @@ fn short_revision(revision: &str) -> &str {
     }
 }
 
-/// The subtest total of the most recent run with data for this area.
-/// Percentages are computed against this so that adding tests to WPT does
-/// not distort historical pass rates.
-fn latest_subtest_total(history: &WptHistory, area_idx: usize) -> Option<u32> {
-    history
-        .runs
-        .iter()
-        .rev()
-        .filter_map(|run| *run.scores.get(area_idx)?)
-        .map(|(_, _, total_subtests, _)| total_subtests)
-        .find(|total| *total != 0)
-}
-
-fn subtest_pass_percent(run: &HistoryRun, area_idx: usize, latest_total: u32) -> Option<f64> {
+fn subtest_pass_percent(run: &HistoryRun, area_idx: usize, subtest_total: u32) -> Option<f64> {
     let (_, _, total_subtests, total_subtests_passed) = (*run.scores.get(area_idx)?)?;
     if total_subtests == 0 {
         return None;
     }
-    Some(total_subtests_passed as f64 / latest_total as f64 * 100.0)
+    Some(total_subtests_passed as f64 / subtest_total as f64 * 100.0)
 }
 
 fn area_series(history: &WptHistory, min_x: f64, spec: &ChartSeries) -> Option<Series> {
     let area_idx = history.focus_areas.iter().position(|a| *a == spec.area)?;
-    let latest_total = latest_subtest_total(history, area_idx)?;
+    let subtest_total = history.subtest_total(area_idx)?;
     let points: Vec<(f64, f64)> = history
         .runs
         .iter()
         .filter_map(|run| {
             Some((
                 parse_date(&run.date)?,
-                subtest_pass_percent(run, area_idx, latest_total)?,
+                subtest_pass_percent(run, area_idx, subtest_total)?,
             ))
         })
         .filter(|(x, _)| *x >= min_x)
@@ -299,7 +286,7 @@ pub fn WptHistoryPage(history: ArcWptHistory, range: ChartRange) -> Element {
             p {
                 dangerous_inner_html: r#"
                 This page charts Blitz's scores on the "css" subsuite of the <a href="https://github.com/web-platform-tests/wpt" target="_blank">Web Platform Tests</a> over time.
-                Scores are the percentage of subtests passing (of those that Blitz can run). Data is recorded for every commit to the main branch."#
+                Scores are the percentage of subtests passing, out of the total number of subtests known to any engine in the latest runs. Data is recorded for every commit to the main branch."#
             }
             hr {}
             ChartRangeSelector { current_range: range, base_path: "/status/wpt/history" }
@@ -389,9 +376,9 @@ fn tooltip_runs(line: &ChartLine, min_x: f64) -> serde_json::Value {
         .focus_areas
         .iter()
         .position(|a| *a == line.series.area);
-    // Latest subtest total: the denominator for plotted percentages (must
-    // match `area_series`)
-    let latest = area_idx.and_then(|idx| latest_subtest_total(history, idx));
+    // The subtest total plotted percentages are relative to (must match
+    // `area_series`)
+    let subtest_total = area_idx.and_then(|idx| history.subtest_total(idx));
     // Include the run immediately before the visible range (if any) so the
     // first visible run's tooltip can show a delta against it
     let first_visible = history
@@ -423,7 +410,7 @@ fn tooltip_runs(line: &ChartLine, min_x: f64) -> serde_json::Value {
     serde_json::json!({
         "name": line.series.label,
         "color": line.series.color,
-        "latest": latest,
+        "total": subtest_total,
         "first": first_visible - start,
         "runs": runs,
     })
@@ -597,14 +584,14 @@ pub fn WptHistorySparklines(history: ArcWptHistory, range: ChartRange) -> Elemen
 
             for (area_idx, area) in history.focus_areas.iter().enumerate() {
                 {
-                    let latest_total = latest_subtest_total(&history, area_idx);
+                    let subtest_total = history.subtest_total(area_idx);
                     let points: Vec<(f64, f64)> = history
                         .runs
                         .iter()
                         .filter_map(|run| {
                             Some((
                                 parse_date(&run.date)?,
-                                subtest_pass_percent(run, area_idx, latest_total?)?,
+                                subtest_pass_percent(run, area_idx, subtest_total?)?,
                             ))
                         })
                         .filter(|(x, _)| *x >= range_min_x)
