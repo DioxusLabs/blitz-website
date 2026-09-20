@@ -140,9 +140,10 @@ fn CompareHistoryChart(
             summary { "Score history" }
             p {
                 font_size: "smaller",
-                "Percentage of subtests passing over time, one master run per day. Each engine's
-                percentage is relative to the subtest count of its own latest run, so lines are
-                not distorted by tests being added to WPT (Blitz only runs the subtests it can)."
+                "Percentage of subtests passing over time, one master run per day. Every engine's
+                percentage is relative to the same denominator: the total number of subtests known
+                to any engine in the latest runs (so lines are not distorted by tests being added
+                to WPT, and an engine that skips tests is not flattered for it)."
             }
             ChartRangeSelector {
                 current_range: range,

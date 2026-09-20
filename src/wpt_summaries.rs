@@ -68,14 +68,22 @@ impl SummaryCacheEntry {
 
     /// The merged history of a product for a set of areas (silently dropping
     /// areas the product has no data file for), or `None` if the product is
-    /// unknown or has none of the areas
-    pub fn history(&self, product: &str, areas: &[String]) -> Option<ArcWptHistory> {
+    /// unknown or has none of the areas. `denominators` is index-aligned
+    /// with `areas`: the cross-engine union subtest total of each area, if
+    /// known (see [`WptHistory::denominator`]).
+    pub fn history(
+        &self,
+        product: &str,
+        areas: &[String],
+        denominators: &[Option<u32>],
+    ) -> Option<ArcWptHistory> {
         let runs = self.runs.get(product)?;
-        let present: Vec<(&String, &Arc<Vec<Option<ScoreTuple>>>)> = areas
+        let present: Vec<PresentArea> = areas
             .iter()
-            .filter_map(|area| {
+            .enumerate()
+            .filter_map(|(i, area)| {
                 let scores = self.areas.get(&(product.to_string(), area.clone()))?;
-                Some((area, scores))
+                Some((area, denominators.get(i).copied().flatten(), scores))
             })
             .collect();
         if present.is_empty() {
@@ -88,15 +96,19 @@ impl SummaryCacheEntry {
                 date: meta.date.clone(),
                 product_revision: meta.product_revision.clone(),
                 commit_message: meta.commit_message.clone(),
-                scores: present.iter().map(|(_, scores)| scores[i]).collect(),
+                scores: present.iter().map(|(_, _, scores)| scores[i]).collect(),
             })
             .collect();
         Some(ArcWptHistory(Arc::new(WptHistory {
-            focus_areas: present.iter().map(|(area, _)| (*area).clone()).collect(),
+            focus_areas: present.iter().map(|(area, _, _)| (*area).clone()).collect(),
+            denominators: present.iter().map(|(_, denom, _)| *denom).collect(),
             runs,
         })))
     }
 }
+
+/// An area a product has data for: `(area, union denominator, per-run scores)`
+type PresentArea<'a> = (&'a String, Option<u32>, &'a Arc<Vec<Option<ScoreTuple>>>);
 
 /// Only one fetch at a time; a refresh that finds another in flight leaves
 /// the cache as it is

@@ -41,7 +41,7 @@ document.querySelectorAll("script[data-wpt-history-data]").forEach(function (dat
     }
 
     function screenX(run) { return px + ((run.x - data.xMin) / xRange) * pw; }
-    function screenY(s, run) { return py + (1 - run.v[0] / s.latest) * ph; }
+    function screenY(s, run) { return py + (1 - run.v[0] / s.total) * ph; }
 
     // Nearest hoverable run of a series to the x position `x` (in data
     // units); runs before `s.first` only serve as deltas
@@ -106,7 +106,7 @@ document.querySelectorAll("script[data-wpt-history-data]").forEach(function (dat
         // Pick the single series whose drawn line is nearest the cursor
         var s = null, bestDist = Y_THRESHOLD;
         for (var i = 0; i < data.series.length; i++) {
-            if (!data.series[i].latest) continue;
+            if (!data.series[i].total) continue;
             var dist = seriesDist(data.series[i], vx, vy);
             if (dist < bestDist) { s = data.series[i]; bestDist = dist; }
         }
@@ -148,7 +148,7 @@ document.querySelectorAll("script[data-wpt-history-data]").forEach(function (dat
             html += "<div style='margin-bottom:4px;white-space:nowrap;overflow:hidden;" +
                 "text-overflow:ellipsis'>" + esc(run.msg) + "</div>";
         }
-        var pass = run.v[0], total = s.latest;
+        var pass = run.v[0], total = s.total;
         html += "<div><span style='color:" + s.color + "'>\u25CF</span> " +
             esc(s.name) + ": " + (100 * pass / total).toFixed(1) + "% (" +
             pass.toLocaleString() + "/" + total.toLocaleString() + ")</div>";
