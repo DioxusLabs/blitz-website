@@ -159,7 +159,7 @@ async fn main() {
                     Ok(run) => run,
                     Err(response) => return *response,
                 };
-                let (areas, denominators): (Vec<String>, Vec<Option<u32>>) =
+                let (areas, union_totals): (Vec<String>, Vec<Option<u32>>) =
                     tokio::task::spawn_blocking(move || {
                         WPT_COMPARE_DB.with_reader(|conn| {
                             let run_ids = [run.id];
@@ -177,7 +177,7 @@ async fn main() {
                     })
                     .await
                     .unwrap();
-                let Some(history) = fresh_wpt_history(areas, denominators).await else {
+                let Some(history) = fresh_wpt_history(areas, union_totals).await else {
                     return (
                         StatusCode::INTERNAL_SERVER_ERROR,
                         Html("History data not available".to_string()),
@@ -256,10 +256,10 @@ async fn main() {
                     // Folder pages chart a single line for the folder itself;
                     // the history lookup also loads Blitz's run list, which
                     // holds the commit message and date for the header
-                    let denominator = results
+                    let subtest_total = results
                         .as_ref()
                         .and_then(|results| union_subtest_total(&[results.score]));
-                    let history = fresh_wpt_history(vec![area.clone()], vec![denominator]).await;
+                    let history = fresh_wpt_history(vec![area.clone()], vec![subtest_total]).await;
                     let commit_info = blitz_commit_info(&run).await;
 
                     if let Some(results) = results {
@@ -423,11 +423,11 @@ async fn fresh_wpt_summaries(
         .await
 }
 
-/// Blitz's score history for a set of areas; `denominators` is
-/// index-aligned with `areas` (see [`wpt_history::WptHistory::denominator`])
+/// Blitz's score history for a set of areas; `union_totals` is
+/// index-aligned with `areas` (see [`wpt_history::WptHistory::subtest_total`])
 async fn fresh_wpt_history(
     areas: Vec<String>,
-    denominators: Vec<Option<u32>>,
+    union_totals: Vec<Option<u32>>,
 ) -> Option<ArcWptHistory> {
     let requests = areas
         .iter()
@@ -435,7 +435,7 @@ async fn fresh_wpt_history(
         .collect();
     fresh_wpt_summaries(requests)
         .await?
-        .history("blitz", &areas, &denominators)
+        .history("blitz", &areas, &union_totals)
 }
 
 /// The cross-engine union subtest total of an area from its per-run
@@ -476,10 +476,10 @@ async fn compare_history(
     };
 
     let areas = [area.to_string()];
-    let denominators = [union_subtest_total(total)];
+    let union_totals = [union_subtest_total(total)];
     let mut lines = Vec::new();
     for product in products {
-        if let Some(history) = summaries.history(product, &areas, &denominators) {
+        if let Some(history) = summaries.history(product, &areas, &union_totals) {
             lines.push(ChartLine {
                 history,
                 series: ChartSeries {

@@ -183,24 +183,24 @@ fn short_revision(revision: &str) -> &str {
     }
 }
 
-fn subtest_pass_percent(run: &HistoryRun, area_idx: usize, denominator: u32) -> Option<f64> {
+fn subtest_pass_percent(run: &HistoryRun, area_idx: usize, subtest_total: u32) -> Option<f64> {
     let (_, _, total_subtests, total_subtests_passed) = (*run.scores.get(area_idx)?)?;
     if total_subtests == 0 {
         return None;
     }
-    Some(total_subtests_passed as f64 / denominator as f64 * 100.0)
+    Some(total_subtests_passed as f64 / subtest_total as f64 * 100.0)
 }
 
 fn area_series(history: &WptHistory, min_x: f64, spec: &ChartSeries) -> Option<Series> {
     let area_idx = history.focus_areas.iter().position(|a| *a == spec.area)?;
-    let denominator = history.denominator(area_idx)?;
+    let subtest_total = history.subtest_total(area_idx)?;
     let points: Vec<(f64, f64)> = history
         .runs
         .iter()
         .filter_map(|run| {
             Some((
                 parse_date(&run.date)?,
-                subtest_pass_percent(run, area_idx, denominator)?,
+                subtest_pass_percent(run, area_idx, subtest_total)?,
             ))
         })
         .filter(|(x, _)| *x >= min_x)
@@ -376,8 +376,9 @@ fn tooltip_runs(line: &ChartLine, min_x: f64) -> serde_json::Value {
         .focus_areas
         .iter()
         .position(|a| *a == line.series.area);
-    // The denominator for plotted percentages (must match `area_series`)
-    let denominator = area_idx.and_then(|idx| history.denominator(idx));
+    // The subtest total plotted percentages are relative to (must match
+    // `area_series`)
+    let subtest_total = area_idx.and_then(|idx| history.subtest_total(idx));
     // Include the run immediately before the visible range (if any) so the
     // first visible run's tooltip can show a delta against it
     let first_visible = history
@@ -409,7 +410,7 @@ fn tooltip_runs(line: &ChartLine, min_x: f64) -> serde_json::Value {
     serde_json::json!({
         "name": line.series.label,
         "color": line.series.color,
-        "total": denominator,
+        "total": subtest_total,
         "first": first_visible - start,
         "runs": runs,
     })
@@ -583,14 +584,14 @@ pub fn WptHistorySparklines(history: ArcWptHistory, range: ChartRange) -> Elemen
 
             for (area_idx, area) in history.focus_areas.iter().enumerate() {
                 {
-                    let denominator = history.denominator(area_idx);
+                    let subtest_total = history.subtest_total(area_idx);
                     let points: Vec<(f64, f64)> = history
                         .runs
                         .iter()
                         .filter_map(|run| {
                             Some((
                                 parse_date(&run.date)?,
-                                subtest_pass_percent(run, area_idx, denominator?)?,
+                                subtest_pass_percent(run, area_idx, subtest_total?)?,
                             ))
                         })
                         .filter(|(x, _)| *x >= range_min_x)

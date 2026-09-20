@@ -68,14 +68,14 @@ impl SummaryCacheEntry {
 
     /// The merged history of a product for a set of areas (silently dropping
     /// areas the product has no data file for), or `None` if the product is
-    /// unknown or has none of the areas. `denominators` is index-aligned
+    /// unknown or has none of the areas. `union_totals` is index-aligned
     /// with `areas`: the cross-engine union subtest total of each area, if
-    /// known (see [`WptHistory::denominator`]).
+    /// known (see [`WptHistory::subtest_total`]).
     pub fn history(
         &self,
         product: &str,
         areas: &[String],
-        denominators: &[Option<u32>],
+        union_totals: &[Option<u32>],
     ) -> Option<ArcWptHistory> {
         let runs = self.runs.get(product)?;
         let present: Vec<PresentArea> = areas
@@ -83,7 +83,7 @@ impl SummaryCacheEntry {
             .enumerate()
             .filter_map(|(i, area)| {
                 let scores = self.areas.get(&(product.to_string(), area.clone()))?;
-                Some((area, denominators.get(i).copied().flatten(), scores))
+                Some((area, union_totals.get(i).copied().flatten(), scores))
             })
             .collect();
         if present.is_empty() {
@@ -101,13 +101,13 @@ impl SummaryCacheEntry {
             .collect();
         Some(ArcWptHistory(Arc::new(WptHistory {
             focus_areas: present.iter().map(|(area, _, _)| (*area).clone()).collect(),
-            denominators: present.iter().map(|(_, denom, _)| *denom).collect(),
+            union_totals: present.iter().map(|(_, total, _)| *total).collect(),
             runs,
         })))
     }
 }
 
-/// An area a product has data for: `(area, union denominator, per-run scores)`
+/// An area a product has data for: `(area, union subtest total, per-run scores)`
 type PresentArea<'a> = (&'a String, Option<u32>, &'a Arc<Vec<Option<ScoreTuple>>>);
 
 /// Only one fetch at a time; a refresh that finds another in flight leaves
