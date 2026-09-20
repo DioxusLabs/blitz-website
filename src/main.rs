@@ -467,19 +467,29 @@ async fn compare_history(
         .map(|(run, _)| run.product.as_str())
         .collect();
 
+    // The whole-suite total includes areas the comparison database leaves
+    // out; they are subtracted so the history matches the comparison
+    let excluded: &[&str] = if area.is_empty() {
+        wpt_db::EXCLUDED_AREAS
+    } else {
+        &[]
+    };
     let requests: Vec<(String, String)> = products
         .iter()
-        .map(|product| (product.to_string(), area.to_string()))
+        .flat_map(|product| {
+            std::iter::once(area)
+                .chain(excluded.iter().copied())
+                .map(|area| (product.to_string(), area.to_string()))
+        })
         .collect();
     let Some(summaries) = fresh_wpt_summaries(requests).await else {
         return Vec::new();
     };
 
-    let areas = [area.to_string()];
-    let union_totals = [union_subtest_total(total)];
+    let union_total = union_subtest_total(total);
     let mut lines = Vec::new();
     for product in products {
-        if let Some(history) = summaries.history(product, &areas, &union_totals) {
+        if let Some(history) = summaries.history_excluding(product, area, excluded, union_total) {
             lines.push(ChartLine {
                 history,
                 series: ChartSeries {

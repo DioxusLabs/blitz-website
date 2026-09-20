@@ -66,6 +66,39 @@ impl SummaryCacheEntry {
             .find(|meta| meta.product_revision == product_revision)
     }
 
+    /// The history of a product for one area with the scores of `excluded`
+    /// (sub-)areas subtracted from every run, e.g. the whole suite minus
+    /// the areas the comparison database leaves out. Excluded areas the
+    /// product has no data for subtract nothing; a run missing data for an
+    /// excluded area gets no score.
+    pub fn history_excluding(
+        &self,
+        product: &str,
+        area: &str,
+        excluded: &[&str],
+        union_total: Option<u32>,
+    ) -> Option<ArcWptHistory> {
+        let mut history = self.build_history(product, &[area.to_string()], &[union_total])?;
+        let excluded: Vec<&Arc<Vec<Option<ScoreTuple>>>> = excluded
+            .iter()
+            .filter_map(|excluded| self.areas.get(&(product.to_string(), excluded.to_string())))
+            .collect();
+        for (i, run) in history.runs.iter_mut().enumerate() {
+            run.scores[0] = run.scores[0].and_then(|score| {
+                excluded.iter().try_fold(score, |score, scores| {
+                    let (tests, test_score, subtests, subtests_passed) = scores[i]?;
+                    Some((
+                        score.0.saturating_sub(tests),
+                        (score.1 - test_score).max(0.0),
+                        score.2.saturating_sub(subtests),
+                        score.3.saturating_sub(subtests_passed),
+                    ))
+                })
+            });
+        }
+        Some(ArcWptHistory(Arc::new(history)))
+    }
+
     /// The merged history of a product for a set of areas (silently dropping
     /// areas the product has no data file for), or `None` if the product is
     /// unknown or has none of the areas. `union_totals` is index-aligned
@@ -77,6 +110,16 @@ impl SummaryCacheEntry {
         areas: &[String],
         union_totals: &[Option<u32>],
     ) -> Option<ArcWptHistory> {
+        self.build_history(product, areas, union_totals)
+            .map(|history| ArcWptHistory(Arc::new(history)))
+    }
+
+    fn build_history(
+        &self,
+        product: &str,
+        areas: &[String],
+        union_totals: &[Option<u32>],
+    ) -> Option<WptHistory> {
         let runs = self.runs.get(product)?;
         let present: Vec<PresentArea> = areas
             .iter()
@@ -99,11 +142,11 @@ impl SummaryCacheEntry {
                 scores: present.iter().map(|(_, _, scores)| scores[i]).collect(),
             })
             .collect();
-        Some(ArcWptHistory(Arc::new(WptHistory {
+        Some(WptHistory {
             focus_areas: present.iter().map(|(area, _, _)| (*area).clone()).collect(),
             union_totals: present.iter().map(|(_, total, _)| *total).collect(),
             runs,
-        })))
+        })
     }
 }
 
