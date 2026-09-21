@@ -467,19 +467,33 @@ async fn compare_history(
         .map(|(run, _)| run.product.as_str())
         .collect();
 
-    let requests: Vec<(String, String)> = products
+    // The whole-suite totals include /encoding/, which the comparison
+    // database leaves out, so it is subtracted to match the comparison
+    let mut requests: Vec<(String, String)> = products
         .iter()
         .map(|product| (product.to_string(), area.to_string()))
         .collect();
+    if area.is_empty() {
+        requests.extend(products.iter().map(|product| {
+            (
+                product.to_string(),
+                wpt_summaries::ENCODING_AREA.to_string(),
+            )
+        }));
+    }
     let Some(summaries) = fresh_wpt_summaries(requests).await else {
         return Vec::new();
     };
 
-    let areas = [area.to_string()];
-    let union_totals = [union_subtest_total(total)];
+    let union_total = union_subtest_total(total);
     let mut lines = Vec::new();
     for product in products {
-        if let Some(history) = summaries.history(product, &areas, &union_totals) {
+        let history = if area.is_empty() {
+            summaries.total_history_without_encoding(product, union_total)
+        } else {
+            summaries.history(product, &[area.to_string()], &[union_total])
+        };
+        if let Some(history) = history {
             lines.push(ChartLine {
                 history,
                 series: ChartSeries {

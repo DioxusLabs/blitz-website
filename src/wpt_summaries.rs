@@ -66,6 +66,36 @@ impl SummaryCacheEntry {
             .find(|meta| meta.product_revision == product_revision)
     }
 
+    /// A product's whole-suite history (the empty area) minus the
+    /// `/encoding/` suite, which the comparison database leaves out (see
+    /// `wpt_db::WptIngester::ingest_test`) but the whole-run totals
+    /// include. A product with no encoding data (Blitz doesn't run it) is
+    /// returned as-is.
+    pub fn total_history_without_encoding(
+        &self,
+        product: &str,
+        union_total: Option<u32>,
+    ) -> Option<ArcWptHistory> {
+        let mut history = self.build_history(product, &[String::new()], &[union_total])?;
+        if let Some(encoding) = self
+            .areas
+            .get(&(product.to_string(), ENCODING_AREA.to_string()))
+        {
+            for (run, encoding) in history.runs.iter_mut().zip(encoding.iter()) {
+                run.scores[0] = match (run.scores[0], *encoding) {
+                    (Some(total), Some(encoding)) => Some((
+                        total.0.saturating_sub(encoding.0),
+                        (total.1 - encoding.1).max(0.0),
+                        total.2.saturating_sub(encoding.2),
+                        total.3.saturating_sub(encoding.3),
+                    )),
+                    _ => None,
+                };
+            }
+        }
+        Some(ArcWptHistory(Arc::new(history)))
+    }
+
     /// The merged history of a product for a set of areas (silently dropping
     /// areas the product has no data file for), or `None` if the product is
     /// unknown or has none of the areas. `union_totals` is index-aligned
@@ -77,6 +107,16 @@ impl SummaryCacheEntry {
         areas: &[String],
         union_totals: &[Option<u32>],
     ) -> Option<ArcWptHistory> {
+        self.build_history(product, areas, union_totals)
+            .map(|history| ArcWptHistory(Arc::new(history)))
+    }
+
+    fn build_history(
+        &self,
+        product: &str,
+        areas: &[String],
+        union_totals: &[Option<u32>],
+    ) -> Option<WptHistory> {
         let runs = self.runs.get(product)?;
         let present: Vec<PresentArea> = areas
             .iter()
@@ -99,13 +139,16 @@ impl SummaryCacheEntry {
                 scores: present.iter().map(|(_, _, scores)| scores[i]).collect(),
             })
             .collect();
-        Some(ArcWptHistory(Arc::new(WptHistory {
+        Some(WptHistory {
             focus_areas: present.iter().map(|(area, _, _)| (*area).clone()).collect(),
             union_totals: present.iter().map(|(_, total, _)| *total).collect(),
             runs,
-        })))
+        })
     }
 }
+
+/// The one WPT area the comparison database skips
+pub const ENCODING_AREA: &str = "encoding";
 
 /// An area a product has data for: `(area, union subtest total, per-run scores)`
 type PresentArea<'a> = (&'a String, Option<u32>, &'a Arc<Vec<Option<ScoreTuple>>>);
