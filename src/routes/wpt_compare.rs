@@ -136,6 +136,7 @@ fn CompareHistoryChart(
     }
     rsx! {
         details {
+            class: "wpt-history-chart",
             open,
             summary { "Score history" }
             p {
