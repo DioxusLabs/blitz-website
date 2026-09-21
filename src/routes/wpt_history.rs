@@ -328,6 +328,7 @@ pub fn ChartRangeSelector(current_range: ChartRange, base_path: String) -> Eleme
     rsx! {
         div {
             display: "flex",
+            flex_wrap: "wrap",
             gap: "8px",
             justify_content: "flex-end",
             font_size: "14px",
@@ -337,6 +338,7 @@ pub fn ChartRangeSelector(current_range: ChartRange, base_path: String) -> Eleme
                 a {
                     href: "{base_path}?range={range.query_value()}",
                     padding: "2px 10px",
+                    white_space: "nowrap",
                     border_radius: "12px",
                     text_decoration: "none",
                     color: if range == current_range { "white" } else { "inherit" },
