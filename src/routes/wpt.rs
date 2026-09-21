@@ -109,6 +109,7 @@ fn FolderHistoryChart(
 
     rsx! {
         details {
+            class: "wpt-history-chart",
             summary { "Score history" }
             ChartRangeSelector { current_range: range, base_path }
             WptHistoryChart { history, series_spec, range, height: 240.0 }
