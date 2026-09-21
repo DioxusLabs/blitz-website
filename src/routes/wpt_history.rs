@@ -80,16 +80,18 @@ pub enum ChartRange {
     Months3,
     Months6,
     Year1,
+    Years2,
     #[default]
     All,
 }
 
 impl ChartRange {
-    pub const ALL: [ChartRange; 5] = [
+    pub const ALL: [ChartRange; 6] = [
         ChartRange::Month1,
         ChartRange::Months3,
         ChartRange::Months6,
         ChartRange::Year1,
+        ChartRange::Years2,
         ChartRange::All,
     ];
 
@@ -99,6 +101,7 @@ impl ChartRange {
             Some("3m") => ChartRange::Months3,
             Some("6m") => ChartRange::Months6,
             Some("1y") => ChartRange::Year1,
+            Some("2y") => ChartRange::Years2,
             _ => ChartRange::All,
         }
     }
@@ -109,6 +112,7 @@ impl ChartRange {
             ChartRange::Months3 => "3m",
             ChartRange::Months6 => "6m",
             ChartRange::Year1 => "1y",
+            ChartRange::Years2 => "2y",
             ChartRange::All => "all",
         }
     }
@@ -119,6 +123,7 @@ impl ChartRange {
             ChartRange::Months3 => "3 months",
             ChartRange::Months6 => "6 months",
             ChartRange::Year1 => "1 year",
+            ChartRange::Years2 => "2 years",
             ChartRange::All => "All time",
         }
     }
@@ -129,6 +134,7 @@ impl ChartRange {
             ChartRange::Months3 => Some(91.0),
             ChartRange::Months6 => Some(183.0),
             ChartRange::Year1 => Some(365.0),
+            ChartRange::Years2 => Some(730.0),
             ChartRange::All => None,
         }
     }
