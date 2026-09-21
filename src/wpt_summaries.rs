@@ -66,35 +66,32 @@ impl SummaryCacheEntry {
             .find(|meta| meta.product_revision == product_revision)
     }
 
-    /// The history of a product for one area with the scores of `excluded`
-    /// (sub-)areas subtracted from every run, e.g. the whole suite minus
-    /// the areas the comparison database leaves out. Excluded areas the
-    /// product has no data for subtract nothing; a run missing data for an
-    /// excluded area gets no score.
-    pub fn history_excluding(
+    /// A product's whole-suite history (the empty area) minus the
+    /// `/encoding/` suite, which the comparison database leaves out (see
+    /// `wpt_db::WptIngester::ingest_test`) but the whole-run totals
+    /// include. A product with no encoding data (Blitz doesn't run it) is
+    /// returned as-is.
+    pub fn total_history_without_encoding(
         &self,
         product: &str,
-        area: &str,
-        excluded: &[&str],
         union_total: Option<u32>,
     ) -> Option<ArcWptHistory> {
-        let mut history = self.build_history(product, &[area.to_string()], &[union_total])?;
-        let excluded: Vec<&Arc<Vec<Option<ScoreTuple>>>> = excluded
-            .iter()
-            .filter_map(|excluded| self.areas.get(&(product.to_string(), excluded.to_string())))
-            .collect();
-        for (i, run) in history.runs.iter_mut().enumerate() {
-            run.scores[0] = run.scores[0].and_then(|score| {
-                excluded.iter().try_fold(score, |score, scores| {
-                    let (tests, test_score, subtests, subtests_passed) = scores[i]?;
-                    Some((
-                        score.0.saturating_sub(tests),
-                        (score.1 - test_score).max(0.0),
-                        score.2.saturating_sub(subtests),
-                        score.3.saturating_sub(subtests_passed),
-                    ))
-                })
-            });
+        let mut history = self.build_history(product, &[String::new()], &[union_total])?;
+        if let Some(encoding) = self
+            .areas
+            .get(&(product.to_string(), ENCODING_AREA.to_string()))
+        {
+            for (run, encoding) in history.runs.iter_mut().zip(encoding.iter()) {
+                run.scores[0] = match (run.scores[0], *encoding) {
+                    (Some(total), Some(encoding)) => Some((
+                        total.0.saturating_sub(encoding.0),
+                        (total.1 - encoding.1).max(0.0),
+                        total.2.saturating_sub(encoding.2),
+                        total.3.saturating_sub(encoding.3),
+                    )),
+                    _ => None,
+                };
+            }
         }
         Some(ArcWptHistory(Arc::new(history)))
     }
@@ -149,6 +146,9 @@ impl SummaryCacheEntry {
         })
     }
 }
+
+/// The one WPT area the comparison database skips
+pub const ENCODING_AREA: &str = "encoding";
 
 /// An area a product has data for: `(area, union subtest total, per-run scores)`
 type PresentArea<'a> = (&'a String, Option<u32>, &'a Arc<Vec<Option<ScoreTuple>>>);

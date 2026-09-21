@@ -21,12 +21,6 @@ use serde::Deserialize;
 /// (all data is re-ingestable from upstream sources).
 const DB_VERSION: i64 = 3;
 
-/// Top-level WPT areas left out of the database. `/encoding/` is very large
-/// (over a million subtests, half the suite) and not layout-relevant. The
-/// history charts subtract these from whole-suite totals, which do include
-/// them, so the two agree.
-pub const EXCLUDED_AREAS: &[&str] = &["encoding"];
-
 const SCHEMA: &str = include_str!("schema.sql");
 
 /// The directory data files (SQLite databases, downloaded build
@@ -307,12 +301,8 @@ impl IngestCtx<'_> {
         if !test.test.starts_with('/') {
             test.test.insert(0, '/');
         }
-        if EXCLUDED_AREAS.iter().any(|area| {
-            test.test
-                .strip_prefix('/')
-                .and_then(|path| path.strip_prefix(area))
-                .is_some_and(|rest| rest.starts_with('/'))
-        }) {
+        // The /encoding/ suite is excluded (very large, not layout-relevant)
+        if test.test.starts_with("/encoding/") {
             return;
         }
 

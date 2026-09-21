@@ -467,21 +467,20 @@ async fn compare_history(
         .map(|(run, _)| run.product.as_str())
         .collect();
 
-    // The whole-suite total includes areas the comparison database leaves
-    // out; they are subtracted so the history matches the comparison
-    let excluded: &[&str] = if area.is_empty() {
-        wpt_db::EXCLUDED_AREAS
-    } else {
-        &[]
-    };
-    let requests: Vec<(String, String)> = products
+    // The whole-suite totals include /encoding/, which the comparison
+    // database leaves out, so it is subtracted to match the comparison
+    let mut requests: Vec<(String, String)> = products
         .iter()
-        .flat_map(|product| {
-            std::iter::once(area)
-                .chain(excluded.iter().copied())
-                .map(|area| (product.to_string(), area.to_string()))
-        })
+        .map(|product| (product.to_string(), area.to_string()))
         .collect();
+    if area.is_empty() {
+        requests.extend(products.iter().map(|product| {
+            (
+                product.to_string(),
+                wpt_summaries::ENCODING_AREA.to_string(),
+            )
+        }));
+    }
     let Some(summaries) = fresh_wpt_summaries(requests).await else {
         return Vec::new();
     };
@@ -489,7 +488,12 @@ async fn compare_history(
     let union_total = union_subtest_total(total);
     let mut lines = Vec::new();
     for product in products {
-        if let Some(history) = summaries.history_excluding(product, area, excluded, union_total) {
+        let history = if area.is_empty() {
+            summaries.total_history_without_encoding(product, union_total)
+        } else {
+            summaries.history(product, &[area.to_string()], &[union_total])
+        };
+        if let Some(history) = history {
             lines.push(ChartLine {
                 history,
                 series: ChartSeries {
