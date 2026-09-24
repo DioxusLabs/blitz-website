@@ -20,11 +20,11 @@
       { "name": "position",
         "notes": "Note that because 'position:static' is not supported, 'position:absolute' nodes are always positioned relative to their immediate parent",
         "values": [
-          { "value": "position:static", "status": "No" },
+          { "value": "position:static", "status": "InProgress" },
           { "value": "position:relative", "status": "Yes" },
           { "value": "position:absolute", "status": "Yes" },
-          { "value": "position:fixed", "status": "No" },
-          { "value": "position:sticky", "status": "No" }
+          { "value": "position:fixed", "status": "InProgress" },
+          { "value": "position:sticky", "status": "InProgress", "issues": ["DioxusLabs/blitz#887"] }
         ]
       },
       {
@@ -178,8 +178,7 @@
       { "name": "text-align", "status": "Yes" },
       { "name": "line-height", "status": "Yes" },
       { "name": "text-decoration", "status": "Yes" },
-      { "name": "vertical-align", "status": "No", "issues": ["linebender/parley#291"] },
-      { "name": "white-space-collapse", "status": "Partial", "properties": ["white-space-collapse", "white-space"] },
+      { "name": "vertical-align", "status": "InProgress", "issues": ["linebender/parley#766"] },
       { "name": "white-space-collapse", "status": "Yes", "properties": ["white-space-collapse", "white-space"] },
       { "name": "text-wrap-mode", "status": "Yes", "properties": ["text-wrap-mode", "text-wrap", "white-space"] },
       { "name": "text-transform",
@@ -190,7 +189,7 @@
         ]
       },
       { "name": "letter-spacing", "status": "Yes" },
-      { "name": "text-overflow", "status": "No", "issues": ["linebender/parley#304"] },
+      { "name": "text-overflow", "status": "InProgress", "issues": ["DioxusLabs/blitz#893"] },
       { "name": "word-break", "status": "Yes" },
       { "name": "line-clamp", "status": "No", "properties": ["line-clamp", "webkit-line-clamp"] },
       { "name": "overflow-wrap / word-wrap", "status": "Yes", "properties": ["overflow-wrap", "word-wrap"] },
@@ -208,7 +207,7 @@
       { "name": "text-decoration-skip-ink", "status": "No" },
       { "name": "quotes", "status": "No" },
       { "name": "text-underline-position", "status": "Yes" },
-      { "name": "line-break", "status": "No" },
+      { "name": "line-break", "status": "InProgress", "issues": ["linebender/parley#843"] },
       { "name": "text-decoration-inset", "status": "Yes" }
     ]
   },
