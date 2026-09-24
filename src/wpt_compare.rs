@@ -27,6 +27,10 @@ const PRODUCTS: &[&str] = &[
     "flow",
 ];
 
+/// Products that are ingested (so their data stays current) but left out of
+/// the comparison columns and history charts
+const HIDDEN_PRODUCTS: &[&str] = &["flow"];
+
 const BLITZ_REPORT_URL: &str = "https://dioxuslabs.github.io/blitz/wptreport.json.zst";
 
 pub static WPT_COMPARE_CACHE: Cache<WptCompareCacheEntry> = Cache::new();
@@ -77,11 +81,15 @@ pub fn seed_from_db() {
     });
 }
 
-/// Order columns: wpt.fyi products first (in `PRODUCTS` order), then Blitz
+/// Order columns: wpt.fyi products first (in `PRODUCTS` order), then Blitz.
+/// `HIDDEN_PRODUCTS` are omitted.
 fn order_runs(runs: Vec<RunRow>) -> Vec<RunRow> {
     let mut ordered: Vec<RunRow> = Vec::with_capacity(runs.len());
     for spec in PRODUCTS.iter().copied().chain(["blitz"]) {
         let product = spec.split('[').next().unwrap();
+        if HIDDEN_PRODUCTS.contains(&product) {
+            continue;
+        }
         ordered.extend(runs.iter().filter(|run| run.product == product).cloned());
     }
     ordered
