@@ -169,14 +169,9 @@ pub async fn load_wpt_compare(
                     Err(err) => println!("Failed to recompute WPT comparison area scores: {err}"),
                 }
             }
-            // Only the latest run per product is kept; a no-op when there
-            // are no superseded runs, so run it on every refresh
-            if let Err(err) = wpt_db::prune_old_runs(conn) {
-                println!("Failed to prune old WPT comparison runs: {err}");
-            }
-            if let Err(err) = wpt_db::checkpoint(conn) {
-                println!("Failed to checkpoint WPT comparison database: {err}");
-            }
+            // A no-op when there are no superseded runs, so run it on
+            // every refresh in case a post-ingest prune failed
+            prune_and_checkpoint(conn);
             wpt_db::latest_runs(conn)
         })
     })
@@ -189,6 +184,20 @@ pub async fn load_wpt_compare(
         runs: ArcRunRows(Arc::new(order_runs(runs))),
         blitz_report_etag,
     })
+}
+
+/// Drop runs superseded by a newer one of the same product and fold the WAL
+/// back into the database file. Called right after every ingest (not just at
+/// the end of a refresh) so that a backlog of new runs, e.g. after a spell of
+/// failed downloads, only ever costs the disk one superseded run at a time
+/// rather than one per product; failures are logged, not propagated.
+fn prune_and_checkpoint(conn: &mut rusqlite::Connection) {
+    if let Err(err) = wpt_db::prune_old_runs(conn) {
+        println!("Failed to prune old WPT comparison runs: {err}");
+    }
+    if let Err(err) = wpt_db::checkpoint(conn) {
+        println!("Failed to checkpoint WPT comparison database: {err}");
+    }
 }
 
 /// Download and ingest a wpt.fyi raw report if it hasn't been ingested yet.
@@ -222,9 +231,12 @@ async fn ingest_wpt_fyi_run(
         let t0 = Instant::now();
         let reader = wpt_fyi::report_reader(&compressed);
         WPT_COMPARE_DB
-            .with_writer(|conn| wpt_db::ingest_report(conn, &meta, reader))
-            .map(|_| ())
-            .map_err(|err| -> Box<dyn std::error::Error + Send + Sync> { err })?;
+            .with_writer(|conn| {
+                wpt_db::ingest_report(conn, &meta, reader)?;
+                prune_and_checkpoint(conn);
+                Ok(())
+            })
+            .map_err(|err: Box<dyn std::error::Error + Send + Sync>| err)?;
         println!(
             "Ingested {product} WPT report in {:.1}s",
             t0.elapsed().as_secs_f64()
@@ -308,6 +320,7 @@ async fn ingest_blitz_run(
             }
             let t0 = Instant::now();
             wpt_db::ingest_report(conn, &meta, &decompressed[..])?;
+            prune_and_checkpoint(conn);
             println!(
                 "Ingested blitz WPT report in {:.1}s",
                 t0.elapsed().as_secs_f64()
