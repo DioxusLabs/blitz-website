@@ -18,12 +18,11 @@
         ] 
       },
       { "name": "position",
-        "notes": "Note that because 'position:static' is not supported, 'position:absolute' nodes are always positioned relative to their immediate parent",
         "values": [
-          { "value": "position:static", "status": "InProgress" },
+          { "value": "position:static", "status": "Yes" },
           { "value": "position:relative", "status": "Yes" },
           { "value": "position:absolute", "status": "Yes" },
-          { "value": "position:fixed", "status": "InProgress" },
+          { "value": "position:fixed", "status": "Yes" },
           { "value": "position:sticky", "status": "InProgress", "issues": ["DioxusLabs/blitz#887"] }
         ]
       },
@@ -80,7 +79,7 @@
           { "value": "inline-size", "status": "No" }
         ]
       },
-      { "name": "isolation", "status": "No" },
+      { "name": "isolation", "status": "Yes" },
       { "name": "content-visibility", "status": "No" }
     ]
   },
