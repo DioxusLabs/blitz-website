@@ -182,7 +182,7 @@ fn SortToggle(area: String, sort: AreaSort) -> Element {
     rsx! {
         p {
             font_size: "smaller",
-            b { "Sort areas: " }
+            b { "Sort: " }
             if sort == AreaSort::Alpha {
                 "alphabetical"
             } else {
