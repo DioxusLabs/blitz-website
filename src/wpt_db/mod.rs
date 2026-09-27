@@ -832,7 +832,12 @@ pub struct TestRunResult {
 }
 
 /// Tests directly in `area` (not in child areas) with per-run results.
-pub fn tests_in_area(conn: &Connection, run_ids: &[i64], area: &str) -> Vec<TestRow> {
+pub fn tests_in_area(
+    conn: &Connection,
+    run_ids: &[i64],
+    area: &str,
+    sort: AreaSort,
+) -> Vec<TestRow> {
     let mut stmt = conn
         .prepare_cached(
             "SELECT t.name, r.run_id, r.status, r.subtest_pass, r.subtest_total
@@ -860,7 +865,7 @@ pub fn tests_in_area(conn: &Connection, run_ids: &[i64], area: &str) -> Vec<Test
             }
         }
     }
-    rows_by_test
+    let mut tests: Vec<TestRow> = rows_by_test
         .into_iter()
         .map(|(name, by_run)| {
             let denom = by_run.values().map(|r| r.subtest_total).max().unwrap_or(1);
@@ -871,7 +876,12 @@ pub fn tests_in_area(conn: &Connection, run_ids: &[i64], area: &str) -> Vec<Test
                 results,
             }
         })
-        .collect()
+        .collect();
+    if sort == AreaSort::Subtests {
+        // Stable sort: ties keep the query's alphabetical order
+        tests.sort_by_key(|test| std::cmp::Reverse(test.denom));
+    }
+    tests
 }
 
 #[derive(Clone, PartialEq)]

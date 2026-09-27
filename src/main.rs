@@ -240,7 +240,12 @@ async fn main() {
                                 .into_iter()
                                 .map(|(name, scores)| (name, scores[0]))
                                 .collect();
-                                let tests = wpt_db::tests_in_area(conn, &run_ids, &area);
+                                let tests = wpt_db::tests_in_area(
+                                    conn,
+                                    &run_ids,
+                                    &area,
+                                    wpt_db::AreaSort::Alpha,
+                                );
                                 Some(BlitzAreaResults {
                                     area,
                                     score,
@@ -548,7 +553,7 @@ async fn wpt_compare_route(area: String, query: WptCompareQuery) -> Response {
                     PageData::Area {
                         total: wpt_db::area_score(conn, &run_ids, &area),
                         children: wpt_db::child_area_scores(conn, &run_ids, &area, sort),
-                        tests: wpt_db::tests_in_area(conn, &run_ids, &area),
+                        tests: wpt_db::tests_in_area(conn, &run_ids, &area, sort),
                     }
                 } else if let Some(detail) =
                     wpt_db::test_detail(conn, &run_ids, &format!("/{area}"))
