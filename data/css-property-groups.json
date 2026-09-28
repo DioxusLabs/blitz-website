@@ -177,7 +177,7 @@
       { "name": "text-align", "status": "Yes" },
       { "name": "line-height", "status": "Yes" },
       { "name": "text-decoration", "status": "Yes" },
-      { "name": "vertical-align", "status": "InProgress", "issues": ["linebender/parley#766"] },
+      { "name": "vertical-align", "status": "Yes" },
       { "name": "white-space-collapse", "status": "Yes", "properties": ["white-space-collapse", "white-space"] },
       { "name": "text-wrap-mode", "status": "Yes", "properties": ["text-wrap-mode", "text-wrap", "white-space"] },
       { "name": "text-transform",
@@ -206,7 +206,7 @@
       { "name": "text-decoration-skip-ink", "status": "No" },
       { "name": "quotes", "status": "No" },
       { "name": "text-underline-position", "status": "Yes" },
-      { "name": "line-break", "status": "InProgress", "issues": ["linebender/parley#843"] },
+      { "name": "line-break", "status": "Yes" },
       { "name": "text-decoration-inset", "status": "Yes" }
     ]
   },
