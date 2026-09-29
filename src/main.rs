@@ -653,6 +653,12 @@ async fn wpt_runs_route() -> Response {
     };
     let props = routes::WptRunsPageProps {
         latest: entry.latest.to_vec(),
+        active: entry.active.as_ref().map(|active| {
+            active
+                .as_ref()
+                .map(|active| active.to_vec())
+                .map_err(|err| err.to_string())
+        }),
         fetched_at: entry.fetched_at,
     };
     dx_route_with_props(routes::WptRunsPage, props)

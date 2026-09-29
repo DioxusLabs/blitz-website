@@ -3,7 +3,7 @@ use jiff::Timestamp;
 
 use crate::{
     components::Page,
-    wpt_runs::LatestRun,
+    wpt_runs::{ActiveRun, LatestRun},
 };
 
 use super::wpt_compare::{product_color, product_label};
@@ -77,9 +77,11 @@ fn CommitLink(sha: String) -> Element {
 #[component]
 pub fn WptRunsPage(
     latest: Vec<LatestRun>,
+    active: Option<Result<Vec<ActiveRun>, String>>,
     fetched_at: Timestamp,
 ) -> Element {
     let now = Timestamp::now();
+    let has_github_token = active.is_some();
 
     rsx! {
         Page { title: "WPT runs".into(),
@@ -88,13 +90,80 @@ pub fn WptRunsPage(
                 class: "introduction",
                 dangerous_inner_html: r#"
                 The latest <a href="https://github.com/web-platform-tests/wpt" target="_blank">Web Platform Tests</a> master run on
-                <a href="https://wpt.fyi/runs" target="_blank">wpt.fyi</a> for each browser in the WPT comparison, most recently added first."#
+                <a href="https://wpt.fyi/runs" target="_blank">wpt.fyi</a> for each browser in the WPT comparison, most recently added first,
+                and the runs that are still in progress."#
             }
             hr {}
             p {
                 font_size: "smaller",
                 a { href: "/wpt", "WPT comparison" }
                 " | All times are UTC. Updated {format_ago(now, fetched_at)}."
+            }
+
+            h2 { margin_bottom: "0.4em", "In progress" }
+            match active {
+                None => rsx! {
+                    p { padding: "20px", color: "#666", "In-progress runs aren't shown because this server has no GitHub token configured. They are read from the WPT repository's CI checks on GitHub." }
+                },
+                Some(Err(err)) => rsx! {
+                    p { "In-progress runs are unavailable right now ({err})." }
+                },
+                Some(Ok(active)) if active.is_empty() => rsx! {
+                    p { "No runs are in progress." }
+                },
+                Some(Ok(active)) => rsx! {
+                    table {
+                        width: "100%",
+                        tr {
+                            th { "Browser" }
+                            th { "WPT commit" }
+                            th { "Started" }
+                            th { "Progress" }
+                        }
+                        for run in active {
+                            tr {
+                                td { BrowserName { browser: run.browser.clone(), channel: run.channel.clone() } }
+                                td { CommitLink { sha: run.revision.clone() } }
+                                td {
+                                    match run.started_at {
+                                        Some(started_at) => rsx! {
+                                            "{format_time(started_at)} ({format_ago(now, started_at)})"
+                                        },
+                                        None => rsx! { "Queued" },
+                                    }
+                                }
+                                td {
+                                    match run.finished_at {
+                                        Some(finished_at) => rsx! {
+                                            "Tests finished {format_ago(now, finished_at)}, waiting for wpt.fyi"
+                                        },
+                                        None => rsx! {
+                                            progress {
+                                                max: "{run.chunks_total}",
+                                                value: "{run.chunks_completed}",
+                                                margin_right: "0.5em",
+                                                vertical_align: "middle",
+                                            }
+                                            "{run.chunks_completed}/{run.chunks_total} chunks done"
+                                            if run.chunks_running > 0 {
+                                                ", {run.chunks_running} running"
+                                            }
+                                            if run.chunks_queued() > 0 {
+                                                ", {run.chunks_queued()} queued"
+                                            }
+                                        },
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+            }
+            if has_github_token {
+                p {
+                    font_size: "smaller",
+                    "Found from the CI check runs on recent commits to the WPT repository. Ladybird is tested outside that CI, so its runs only show up once they are on wpt.fyi."
+                }
             }
 
             h2 { margin_bottom: "0.4em", "Latest runs" }
