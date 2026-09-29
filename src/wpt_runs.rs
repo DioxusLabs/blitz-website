@@ -16,28 +16,19 @@ use serde::{de::DeserializeOwned, Deserialize};
 use tokio::task::JoinSet;
 
 use crate::cache::{Cache, Cached, RefreshOutcome};
+use crate::wpt_compare;
 
 pub type Error = Box<dyn std::error::Error + Send + Sync>;
 
 pub static WPT_RUNS_CACHE: Cache<WptRunsEntry> = Cache::new();
 
-/// wpt.fyi product specs queried for the latest runs. Runs are grouped by
-/// their channel label, so overlapping specs are harmless.
-const PRODUCT_SPECS: &[&str] = &[
-    "chrome[stable]",
-    "chrome[beta]",
-    "chrome[experimental]",
-    "edge[stable]",
-    "edge[beta]",
-    "edge[experimental]",
-    "firefox[stable]",
-    "firefox[beta]",
-    "firefox[experimental]",
-    "safari[stable]",
-    "safari[experimental]",
-    "servo",
-    "ladybird",
-];
+/// The wpt.fyi products shown on the comparison pages
+fn product_specs() -> impl Iterator<Item = &'static str> {
+    wpt_compare::PRODUCTS.iter().copied().filter(|spec| {
+        let product = spec.split('[').next().unwrap();
+        !wpt_compare::HIDDEN_PRODUCTS.contains(&product)
+    })
+}
 
 /// wpt.fyi run labels that name a release channel
 const CHANNELS: &[&str] = &["stable", "beta", "dev", "canary", "nightly", "preview"];
@@ -160,21 +151,32 @@ async fn fetch_latest_runs(client: &Client) -> Result<Vec<LatestRun>, Error> {
         created_at: String,
     }
 
-    // Runs are returned newest-started first, per spec: the most recently
-    // added run is almost always the first, but a run that started earlier
-    // can finish (and be added) later
-    let mut url = "https://wpt.fyi/api/runs?label=master&max-count=5".to_string();
-    for spec in PRODUCT_SPECS {
-        url.push_str("&product=");
-        url.push_str(&spec.replace('[', "%5B").replace(']', "%5D"));
+    // One request per product, in parallel, which is faster than a single
+    // request for all of them. Runs are returned newest-started first: the
+    // most recently added run is almost always the first, but a run that
+    // started earlier can finish (and be added) later
+    let mut tasks = JoinSet::new();
+    for spec in product_specs() {
+        let client = client.clone();
+        let url = format!(
+            "https://wpt.fyi/api/runs?label=master&max-count=5&product={}",
+            spec.replace('[', "%5B").replace(']', "%5D")
+        );
+        tasks.spawn(async move {
+            let runs: Vec<ApiRun> = client
+                .get(url)
+                .send()
+                .await?
+                .error_for_status()?
+                .json()
+                .await?;
+            Ok::<_, Error>(runs)
+        });
     }
-    let runs: Vec<ApiRun> = client
-        .get(url)
-        .send()
-        .await?
-        .error_for_status()?
-        .json()
-        .await?;
+    let mut runs = Vec::new();
+    while let Some(result) = tasks.join_next().await {
+        runs.extend(result??);
+    }
 
     let mut latest: HashMap<(String, String), LatestRun> = HashMap::new();
     for run in runs {
@@ -356,13 +358,21 @@ async fn fetch_active_runs(
             .collect(),
     );
 
-    Ok(summarize_check_runs(
+    let mut active = summarize_check_runs(
         suite_check_runs
             .iter()
             .map(|(_, _, sha, runs)| (sha.as_str(), runs.as_slice())),
         latest,
         now,
-    ))
+    );
+    // Only the channels shown on the comparison pages (which `latest` is
+    // limited to)
+    active.retain(|run| {
+        latest
+            .iter()
+            .any(|latest| latest.browser == run.browser && latest.channel == run.channel)
+    });
+    Ok(active)
 }
 
 /// Group check runs (with the commit they ran on) into the runs they are

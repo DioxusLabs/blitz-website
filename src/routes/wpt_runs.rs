@@ -88,8 +88,9 @@ pub fn WptRunsPage(
             p {
                 class: "introduction",
                 dangerous_inner_html: r#"
-                The latest <a href="https://github.com/web-platform-tests/wpt" target="_blank">Web Platform Tests</a> master run for each browser
-                on <a href="https://wpt.fyi/runs" target="_blank">wpt.fyi</a>, most recently added first, and the runs that are still in progress."#
+                The latest <a href="https://github.com/web-platform-tests/wpt" target="_blank">Web Platform Tests</a> master run on
+                <a href="https://wpt.fyi/runs" target="_blank">wpt.fyi</a> for each browser in the WPT comparison, most recently added first,
+                and the runs that are still in progress."#
             }
             hr {}
             p {
@@ -164,7 +165,6 @@ pub fn WptRunsPage(
                 width: "100%",
                 tr {
                     th { "Browser" }
-                    th { "Version" }
                     th { "WPT commit" }
                     th { "Started" }
                     th { "Took" }
@@ -179,8 +179,12 @@ pub fn WptRunsPage(
                                 target: "_blank",
                                 BrowserName { browser: run.browser.clone(), channel: run.channel.clone() }
                             }
+                            div {
+                                font_size: "smaller",
+                                opacity: "0.7",
+                                {run.browser_version.clone()}
+                            }
                         }
-                        td { {run.browser_version.clone()} }
                         td { CommitLink { sha: run.revision.clone() } }
                         td { {format_time(run.time_start)} }
                         td { {format_duration(run.time_end.as_second() - run.time_start.as_second())} }
