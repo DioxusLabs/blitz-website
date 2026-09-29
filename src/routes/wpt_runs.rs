@@ -79,6 +79,7 @@ pub fn WptRunsPage(
     latest: Vec<LatestRun>,
     active: Option<Result<Vec<ActiveRun>, String>>,
     fetched_at: Timestamp,
+    refreshing: bool,
 ) -> Element {
     let now = Timestamp::now();
     let has_github_token = active.is_some();
@@ -98,6 +99,9 @@ pub fn WptRunsPage(
                 font_size: "smaller",
                 a { href: "/wpt", "WPT comparison" }
                 " | All times are UTC. Updated {format_ago(now, fetched_at)}."
+                if refreshing {
+                    span { color: "#666", " Refreshing data…" }
+                }
             }
 
             h2 { margin_bottom: "0.4em", "In progress" }

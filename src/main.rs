@@ -649,12 +649,9 @@ async fn wpt_compare_route(area: String, query: WptCompareQuery) -> Response {
 }
 
 async fn wpt_runs_route() -> Response {
+    const FRESH_FOR: Duration = Duration::from_mins(5);
     let Some(entry) = wpt_runs::WPT_RUNS_CACHE
-        .get_or_refresh(
-            Duration::from_mins(5),
-            Duration::MAX,
-            wpt_runs::load_wpt_runs,
-        )
+        .get_or_refresh(FRESH_FOR, Duration::MAX, wpt_runs::load_wpt_runs)
         .await
     else {
         return wpt_unavailable_response(
@@ -671,6 +668,9 @@ async fn wpt_runs_route() -> Response {
                 .map_err(|err| err.to_string())
         }),
         fetched_at: entry.fetched_at,
+        // A stale entry has just had a background refresh started, which may
+        // not have taken the refresh lock yet
+        refreshing: wpt_runs::is_refreshing() || entry.cached_at.elapsed() > FRESH_FOR,
     };
     dx_route_with_props(routes::WptRunsPage, props)
         .await
