@@ -103,7 +103,7 @@ pub fn WptRunsPage(
             h2 { margin_bottom: "0.4em", "In progress" }
             match active {
                 None => rsx! {
-                    p { "In-progress runs aren't shown because this server has no GitHub token configured. They are read from the WPT repository's CI checks on GitHub." }
+                    p { padding: "20px", color: "#666", "In-progress runs aren't shown because this server has no GitHub token configured. They are read from the WPT repository's CI checks on GitHub." }
                 },
                 Some(Err(err)) => rsx! {
                     p { "In-progress runs are unavailable right now ({err})." }
