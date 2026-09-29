@@ -46,12 +46,18 @@ pub struct LatestRun {
     pub created_at: Timestamp,
 }
 
+static REFRESH_LOCK: tokio::sync::Mutex<()> = tokio::sync::Mutex::const_new(());
+
+/// Whether a refresh is currently running
+pub fn is_refreshing() -> bool {
+    REFRESH_LOCK.try_lock().is_err()
+}
+
 /// Fetch the latest runs. Only one refresh runs at a time;
 /// calls that arrive while one is in flight wait for it instead.
 pub async fn load_wpt_runs(
     _existing: Option<Arc<Cached<WptRunsEntry>>>,
 ) -> RefreshOutcome<WptRunsEntry> {
-    static REFRESH_LOCK: tokio::sync::Mutex<()> = tokio::sync::Mutex::const_new(());
     let Ok(_guard) = REFRESH_LOCK.try_lock() else {
         let _guard = REFRESH_LOCK.lock().await;
         return RefreshOutcome::Unchanged;

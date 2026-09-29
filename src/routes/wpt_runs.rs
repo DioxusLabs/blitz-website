@@ -78,6 +78,7 @@ fn CommitLink(sha: String) -> Element {
 pub fn WptRunsPage(
     latest: Vec<LatestRun>,
     fetched_at: Timestamp,
+    refreshing: bool,
 ) -> Element {
     let now = Timestamp::now();
 
@@ -95,6 +96,9 @@ pub fn WptRunsPage(
                 font_size: "smaller",
                 a { href: "/wpt", "WPT comparison" }
                 " | All times are UTC. Updated {format_ago(now, fetched_at)}."
+                if refreshing {
+                    span { color: "#666", " Refreshing data…" }
+                }
             }
 
             h2 { margin_bottom: "0.4em", "Latest runs" }
