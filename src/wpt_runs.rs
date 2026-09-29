@@ -51,7 +51,8 @@ pub struct WptRunsEntry {
     /// The latest run for each browser channel, newest on wpt.fyi first
     pub latest: Arc<Vec<LatestRun>>,
     /// In-progress runs, or why they couldn't be loaded
-    pub active: Result<Arc<Vec<ActiveRun>>, Arc<str>>,
+    /// `None` when no `GITHUB_TOKEN` is configured
+    pub active: Option<Result<Arc<Vec<ActiveRun>>, Arc<str>>>,
     pub fetched_at: Timestamp,
 }
 
@@ -106,17 +107,27 @@ pub async fn load_wpt_runs(
             return RefreshOutcome::Failed;
         }
     };
-    let github = GithubApi {
-        client,
-        token: std::env::var("GITHUB_TOKEN").ok().map(Arc::from),
+    let token = std::env::var("GITHUB_TOKEN")
+        .ok()
+        .filter(|token| !token.is_empty());
+    let active = match token {
+        Some(token) => {
+            let github = GithubApi {
+                client,
+                token: Some(Arc::from(token)),
+            };
+            Some(
+                fetch_active_runs(&github, &latest)
+                    .await
+                    .map(Arc::new)
+                    .map_err(|err| {
+                        println!("Error fetching in-progress WPT runs: {err}");
+                        Arc::from(err.to_string())
+                    }),
+            )
+        }
+        None => None,
     };
-    let active = fetch_active_runs(&github, &latest)
-        .await
-        .map(Arc::new)
-        .map_err(|err| {
-            println!("Error fetching in-progress WPT runs: {err}");
-            Arc::from(err.to_string())
-        });
 
     RefreshOutcome::Updated(WptRunsEntry {
         latest: Arc::new(latest),

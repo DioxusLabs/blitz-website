@@ -77,7 +77,7 @@ fn CommitLink(sha: String) -> Element {
 #[component]
 pub fn WptRunsPage(
     latest: Vec<LatestRun>,
-    active: Result<Vec<ActiveRun>, String>,
+    active: Option<Result<Vec<ActiveRun>, String>>,
     fetched_at: Timestamp,
 ) -> Element {
     let now = Timestamp::now();
@@ -99,15 +99,18 @@ pub fn WptRunsPage(
                 " | All times are UTC. Updated {format_ago(now, fetched_at)}."
             }
 
-            h2 { "In progress" }
+            h2 { margin_bottom: "0.4em", "In progress" }
             match active {
-                Err(err) => rsx! {
+                None => rsx! {
+                    p { "In-progress runs aren't shown because this server has no GitHub token configured. They are read from the WPT repository's CI checks on GitHub." }
+                },
+                Some(Err(err)) => rsx! {
                     p { "In-progress runs are unavailable right now ({err})." }
                 },
-                Ok(active) if active.is_empty() => rsx! {
+                Some(Ok(active)) if active.is_empty() => rsx! {
                     p { "No runs are in progress." }
                 },
-                Ok(active) => rsx! {
+                Some(Ok(active)) => rsx! {
                     table {
                         width: "100%",
                         tr {
@@ -160,7 +163,7 @@ pub fn WptRunsPage(
                 "Found from the CI check runs on recent commits to the WPT repository. Ladybird is tested outside that CI, so its runs only show up once they are on wpt.fyi."
             }
 
-            h2 { "Latest runs" }
+            h2 { margin_bottom: "0.4em", "Latest runs" }
             table {
                 width: "100%",
                 tr {
