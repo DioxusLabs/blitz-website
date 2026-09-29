@@ -1,5 +1,5 @@
-//! The latest wpt.fyi master run for each browser channel, for the
-//! `/wpt/runs` page.
+//! The latest wpt.fyi master run for each browser channel, plus runs that
+//! are still in progress (see [`in_progress`]), for the `/wpt/runs` page.
 
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -10,6 +10,9 @@ use serde::Deserialize;
 
 use crate::cache::{Cache, Cached, RefreshOutcome};
 use crate::wpt_compare;
+
+mod in_progress;
+pub use in_progress::ActiveRun;
 
 pub type Error = Box<dyn std::error::Error + Send + Sync>;
 
@@ -30,6 +33,9 @@ const CHANNELS: &[&str] = &["stable", "beta", "dev", "canary", "nightly", "previ
 pub struct WptRunsEntry {
     /// The latest run for each browser channel, newest on wpt.fyi first
     pub latest: Arc<Vec<LatestRun>>,
+    /// In-progress runs, or why they couldn't be loaded
+    /// `None` when no `GITHUB_TOKEN` is configured
+    pub active: Option<Result<Arc<Vec<ActiveRun>>, Arc<str>>>,
     pub fetched_at: Timestamp,
 }
 
@@ -53,7 +59,7 @@ pub fn is_refreshing() -> bool {
     REFRESH_LOCK.try_lock().is_err()
 }
 
-/// Fetch the latest runs. Only one refresh runs at a time;
+/// Fetch the latest and in-progress runs. Only one refresh runs at a time;
 /// calls that arrive while one is in flight wait for it instead.
 pub async fn load_wpt_runs(
     _existing: Option<Arc<Cached<WptRunsEntry>>>,
@@ -71,8 +77,11 @@ pub async fn load_wpt_runs(
             return RefreshOutcome::Failed;
         }
     };
+    let active = in_progress::load(client, &latest).await;
+
     RefreshOutcome::Updated(WptRunsEntry {
         latest: Arc::new(latest),
+        active,
         fetched_at: Timestamp::now(),
     })
 }
