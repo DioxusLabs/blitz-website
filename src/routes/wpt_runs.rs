@@ -81,6 +81,7 @@ pub fn WptRunsPage(
     fetched_at: Timestamp,
 ) -> Element {
     let now = Timestamp::now();
+    let has_github_token = active.is_some();
 
     rsx! {
         Page { title: "WPT runs".into(),
@@ -158,9 +159,11 @@ pub fn WptRunsPage(
                     }
                 },
             }
-            p {
-                font_size: "smaller",
-                "Found from the CI check runs on recent commits to the WPT repository. Ladybird is tested outside that CI, so its runs only show up once they are on wpt.fyi."
+            if has_github_token {
+                p {
+                    font_size: "smaller",
+                    "Found from the CI check runs on recent commits to the WPT repository. Ladybird is tested outside that CI, so its runs only show up once they are on wpt.fyi."
+                }
             }
 
             h2 { margin_bottom: "0.4em", "Latest runs" }
