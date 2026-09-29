@@ -73,6 +73,8 @@ pub fn WptComparePage(
             if area.is_empty() {
                 p {
                     font_size: "smaller",
+                    a { href: "/wpt/runs", "Latest runs" }
+                    " | "
                     b { "Focus areas: " }
                     for (i, set) in FOCUS_AREA_SETS.iter().enumerate() {
                         if i > 0 {
@@ -80,8 +82,6 @@ pub fn WptComparePage(
                         }
                         a { href: format!("/wpt/focus-areas/{}", set.slug), "{set.label}" }
                     }
-                    " | "
-                    a { href: "/wpt/runs", "Latest runs" }
                 }
             }
             WptCompareBreadcrumb { area: area.clone() }
