@@ -162,32 +162,21 @@ async fn fetch_latest_runs(client: &Client) -> Result<Vec<LatestRun>, Error> {
         created_at: String,
     }
 
-    // One request per product, in parallel, which is faster than a single
-    // request for all of them. Runs are returned newest-started first: the
-    // most recently added run is almost always the first, but a run that
-    // started earlier can finish (and be added) later
-    let mut tasks = JoinSet::new();
+    // Runs are returned newest-started first: the most recently added run is
+    // almost always the first, but a run that started earlier can finish (and
+    // be added) later. `max-count` applies to each product separately
+    let mut url = String::from("https://wpt.fyi/api/runs?label=master&max-count=5");
     for spec in product_specs() {
-        let client = client.clone();
-        let url = format!(
-            "https://wpt.fyi/api/runs?label=master&max-count=5&product={}",
-            spec.replace('[', "%5B").replace(']', "%5D")
-        );
-        tasks.spawn(async move {
-            let runs: Vec<ApiRun> = client
-                .get(url)
-                .send()
-                .await?
-                .error_for_status()?
-                .json()
-                .await?;
-            Ok::<_, Error>(runs)
-        });
+        url.push_str("&product=");
+        url.push_str(&spec.replace('[', "%5B").replace(']', "%5D"));
     }
-    let mut runs = Vec::new();
-    while let Some(result) = tasks.join_next().await {
-        runs.extend(result??);
-    }
+    let runs: Vec<ApiRun> = client
+        .get(url)
+        .send()
+        .await?
+        .error_for_status()?
+        .json()
+        .await?;
 
     let mut latest: HashMap<(String, String), LatestRun> = HashMap::new();
     for run in runs {

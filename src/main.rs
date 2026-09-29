@@ -397,6 +397,17 @@ async fn main() {
             WPT_COMPARE_CACHE.refresh(load_wpt_compare).await;
         }
     });
+    // Refresh the latest WPT runs on startup and every hour, even if nobody
+    // visits the page
+    tokio::spawn(async {
+        let mut interval = tokio::time::interval(Duration::from_hours(1));
+        loop {
+            interval.tick().await;
+            wpt_runs::WPT_RUNS_CACHE
+                .refresh(wpt_runs::load_wpt_runs)
+                .await;
+        }
+    });
 
     if std::env::var("PRECACHE_DOWNLOADS").is_ok() {
         tokio::spawn(DOWNLOAD_CACHE.refresh(load_downloads));
@@ -641,7 +652,7 @@ async fn wpt_runs_route() -> Response {
     let Some(entry) = wpt_runs::WPT_RUNS_CACHE
         .get_or_refresh(
             Duration::from_mins(5),
-            Duration::from_hours(1),
+            Duration::MAX,
             wpt_runs::load_wpt_runs,
         )
         .await
