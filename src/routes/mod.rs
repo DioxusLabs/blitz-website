@@ -9,4 +9,5 @@ mod wpt;                pub use wpt::*;
 mod wpt_compare;        pub use wpt_compare::*;
 mod wpt_focus_areas;    pub use wpt_focus_areas::*;
 mod wpt_history;        pub use wpt_history::*;
+mod wpt_runs;           pub use wpt_runs::*;
 mod wpt_test;           pub use wpt_test::*;

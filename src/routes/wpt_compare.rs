@@ -80,6 +80,8 @@ pub fn WptComparePage(
                         }
                         a { href: format!("/wpt/focus-areas/{}", set.slug), "{set.label}" }
                     }
+                    " | "
+                    a { href: "/wpt/runs", "Latest runs" }
                 }
             }
             WptCompareBreadcrumb { area: area.clone() }
