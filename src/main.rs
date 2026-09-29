@@ -55,6 +55,7 @@ mod wpt_compare;
 mod wpt_db;
 mod wpt_fyi;
 mod wpt_history;
+mod wpt_runs;
 mod wpt_source;
 mod wpt_spec_meta;
 mod wpt_summaries;
@@ -291,6 +292,7 @@ async fn main() {
                 wpt_compare_route(String::new(), query).await
             }),
         )
+        .route("/wpt/runs", get(wpt_runs_route))
         .route(
             "/wpt/focus-areas/{set}",
             get(async |Path(set): Path<String>| wpt_focus_areas_route(set).await),
@@ -393,6 +395,17 @@ async fn main() {
         loop {
             interval.tick().await;
             WPT_COMPARE_CACHE.refresh(load_wpt_compare).await;
+        }
+    });
+    // Refresh the latest WPT runs on startup and every hour, even if nobody
+    // visits the page
+    tokio::spawn(async {
+        let mut interval = tokio::time::interval(Duration::from_hours(1));
+        loop {
+            interval.tick().await;
+            wpt_runs::WPT_RUNS_CACHE
+                .refresh(wpt_runs::load_wpt_runs)
+                .await;
         }
     });
 
@@ -633,6 +646,29 @@ async fn wpt_compare_route(area: String, query: WptCompareQuery) -> Response {
             (StatusCode::NOT_FOUND, format!("Unknown WPT area: {area}")).into_response()
         }
     }
+}
+
+async fn wpt_runs_route() -> Response {
+    const FRESH_FOR: Duration = Duration::from_mins(5);
+    let Some(entry) = wpt_runs::WPT_RUNS_CACHE
+        .get_or_refresh(FRESH_FOR, Duration::MAX, wpt_runs::load_wpt_runs)
+        .await
+    else {
+        return wpt_unavailable_response(
+            "The latest runs couldn't be loaded from wpt.fyi. Please try again in a moment.",
+        )
+        .await;
+    };
+    let props = routes::WptRunsPageProps {
+        latest: entry.latest.to_vec(),
+        fetched_at: entry.fetched_at,
+        // A stale entry has just had a background refresh started, which may
+        // not have taken the refresh lock yet
+        refreshing: wpt_runs::is_refreshing() || entry.cached_at.elapsed() > FRESH_FOR,
+    };
+    dx_route_with_props(routes::WptRunsPage, props)
+        .await
+        .into_response()
 }
 
 async fn wpt_focus_areas_route(set: String) -> Response {

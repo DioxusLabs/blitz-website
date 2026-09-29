@@ -18,7 +18,7 @@ use crate::wpt_fyi;
 /// Engines compared against Blitz, in display order. The experimental
 /// channels match wpt.fyi's default dashboard (the stable Safari runs in
 /// particular score far lower, e.g. collapsing on the wasm suite).
-const PRODUCTS: &[&str] = &[
+pub(crate) const PRODUCTS: &[&str] = &[
     "chrome[experimental]",
     "firefox[experimental]",
     "safari[experimental]",
@@ -29,7 +29,7 @@ const PRODUCTS: &[&str] = &[
 
 /// Products that are ingested (so their data stays current) but left out of
 /// the comparison columns and history charts
-const HIDDEN_PRODUCTS: &[&str] = &["flow"];
+pub(crate) const HIDDEN_PRODUCTS: &[&str] = &["flow"];
 
 const BLITZ_REPORT_URL: &str = "https://dioxuslabs.github.io/blitz/wptreport.json.zst";
 
