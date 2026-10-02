@@ -190,9 +190,63 @@ pub struct ChartLine {
 }
 
 struct Series {
-    label: String,
     color: &'static str,
+    metric: ChartMetric,
     points: Vec<(f64, f64)>,
+}
+
+#[derive(Clone, Copy, PartialEq)]
+enum ChartMetric {
+    PassPercent,
+    SubtestTotal,
+}
+
+fn max_subtest_line(lines: &[ChartLine]) -> ChartLine {
+    let mut updates = Vec::new();
+    let mut subtest_total = None;
+    for (browser, line) in lines.iter().enumerate() {
+        let Some(area_idx) = line.history.focus_areas.iter().position(|a| *a == line.series.area) else {
+            continue;
+        };
+        subtest_total = subtest_total.max(line.history.subtest_total(area_idx));
+        for run in &line.history.runs {
+            if let (Some(x), Some(Some((_, _, total, _)))) =
+                (parse_date(&run.date), run.scores.get(area_idx))
+            {
+                updates.push((x, &run.date, browser, *total));
+            }
+        }
+    }
+    updates.sort_by(|a, b| a.0.total_cmp(&b.0));
+
+    // Carry each browser's most recent count forward between its runs.
+    let mut totals = vec![0; lines.len()];
+    let mut runs = Vec::new();
+    for (i, &(x, date, browser, total)) in updates.iter().enumerate() {
+        totals[browser] = total;
+        if updates.get(i + 1).is_some_and(|next| next.0 == x) {
+            continue;
+        }
+        let max = totals.iter().copied().max().unwrap_or(0);
+        runs.push(HistoryRun {
+            date: date.clone(),
+            product_revision: String::new(),
+            commit_message: None,
+            scores: vec![Some((0, 0.0, max, 0))],
+        });
+    }
+    ChartLine {
+        history: ArcWptHistory(Arc::new(WptHistory {
+            focus_areas: vec![String::new()],
+            union_totals: vec![subtest_total],
+            runs,
+        })),
+        series: ChartSeries {
+            area: String::new(),
+            label: "Maximum across browsers".into(),
+            color: "#666666",
+        },
+    }
 }
 
 /// The run identifier shown in a tooltip: browser versions as-is, long
@@ -213,7 +267,12 @@ fn subtest_pass_percent(run: &HistoryRun, area_idx: usize, subtest_total: u32) -
     Some(total_subtests_passed as f64 / subtest_total as f64 * 100.0)
 }
 
-fn area_series(history: &WptHistory, min_x: f64, spec: &ChartSeries) -> Option<Series> {
+fn area_series(
+    history: &WptHistory,
+    min_x: f64,
+    spec: &ChartSeries,
+    metric: ChartMetric,
+) -> Option<Series> {
     let area_idx = history.focus_areas.iter().position(|a| *a == spec.area)?;
     let subtest_total = history.subtest_total(area_idx)?;
     let points: Vec<(f64, f64)> = history
@@ -222,7 +281,15 @@ fn area_series(history: &WptHistory, min_x: f64, spec: &ChartSeries) -> Option<S
         .filter_map(|run| {
             Some((
                 parse_date(&run.date)?,
-                subtest_pass_percent(run, area_idx, subtest_total)?,
+                match metric {
+                    ChartMetric::PassPercent => {
+                        subtest_pass_percent(run, area_idx, subtest_total)?
+                    }
+                    ChartMetric::SubtestTotal => {
+                        let (_, _, total, _) = (*run.scores.get(area_idx)?)?;
+                        total as f64 / subtest_total as f64 * 100.0
+                    }
+                },
             ))
         })
         .filter(|(x, _)| *x >= min_x)
@@ -231,8 +298,8 @@ fn area_series(history: &WptHistory, min_x: f64, spec: &ChartSeries) -> Option<S
         return None;
     }
     Some(Series {
-        label: spec.label.clone(),
         color: spec.color,
+        metric,
         points,
     })
 }
@@ -241,6 +308,7 @@ fn polyline_points(
     points: &[(f64, f64)],
     x_min: f64,
     x_max: f64,
+    y_max: f64,
     plot: (f64, f64, f64, f64), // (x, y, width, height) of plot area
 ) -> String {
     if points.is_empty() {
@@ -255,7 +323,7 @@ fn polyline_points(
     let mut out = String::new();
     let mut plot_point = |&(x, y): &(f64, f64)| {
         let sx = px + (x - x_min) / x_range * pw;
-        let sy = py + (1.0 - y / 100.0) * ph;
+        let sy = py + (1.0 - y / y_max) * ph;
         write!(out, "{sx:.1},{sy:.1} ").unwrap();
     };
     for point in points.iter().step_by(stride) {
@@ -392,7 +460,7 @@ pub fn WptHistoryChart(
 
 /// Per-run tooltip data for one line: the runs from just before the visible
 /// range onwards, with the line's `[passed, total]` subtest counts
-fn tooltip_runs(line: &ChartLine, min_x: f64) -> serde_json::Value {
+fn tooltip_runs(line: &ChartLine, min_x: f64, metric: ChartMetric) -> serde_json::Value {
     let history = &line.history;
     let area_idx = history
         .focus_areas
@@ -415,7 +483,9 @@ fn tooltip_runs(line: &ChartLine, min_x: f64) -> serde_json::Value {
             let x = parse_date(&run.date)?;
             let value = area_idx
                 .and_then(|idx| *run.scores.get(idx)?)
-                .filter(|(_, _, total_subtests, _)| *total_subtests != 0)
+                .filter(|(_, _, total_subtests, _)| {
+                    metric == ChartMetric::SubtestTotal || *total_subtests != 0
+                })
                 .map(|(_, _, total_subtests, total_subtests_passed)| {
                     serde_json::json!([total_subtests_passed, total_subtests])
                 })
@@ -432,6 +502,7 @@ fn tooltip_runs(line: &ChartLine, min_x: f64) -> serde_json::Value {
     serde_json::json!({
         "name": line.series.label,
         "color": line.series.color,
+        "metric": if metric == ChartMetric::SubtestTotal { "total" } else { "percent" },
         "total": subtest_total,
         "first": first_visible - start,
         "runs": runs,
@@ -444,17 +515,29 @@ pub fn HistoryLineChart(
     lines: Vec<ChartLine>,
     range: ChartRange,
     #[props(default = 440.0)] height: f64,
+    #[props(default = false)] show_subtest_totals: bool,
 ) -> Element {
     const WIDTH: f64 = 900.0;
-    let plot: (f64, f64, f64, f64) = (50.0, 15.0, WIDTH - 65.0, height - 55.0);
+    let plot: (f64, f64, f64, f64) = if show_subtest_totals {
+        (50.0, 15.0, WIDTH - 65.0, height - 75.0)
+    } else {
+        (50.0, 15.0, WIDTH - 65.0, height - 55.0)
+    };
     let (px, py, pw, ph) = plot;
 
     let min_x = range.min_x_of(lines.iter().map(|line| &*line.history));
-    let series: Vec<Series> = lines
+    let total_line = show_subtest_totals.then(|| max_subtest_line(&lines));
+    let chart_lines: Vec<_> = lines
         .iter()
-        .filter_map(|line| area_series(&line.history, min_x, &line.series))
+        .map(|line| (line, ChartMetric::PassPercent))
+        .chain(total_line.iter().map(|line| (line, ChartMetric::SubtestTotal)))
         .collect();
-
+    let series: Vec<Series> = chart_lines
+        .iter()
+        .filter_map(|(line, metric)| {
+            area_series(&line.history, min_x, &line.series, *metric)
+        })
+        .collect();
     let x_min = series
         .iter()
         .filter_map(|s| s.points.first().map(|p| p.0))
@@ -470,7 +553,9 @@ pub fn HistoryLineChart(
 
     let ticks = month_ticks(x_min, x_max);
     let x_range = (x_max - x_min).max(f64::EPSILON);
-    let legend_step = (pw / series.len().max(1) as f64).min(140.0);
+    let legend_step = pw / lines.len().max(1) as f64;
+    let legend_step = if show_subtest_totals { legend_step } else { legend_step.min(140.0) };
+    let legend_y = height - if show_subtest_totals { 30.0 } else { 10.0 };
 
     // Per-run data for the hover tooltip (a JS progressive enhancement)
     let tooltip_data = serde_json::json!({
@@ -478,9 +563,9 @@ pub fn HistoryLineChart(
         "plot": [px, py, pw, ph],
         "xMin": x_min,
         "xMax": x_max,
-        "series": lines
+        "series": chart_lines
             .iter()
-            .map(|line| tooltip_runs(line, min_x))
+            .map(|(line, metric)| tooltip_runs(line, min_x, *metric))
             .collect::<Vec<_>>(),
     })
     .to_string()
@@ -542,29 +627,54 @@ pub fn HistoryLineChart(
             // Data series
             for (i, s) in series.iter().enumerate() {
                 polyline {
-                    points: polyline_points(&s.points, x_min, x_max, plot),
+                    points: polyline_points(&s.points, x_min, x_max, 100.0, plot),
                     fill: "none",
                     stroke: s.color,
                     stroke_width: if i == 0 { "2.5" } else { "1.5" },
+                    stroke_dasharray: if s.metric == ChartMetric::SubtestTotal { "5,4" } else { "none" },
                 }
             }
 
             // Legend, spread across the plot width when there are many series
-            for (i, s) in series.iter().enumerate() {
+            for (i, line_spec) in lines.iter().enumerate() {
                 line {
                     x1: "{px + 10.0 + (i as f64) * legend_step}",
                     x2: "{px + 34.0 + (i as f64) * legend_step}",
-                    y1: "{height - 10.0}",
-                    y2: "{height - 10.0}",
-                    stroke: s.color,
+                    y1: "{legend_y}",
+                    y2: "{legend_y}",
+                    stroke: line_spec.series.color,
                     stroke_width: "3",
                 }
                 text {
                     x: "{px + 40.0 + (i as f64) * legend_step}",
-                    y: "{height - 6.0}",
+                    y: "{legend_y + 4.0}",
                     font_size: "12",
                     fill: "#333",
-                    {s.label.clone()}
+                    {line_spec.series.label.clone()}
+                }
+            }
+            if show_subtest_totals {
+                for (i, metric) in [ChartMetric::PassPercent, ChartMetric::SubtestTotal].iter().enumerate() {
+                    line {
+                        x1: "{px + 10.0 + i as f64 * 220.0}",
+                        x2: "{px + 34.0 + i as f64 * 220.0}",
+                        y1: "{height - 10.0}",
+                        y2: "{height - 10.0}",
+                        stroke: "#666",
+                        stroke_width: "2",
+                        stroke_dasharray: if *metric == ChartMetric::SubtestTotal { "5,4" } else { "none" },
+                    }
+                    text {
+                        x: "{px + 40.0 + i as f64 * 220.0}",
+                        y: "{height - 6.0}",
+                        font_size: "12",
+                        fill: "#333",
+                        if *metric == ChartMetric::SubtestTotal {
+                            "Max total subtests"
+                        } else {
+                            "Passing subtests"
+                        }
+                    }
                 }
             }
         }
@@ -638,7 +748,7 @@ pub fn WptHistorySparklines(history: ArcWptHistory, range: ChartRange) -> Elemen
                                 width: "100%",
                                 style: "border: 1px solid #ddd",
                                 polyline {
-                                    points: polyline_points(&points, x_min, x_max, PLOT),
+                                    points: polyline_points(&points, x_min, x_max, 100.0, PLOT),
                                     fill: "none",
                                     stroke: "#7986cb",
                                     stroke_width: "1.5",

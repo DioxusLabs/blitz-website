@@ -1,8 +1,8 @@
 // Hover tooltip for WPT history charts (progressive enhancement): reads run
 // data from each chart's JSON blob and shows the nearest run of the nearest
-// line: its revision, commit message, and pass percentage. Each series has
-// its own list of runs (lines for different products are recorded on
-// different dates).
+// line: its revision, commit message, and pass percentage or subtest total.
+// Each series has its own list of runs (lines for different products are
+// recorded on different dates).
 document.querySelectorAll("script[data-wpt-history-data]").forEach(function (dataEl) {
     if (dataEl.dataset.tooltipInit) return;
     dataEl.dataset.tooltipInit = "1";
@@ -34,14 +34,15 @@ document.querySelectorAll("script[data-wpt-history-data]").forEach(function (dat
     svg.appendChild(dot);
 
     var px = data.plot[0], py = data.plot[1], pw = data.plot[2], ph = data.plot[3];
-    var xRange = data.xMax - data.xMin;
+    var xRange = Math.max(data.xMax - data.xMin, Number.EPSILON);
 
     function esc(s) {
         return s.replace(/&/g, "&amp;").replace(/</g, "&lt;");
     }
 
     function screenX(run) { return px + ((run.x - data.xMin) / xRange) * pw; }
-    function screenY(s, run) { return py + (1 - run.v[0] / s.total) * ph; }
+    function value(s, run) { return run.v[s.metric === "total" ? 1 : 0]; }
+    function screenY(s, run) { return py + (1 - value(s, run) / s.total) * ph; }
 
     // Nearest hoverable run of a series to the x position `x` (in data
     // units); runs before `s.first` only serve as deltas
@@ -122,7 +123,7 @@ document.querySelectorAll("script[data-wpt-history-data]").forEach(function (dat
             var cur = s.runs[i].v;
             if (cur == null) return false;
             var p = i > 0 ? s.runs[i - 1].v : null;
-            return p == null || cur[0] !== p[0] || cur[1] !== p[1];
+            return p == null || (s.metric === "total" ? cur[1] !== p[1] : cur[0] !== p[0] || cur[1] !== p[1]);
         }
         var snapped = -1, snappedDist = SNAP_PX;
         for (var j = s.first; j < s.runs.length; j++) {
@@ -143,24 +144,36 @@ document.querySelectorAll("script[data-wpt-history-data]").forEach(function (dat
         dot.setAttribute("fill", s.color);
         dot.style.display = "";
 
-        var html = "<div style='font-weight:bold'>" + esc(run.rev) + " (" + esc(run.d) + ")</div>";
+        var html = "<div style='font-weight:bold'>" +
+            (run.rev ? esc(run.rev) + " (" + esc(run.d) + ")" : esc(run.d)) + "</div>";
         if (run.msg) {
             html += "<div style='margin-bottom:4px;white-space:nowrap;overflow:hidden;" +
                 "text-overflow:ellipsis'>" + esc(run.msg) + "</div>";
         }
-        var pass = run.v[0], total = s.total;
-        html += "<div><span style='color:" + s.color + "'>\u25CF</span> " +
-            esc(s.name) + ": " + (100 * pass / total).toFixed(1) + "% (" +
-            pass.toLocaleString() + "/" + total.toLocaleString() + ")</div>";
+        if (s.metric === "total") {
+            html += "<div><span style='color:" + s.color + "'>\u2504</span> " +
+                esc(s.name) + ": " + (100 * run.v[1] / s.total).toFixed(1) + "% (" +
+                run.v[1].toLocaleString() + " total subtests)</div>";
+            if (prev && prev.v != null) {
+                var dTotal = run.v[1] - prev.v[1];
+                html += "<div>Change: " + (dTotal > 0 ? "+" : "") +
+                    dTotal.toLocaleString() + " subtests</div>";
+            }
+        } else {
+            var pass = run.v[0], total = s.total;
+            html += "<div><span style='color:" + s.color + "'>\u25CF</span> " +
+                esc(s.name) + ": " + (100 * pass / total).toFixed(1) + "% (" +
+                pass.toLocaleString() + "/" + total.toLocaleString() + ")</div>";
 
-        // Change relative to the previous run
-        if (prev && prev.v != null) {
-            var dPass = pass - prev.v[0];
-            var dPct = 100 * (dPass / total);
-            var sign = dPass > 0 ? "+" : "";
-            var color = dPass > 0 ? "#2e7d32" : (dPass < 0 ? "#c62828" : "#666");
-            html += "<div style='color:" + color + "'>Change: " + sign +
-                dPass.toLocaleString() + " (" + sign + dPct.toFixed(2) + "%)</div>";
+            // Change relative to the previous run
+            if (prev && prev.v != null) {
+                var dPass = pass - prev.v[0];
+                var dPct = 100 * (dPass / total);
+                var sign = dPass > 0 ? "+" : "";
+                var color = dPass > 0 ? "#2e7d32" : (dPass < 0 ? "#c62828" : "#666");
+                html += "<div style='color:" + color + "'>Change: " + sign +
+                    dPass.toLocaleString() + " (" + sign + dPct.toFixed(2) + "%)</div>";
+            }
         }
         tip.innerHTML = html;
         tip.style.display = "block";
