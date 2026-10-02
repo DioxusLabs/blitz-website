@@ -201,6 +201,52 @@ enum ChartMetric {
     SubtestTotal,
 }
 
+fn max_subtest_line(lines: &[ChartLine]) -> ChartLine {
+    let mut updates = Vec::new();
+    for (browser, line) in lines.iter().enumerate() {
+        let Some(area_idx) = line.history.focus_areas.iter().position(|a| *a == line.series.area) else {
+            continue;
+        };
+        for run in &line.history.runs {
+            if let (Some(x), Some(Some((_, _, total, _)))) =
+                (parse_date(&run.date), run.scores.get(area_idx))
+            {
+                updates.push((x, &run.date, browser, *total));
+            }
+        }
+    }
+    updates.sort_by(|a, b| a.0.total_cmp(&b.0));
+
+    // Carry each browser's most recent count forward between its runs.
+    let mut totals = vec![0; lines.len()];
+    let mut runs = Vec::new();
+    for (i, &(x, date, browser, total)) in updates.iter().enumerate() {
+        totals[browser] = total;
+        if updates.get(i + 1).is_some_and(|next| next.0 == x) {
+            continue;
+        }
+        let max = totals.iter().copied().max().unwrap_or(0);
+        runs.push(HistoryRun {
+            date: date.clone(),
+            product_revision: String::new(),
+            commit_message: None,
+            scores: vec![Some((0, 0.0, max, 0))],
+        });
+    }
+    ChartLine {
+        history: ArcWptHistory(Arc::new(WptHistory {
+            focus_areas: vec![String::new()],
+            union_totals: vec![None],
+            runs,
+        })),
+        series: ChartSeries {
+            area: String::new(),
+            label: "Maximum across browsers".into(),
+            color: "#666666",
+        },
+    }
+}
+
 /// The run identifier shown in a tooltip: browser versions as-is, long
 /// nightly versions and commit shas shortened
 fn short_revision(revision: &str) -> &str {
@@ -504,17 +550,16 @@ pub fn HistoryLineChart(
     let (px, py, pw, ph) = plot;
 
     let min_x = range.min_x_of(lines.iter().map(|line| &*line.history));
-    let metrics = if show_subtest_totals {
-        &[ChartMetric::PassPercent, ChartMetric::SubtestTotal][..]
-    } else {
-        &[ChartMetric::PassPercent][..]
-    };
-    let series: Vec<Series> = metrics
+    let total_line = show_subtest_totals.then(|| max_subtest_line(&lines));
+    let chart_lines: Vec<_> = lines
         .iter()
-        .flat_map(|&metric| {
-            lines.iter().filter_map(move |line| {
-                area_series(&line.history, min_x, &line.series, metric)
-            })
+        .map(|line| (line, ChartMetric::PassPercent))
+        .chain(total_line.iter().map(|line| (line, ChartMetric::SubtestTotal)))
+        .collect();
+    let series: Vec<Series> = chart_lines
+        .iter()
+        .filter_map(|(line, metric)| {
+            area_series(&line.history, min_x, &line.series, *metric)
         })
         .collect();
     let subtest_max = subtest_axis_max(&series);
@@ -544,11 +589,9 @@ pub fn HistoryLineChart(
         "plot": [px, py, pw, ph],
         "xMin": x_min,
         "xMax": x_max,
-        "series": metrics
+        "series": chart_lines
             .iter()
-            .flat_map(|&metric| lines.iter().map(move |line| {
-                tooltip_runs(line, min_x, metric, subtest_max)
-            }))
+            .map(|(line, metric)| tooltip_runs(line, min_x, *metric, subtest_max))
             .collect::<Vec<_>>(),
     })
     .to_string()
@@ -660,7 +703,7 @@ pub fn HistoryLineChart(
                 }
             }
             if show_subtest_totals {
-                for (i, metric) in metrics.iter().enumerate() {
+                for (i, metric) in [ChartMetric::PassPercent, ChartMetric::SubtestTotal].iter().enumerate() {
                     line {
                         x1: "{px + 10.0 + i as f64 * 220.0}",
                         x2: "{px + 34.0 + i as f64 * 220.0}",
@@ -676,7 +719,7 @@ pub fn HistoryLineChart(
                         font_size: "12",
                         fill: "#333",
                         if *metric == ChartMetric::SubtestTotal {
-                            "Total subtests (right axis)"
+                            "Max subtests (right axis)"
                         } else {
                             "Score (left axis)"
                         }

@@ -144,7 +144,8 @@ document.querySelectorAll("script[data-wpt-history-data]").forEach(function (dat
         dot.setAttribute("fill", s.color);
         dot.style.display = "";
 
-        var html = "<div style='font-weight:bold'>" + esc(run.rev) + " (" + esc(run.d) + ")</div>";
+        var html = "<div style='font-weight:bold'>" +
+            (run.rev ? esc(run.rev) + " (" + esc(run.d) + ")" : esc(run.d)) + "</div>";
         if (run.msg) {
             html += "<div style='margin-bottom:4px;white-space:nowrap;overflow:hidden;" +
                 "text-overflow:ellipsis'>" + esc(run.msg) + "</div>";

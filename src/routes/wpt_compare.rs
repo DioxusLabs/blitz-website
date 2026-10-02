@@ -146,8 +146,9 @@ fn CompareHistoryChart(
                 "Percentage of subtests passing over time, one master run per day. Every engine's
                 percentage is relative to the same denominator: the total number of subtests known
                 to any engine in the latest runs (so lines are not distorted by tests being added
-                to WPT, and an engine that skips tests is not flattered for it). Dashed lines show
-                each engine's total number of subtests in each run, using the right-hand axis."
+                to WPT, and an engine that skips tests is not flattered for it). The dashed line
+                shows the maximum total subtest count across browsers, using the right-hand axis
+                and each browser's latest available run at that date."
             }
             ChartRangeSelector {
                 current_range: range,
