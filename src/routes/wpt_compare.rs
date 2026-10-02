@@ -147,8 +147,9 @@ fn CompareHistoryChart(
                 percentage is relative to the same denominator: the total number of subtests known
                 to any engine in the latest runs (so lines are not distorted by tests being added
                 to WPT, and an engine that skips tests is not flattered for it). The dashed line
-                shows the maximum total subtest count across browsers, using the right-hand axis
-                and each browser's latest available run at that date."
+                shows the maximum total subtest count across browsers, using the same denominator
+                and percentage scale as the passing scores, and each browser's latest available
+                run at that date."
             }
             ChartRangeSelector {
                 current_range: range,

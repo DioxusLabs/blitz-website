@@ -203,10 +203,12 @@ enum ChartMetric {
 
 fn max_subtest_line(lines: &[ChartLine]) -> ChartLine {
     let mut updates = Vec::new();
+    let mut subtest_total = None;
     for (browser, line) in lines.iter().enumerate() {
         let Some(area_idx) = line.history.focus_areas.iter().position(|a| *a == line.series.area) else {
             continue;
         };
+        subtest_total = subtest_total.max(line.history.subtest_total(area_idx));
         for run in &line.history.runs {
             if let (Some(x), Some(Some((_, _, total, _)))) =
                 (parse_date(&run.date), run.scores.get(area_idx))
@@ -236,7 +238,7 @@ fn max_subtest_line(lines: &[ChartLine]) -> ChartLine {
     ChartLine {
         history: ArcWptHistory(Arc::new(WptHistory {
             focus_areas: vec![String::new()],
-            union_totals: vec![None],
+            union_totals: vec![subtest_total],
             runs,
         })),
         series: ChartSeries {
@@ -272,7 +274,7 @@ fn area_series(
     metric: ChartMetric,
 ) -> Option<Series> {
     let area_idx = history.focus_areas.iter().position(|a| *a == spec.area)?;
-    let subtest_total = history.subtest_total(area_idx);
+    let subtest_total = history.subtest_total(area_idx)?;
     let points: Vec<(f64, f64)> = history
         .runs
         .iter()
@@ -281,11 +283,11 @@ fn area_series(
                 parse_date(&run.date)?,
                 match metric {
                     ChartMetric::PassPercent => {
-                        subtest_pass_percent(run, area_idx, subtest_total?)?
+                        subtest_pass_percent(run, area_idx, subtest_total)?
                     }
                     ChartMetric::SubtestTotal => {
                         let (_, _, total, _) = (*run.scores.get(area_idx)?)?;
-                        total as f64
+                        total as f64 / subtest_total as f64 * 100.0
                     }
                 },
             ))
@@ -300,23 +302,6 @@ fn area_series(
         metric,
         points,
     })
-}
-
-fn subtest_axis_max(series: &[Series]) -> f64 {
-    let max = series
-        .iter()
-        .filter(|s| s.metric == ChartMetric::SubtestTotal)
-        .flat_map(|s| &s.points)
-        .map(|(_, y)| *y)
-        .fold(1.0, f64::max);
-    let raw_step = max / 5.0;
-    let magnitude = 10.0_f64.powf(raw_step.log10().floor()).max(1.0);
-    let step = [1.0, 2.0, 5.0, 10.0]
-        .into_iter()
-        .find(|step| step * magnitude >= raw_step)
-        .unwrap_or(10.0)
-        * magnitude;
-    step * 5.0
 }
 
 fn polyline_points(
@@ -475,12 +460,7 @@ pub fn WptHistoryChart(
 
 /// Per-run tooltip data for one line: the runs from just before the visible
 /// range onwards, with the line's `[passed, total]` subtest counts
-fn tooltip_runs(
-    line: &ChartLine,
-    min_x: f64,
-    metric: ChartMetric,
-    subtest_max: f64,
-) -> serde_json::Value {
+fn tooltip_runs(line: &ChartLine, min_x: f64, metric: ChartMetric) -> serde_json::Value {
     let history = &line.history;
     let area_idx = history
         .focus_areas
@@ -523,11 +503,7 @@ fn tooltip_runs(
         "name": line.series.label,
         "color": line.series.color,
         "metric": if metric == ChartMetric::SubtestTotal { "total" } else { "percent" },
-        "total": if metric == ChartMetric::SubtestTotal {
-            Some(subtest_max)
-        } else {
-            subtest_total.map(f64::from)
-        },
+        "total": subtest_total,
         "first": first_visible - start,
         "runs": runs,
     })
@@ -543,7 +519,7 @@ pub fn HistoryLineChart(
 ) -> Element {
     const WIDTH: f64 = 900.0;
     let plot: (f64, f64, f64, f64) = if show_subtest_totals {
-        (50.0, 25.0, WIDTH - 135.0, height - 85.0)
+        (50.0, 15.0, WIDTH - 65.0, height - 75.0)
     } else {
         (50.0, 15.0, WIDTH - 65.0, height - 55.0)
     };
@@ -562,8 +538,6 @@ pub fn HistoryLineChart(
             area_series(&line.history, min_x, &line.series, *metric)
         })
         .collect();
-    let subtest_max = subtest_axis_max(&series);
-
     let x_min = series
         .iter()
         .filter_map(|s| s.points.first().map(|p| p.0))
@@ -591,7 +565,7 @@ pub fn HistoryLineChart(
         "xMax": x_max,
         "series": chart_lines
             .iter()
-            .map(|(line, metric)| tooltip_runs(line, min_x, *metric, subtest_max))
+            .map(|(line, metric)| tooltip_runs(line, min_x, *metric))
             .collect::<Vec<_>>(),
     })
     .to_string()
@@ -630,25 +604,6 @@ pub fn HistoryLineChart(
                 }
             }
 
-            if show_subtest_totals {
-                text {
-                    x: "{px + pw + 6.0}",
-                    y: "{py - 10.0}",
-                    font_size: "12",
-                    fill: "#666",
-                    "Subtests"
-                }
-                for i in 0..=5 {
-                    text {
-                        x: "{px + pw + 6.0}",
-                        y: "{py + ph * (1.0 - i as f64 / 5.0) + 4.0}",
-                        font_size: "12",
-                        fill: "#666",
-                        {format!("{:.0}", subtest_max * i as f64 / 5.0)}
-                    }
-                }
-            }
-
             // X-axis ticks and labels (month boundaries)
             for (days, label) in ticks {
                 line {
@@ -672,11 +627,7 @@ pub fn HistoryLineChart(
             // Data series
             for (i, s) in series.iter().enumerate() {
                 polyline {
-                    points: polyline_points(
-                        &s.points, x_min, x_max,
-                        if s.metric == ChartMetric::SubtestTotal { subtest_max } else { 100.0 },
-                        plot,
-                    ),
+                    points: polyline_points(&s.points, x_min, x_max, 100.0, plot),
                     fill: "none",
                     stroke: s.color,
                     stroke_width: if i == 0 { "2.5" } else { "1.5" },
@@ -719,9 +670,9 @@ pub fn HistoryLineChart(
                         font_size: "12",
                         fill: "#333",
                         if *metric == ChartMetric::SubtestTotal {
-                            "Max subtests (right axis)"
+                            "Max total subtests"
                         } else {
-                            "Score (left axis)"
+                            "Passing subtests"
                         }
                     }
                 }

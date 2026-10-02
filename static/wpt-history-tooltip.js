@@ -152,7 +152,8 @@ document.querySelectorAll("script[data-wpt-history-data]").forEach(function (dat
         }
         if (s.metric === "total") {
             html += "<div><span style='color:" + s.color + "'>\u2504</span> " +
-                esc(s.name) + ": " + run.v[1].toLocaleString() + " total subtests</div>";
+                esc(s.name) + ": " + (100 * run.v[1] / s.total).toFixed(1) + "% (" +
+                run.v[1].toLocaleString() + " total subtests)</div>";
             if (prev && prev.v != null) {
                 var dTotal = run.v[1] - prev.v[1];
                 html += "<div>Change: " + (dTotal > 0 ? "+" : "") +
