@@ -190,9 +190,15 @@ pub struct ChartLine {
 }
 
 struct Series {
-    label: String,
     color: &'static str,
+    metric: ChartMetric,
     points: Vec<(f64, f64)>,
+}
+
+#[derive(Clone, Copy, PartialEq)]
+enum ChartMetric {
+    PassPercent,
+    SubtestTotal,
 }
 
 /// The run identifier shown in a tooltip: browser versions as-is, long
@@ -213,16 +219,29 @@ fn subtest_pass_percent(run: &HistoryRun, area_idx: usize, subtest_total: u32) -
     Some(total_subtests_passed as f64 / subtest_total as f64 * 100.0)
 }
 
-fn area_series(history: &WptHistory, min_x: f64, spec: &ChartSeries) -> Option<Series> {
+fn area_series(
+    history: &WptHistory,
+    min_x: f64,
+    spec: &ChartSeries,
+    metric: ChartMetric,
+) -> Option<Series> {
     let area_idx = history.focus_areas.iter().position(|a| *a == spec.area)?;
-    let subtest_total = history.subtest_total(area_idx)?;
+    let subtest_total = history.subtest_total(area_idx);
     let points: Vec<(f64, f64)> = history
         .runs
         .iter()
         .filter_map(|run| {
             Some((
                 parse_date(&run.date)?,
-                subtest_pass_percent(run, area_idx, subtest_total)?,
+                match metric {
+                    ChartMetric::PassPercent => {
+                        subtest_pass_percent(run, area_idx, subtest_total?)?
+                    }
+                    ChartMetric::SubtestTotal => {
+                        let (_, _, total, _) = (*run.scores.get(area_idx)?)?;
+                        total as f64
+                    }
+                },
             ))
         })
         .filter(|(x, _)| *x >= min_x)
@@ -231,16 +250,34 @@ fn area_series(history: &WptHistory, min_x: f64, spec: &ChartSeries) -> Option<S
         return None;
     }
     Some(Series {
-        label: spec.label.clone(),
         color: spec.color,
+        metric,
         points,
     })
+}
+
+fn subtest_axis_max(series: &[Series]) -> f64 {
+    let max = series
+        .iter()
+        .filter(|s| s.metric == ChartMetric::SubtestTotal)
+        .flat_map(|s| &s.points)
+        .map(|(_, y)| *y)
+        .fold(1.0, f64::max);
+    let raw_step = max / 5.0;
+    let magnitude = 10.0_f64.powf(raw_step.log10().floor()).max(1.0);
+    let step = [1.0, 2.0, 5.0, 10.0]
+        .into_iter()
+        .find(|step| step * magnitude >= raw_step)
+        .unwrap_or(10.0)
+        * magnitude;
+    step * 5.0
 }
 
 fn polyline_points(
     points: &[(f64, f64)],
     x_min: f64,
     x_max: f64,
+    y_max: f64,
     plot: (f64, f64, f64, f64), // (x, y, width, height) of plot area
 ) -> String {
     if points.is_empty() {
@@ -255,7 +292,7 @@ fn polyline_points(
     let mut out = String::new();
     let mut plot_point = |&(x, y): &(f64, f64)| {
         let sx = px + (x - x_min) / x_range * pw;
-        let sy = py + (1.0 - y / 100.0) * ph;
+        let sy = py + (1.0 - y / y_max) * ph;
         write!(out, "{sx:.1},{sy:.1} ").unwrap();
     };
     for point in points.iter().step_by(stride) {
@@ -392,7 +429,12 @@ pub fn WptHistoryChart(
 
 /// Per-run tooltip data for one line: the runs from just before the visible
 /// range onwards, with the line's `[passed, total]` subtest counts
-fn tooltip_runs(line: &ChartLine, min_x: f64) -> serde_json::Value {
+fn tooltip_runs(
+    line: &ChartLine,
+    min_x: f64,
+    metric: ChartMetric,
+    subtest_max: f64,
+) -> serde_json::Value {
     let history = &line.history;
     let area_idx = history
         .focus_areas
@@ -415,7 +457,9 @@ fn tooltip_runs(line: &ChartLine, min_x: f64) -> serde_json::Value {
             let x = parse_date(&run.date)?;
             let value = area_idx
                 .and_then(|idx| *run.scores.get(idx)?)
-                .filter(|(_, _, total_subtests, _)| *total_subtests != 0)
+                .filter(|(_, _, total_subtests, _)| {
+                    metric == ChartMetric::SubtestTotal || *total_subtests != 0
+                })
                 .map(|(_, _, total_subtests, total_subtests_passed)| {
                     serde_json::json!([total_subtests_passed, total_subtests])
                 })
@@ -432,7 +476,12 @@ fn tooltip_runs(line: &ChartLine, min_x: f64) -> serde_json::Value {
     serde_json::json!({
         "name": line.series.label,
         "color": line.series.color,
-        "total": subtest_total,
+        "metric": if metric == ChartMetric::SubtestTotal { "total" } else { "percent" },
+        "total": if metric == ChartMetric::SubtestTotal {
+            Some(subtest_max)
+        } else {
+            subtest_total.map(f64::from)
+        },
         "first": first_visible - start,
         "runs": runs,
     })
@@ -444,16 +493,31 @@ pub fn HistoryLineChart(
     lines: Vec<ChartLine>,
     range: ChartRange,
     #[props(default = 440.0)] height: f64,
+    #[props(default = false)] show_subtest_totals: bool,
 ) -> Element {
     const WIDTH: f64 = 900.0;
-    let plot: (f64, f64, f64, f64) = (50.0, 15.0, WIDTH - 65.0, height - 55.0);
+    let plot: (f64, f64, f64, f64) = if show_subtest_totals {
+        (50.0, 25.0, WIDTH - 135.0, height - 85.0)
+    } else {
+        (50.0, 15.0, WIDTH - 65.0, height - 55.0)
+    };
     let (px, py, pw, ph) = plot;
 
     let min_x = range.min_x_of(lines.iter().map(|line| &*line.history));
-    let series: Vec<Series> = lines
+    let metrics = if show_subtest_totals {
+        &[ChartMetric::PassPercent, ChartMetric::SubtestTotal][..]
+    } else {
+        &[ChartMetric::PassPercent][..]
+    };
+    let series: Vec<Series> = metrics
         .iter()
-        .filter_map(|line| area_series(&line.history, min_x, &line.series))
+        .flat_map(|&metric| {
+            lines.iter().filter_map(move |line| {
+                area_series(&line.history, min_x, &line.series, metric)
+            })
+        })
         .collect();
+    let subtest_max = subtest_axis_max(&series);
 
     let x_min = series
         .iter()
@@ -470,7 +534,9 @@ pub fn HistoryLineChart(
 
     let ticks = month_ticks(x_min, x_max);
     let x_range = (x_max - x_min).max(f64::EPSILON);
-    let legend_step = (pw / series.len().max(1) as f64).min(140.0);
+    let legend_step = pw / lines.len().max(1) as f64;
+    let legend_step = if show_subtest_totals { legend_step } else { legend_step.min(140.0) };
+    let legend_y = height - if show_subtest_totals { 30.0 } else { 10.0 };
 
     // Per-run data for the hover tooltip (a JS progressive enhancement)
     let tooltip_data = serde_json::json!({
@@ -478,9 +544,11 @@ pub fn HistoryLineChart(
         "plot": [px, py, pw, ph],
         "xMin": x_min,
         "xMax": x_max,
-        "series": lines
+        "series": metrics
             .iter()
-            .map(|line| tooltip_runs(line, min_x))
+            .flat_map(|&metric| lines.iter().map(move |line| {
+                tooltip_runs(line, min_x, metric, subtest_max)
+            }))
             .collect::<Vec<_>>(),
     })
     .to_string()
@@ -519,6 +587,25 @@ pub fn HistoryLineChart(
                 }
             }
 
+            if show_subtest_totals {
+                text {
+                    x: "{px + pw + 6.0}",
+                    y: "{py - 10.0}",
+                    font_size: "12",
+                    fill: "#666",
+                    "Subtests"
+                }
+                for i in 0..=5 {
+                    text {
+                        x: "{px + pw + 6.0}",
+                        y: "{py + ph * (1.0 - i as f64 / 5.0) + 4.0}",
+                        font_size: "12",
+                        fill: "#666",
+                        {format!("{:.0}", subtest_max * i as f64 / 5.0)}
+                    }
+                }
+            }
+
             // X-axis ticks and labels (month boundaries)
             for (days, label) in ticks {
                 line {
@@ -542,29 +629,58 @@ pub fn HistoryLineChart(
             // Data series
             for (i, s) in series.iter().enumerate() {
                 polyline {
-                    points: polyline_points(&s.points, x_min, x_max, plot),
+                    points: polyline_points(
+                        &s.points, x_min, x_max,
+                        if s.metric == ChartMetric::SubtestTotal { subtest_max } else { 100.0 },
+                        plot,
+                    ),
                     fill: "none",
                     stroke: s.color,
                     stroke_width: if i == 0 { "2.5" } else { "1.5" },
+                    stroke_dasharray: if s.metric == ChartMetric::SubtestTotal { "5,4" } else { "none" },
                 }
             }
 
             // Legend, spread across the plot width when there are many series
-            for (i, s) in series.iter().enumerate() {
+            for (i, line_spec) in lines.iter().enumerate() {
                 line {
                     x1: "{px + 10.0 + (i as f64) * legend_step}",
                     x2: "{px + 34.0 + (i as f64) * legend_step}",
-                    y1: "{height - 10.0}",
-                    y2: "{height - 10.0}",
-                    stroke: s.color,
+                    y1: "{legend_y}",
+                    y2: "{legend_y}",
+                    stroke: line_spec.series.color,
                     stroke_width: "3",
                 }
                 text {
                     x: "{px + 40.0 + (i as f64) * legend_step}",
-                    y: "{height - 6.0}",
+                    y: "{legend_y + 4.0}",
                     font_size: "12",
                     fill: "#333",
-                    {s.label.clone()}
+                    {line_spec.series.label.clone()}
+                }
+            }
+            if show_subtest_totals {
+                for (i, metric) in metrics.iter().enumerate() {
+                    line {
+                        x1: "{px + 10.0 + i as f64 * 220.0}",
+                        x2: "{px + 34.0 + i as f64 * 220.0}",
+                        y1: "{height - 10.0}",
+                        y2: "{height - 10.0}",
+                        stroke: "#666",
+                        stroke_width: "2",
+                        stroke_dasharray: if *metric == ChartMetric::SubtestTotal { "5,4" } else { "none" },
+                    }
+                    text {
+                        x: "{px + 40.0 + i as f64 * 220.0}",
+                        y: "{height - 6.0}",
+                        font_size: "12",
+                        fill: "#333",
+                        if *metric == ChartMetric::SubtestTotal {
+                            "Total subtests (right axis)"
+                        } else {
+                            "Score (left axis)"
+                        }
+                    }
                 }
             }
         }
@@ -638,7 +754,7 @@ pub fn WptHistorySparklines(history: ArcWptHistory, range: ChartRange) -> Elemen
                                 width: "100%",
                                 style: "border: 1px solid #ddd",
                                 polyline {
-                                    points: polyline_points(&points, x_min, x_max, PLOT),
+                                    points: polyline_points(&points, x_min, x_max, 100.0, PLOT),
                                     fill: "none",
                                     stroke: "#7986cb",
                                     stroke_width: "1.5",
@@ -649,5 +765,122 @@ pub fn WptHistorySparklines(history: ArcWptHistory, range: ChartRange) -> Elemen
                 }
             }
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn chart_line(totals: &[Option<u32>], union_total: u32) -> ChartLine {
+        ChartLine {
+            history: ArcWptHistory(Arc::new(WptHistory {
+                focus_areas: vec!["css".into()],
+                union_totals: vec![Some(union_total)],
+                runs: totals
+                    .iter()
+                    .enumerate()
+                    .map(|(i, total)| HistoryRun {
+                        date: format!("2026-01-{:02}", i + 1),
+                        product_revision: format!("rev-{i}"),
+                        commit_message: None,
+                        scores: vec![total.map(|total| (10, 5.0, total, total / 2))],
+                    })
+                    .collect(),
+            })),
+            series: ChartSeries {
+                area: "css".into(),
+                label: "Blitz".into(),
+                color: "#000000",
+            },
+        }
+    }
+
+    #[test]
+    fn totals_use_each_runs_count_not_the_union_denominator() {
+        let line = chart_line(&[Some(100), None, Some(0), Some(200)], 1000);
+        let totals = area_series(
+            &line.history,
+            f64::NEG_INFINITY,
+            &line.series,
+            ChartMetric::SubtestTotal,
+        )
+        .unwrap();
+        assert_eq!(totals.points.iter().map(|p| p.1).collect::<Vec<_>>(), [100.0, 0.0, 200.0]);
+        let scores = area_series(
+            &line.history,
+            f64::NEG_INFINITY,
+            &line.series,
+            ChartMetric::PassPercent,
+        )
+        .unwrap();
+        assert_eq!(scores.points.iter().map(|p| p.1).collect::<Vec<_>>(), [5.0, 10.0]);
+
+        let min_x = parse_date("2026-01-04").unwrap();
+        let visible = area_series(&line.history, min_x, &line.series, ChartMetric::SubtestTotal)
+            .unwrap();
+        assert_eq!(visible.points, [(min_x, 200.0)]);
+        let data = tooltip_runs(&line, min_x, ChartMetric::SubtestTotal, 500.0);
+        assert_eq!(data["metric"], "total");
+        assert_eq!(data["total"], 500.0);
+        assert_eq!(data["first"], 1);
+        assert_eq!(data["runs"][0]["v"], serde_json::json!([0, 0]));
+        assert_eq!(data["runs"][1]["v"], serde_json::json!([100, 200]));
+    }
+
+    #[test]
+    fn total_axis_covers_visible_counts_with_integer_ticks() {
+        for (max, expected) in [(1.0, 5.0), (200.0, 250.0), (1200.0, 2500.0), (1_200_000.0, 2_500_000.0)] {
+            let series = Series {
+                color: "#000000",
+                metric: ChartMetric::SubtestTotal,
+                points: vec![(0.0, max)],
+            };
+            assert_eq!(subtest_axis_max(&[series]), expected);
+        }
+        assert_eq!(
+            polyline_points(&[(0.0, 100.0), (1.0, 200.0)], 0.0, 1.0, 250.0, (50.0, 25.0, 100.0, 100.0)),
+            "50.0,85.0 150.0,45.0 "
+        );
+    }
+
+    #[test]
+    fn comparison_chart_renders_both_metrics_for_each_engine() {
+        let blitz = chart_line(&[Some(100), Some(200)], 1000);
+        let mut chrome = chart_line(&[Some(600), Some(800)], 1000);
+        chrome.series.label = "Chrome".into();
+        chrome.series.color = "#e57373";
+        let html = dioxus_ssr::render_element(rsx! {
+            HistoryLineChart {
+                lines: vec![blitz, chrome],
+                range: ChartRange::All,
+                height: 320.0,
+                show_subtest_totals: true,
+            }
+        });
+        assert_eq!(html.matches("<polyline").count(), 4);
+        assert!(html.contains("Subtests"));
+        assert!(html.contains("Total subtests (right axis)"));
+        assert!(html.contains("stroke-dasharray=\"5,4\""));
+        let (_, json) = html.split_once("application/json").unwrap();
+        let (_, json) = json.split_once('>').unwrap();
+        let data: serde_json::Value = serde_json::from_str(json.split("</script>").next().unwrap()).unwrap();
+        assert_eq!(data["series"].as_array().unwrap().len(), 4);
+        assert_eq!(data["series"][0]["metric"], "percent");
+        assert_eq!(data["series"][2]["metric"], "total");
+        assert_eq!(data["series"][2]["total"], data["series"][3]["total"]);
+        assert_eq!(data["series"][2]["runs"][1]["v"], serde_json::json!([100, 200]));
+        assert_eq!(data["series"][3]["runs"][1]["v"], serde_json::json!([400, 800]));
+    }
+
+    #[test]
+    fn other_history_charts_remain_percentage_only() {
+        let line = chart_line(&[Some(100), Some(200)], 1000);
+        let html = dioxus_ssr::render_element(rsx! {
+            HistoryLineChart { lines: vec![line], range: ChartRange::All }
+        });
+        assert_eq!(html.matches("<polyline").count(), 1);
+        assert!(!html.contains("Subtests"));
+        assert!(!html.contains("Total subtests (right axis)"));
     }
 }

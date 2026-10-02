@@ -146,13 +146,14 @@ fn CompareHistoryChart(
                 "Percentage of subtests passing over time, one master run per day. Every engine's
                 percentage is relative to the same denominator: the total number of subtests known
                 to any engine in the latest runs (so lines are not distorted by tests being added
-                to WPT, and an engine that skips tests is not flattered for it)."
+                to WPT, and an engine that skips tests is not flattered for it). Dashed lines show
+                each engine's total number of subtests in each run, using the right-hand axis."
             }
             ChartRangeSelector {
                 current_range: range,
                 base_path: if area.is_empty() { "/wpt".to_string() } else { format!("/wpt/{area}") },
             }
-            HistoryLineChart { lines: history, range, height: 320.0 }
+            HistoryLineChart { lines: history, range, height: 320.0, show_subtest_totals: true }
         }
     }
 }
