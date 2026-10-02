@@ -157,7 +157,16 @@
           { "value": "font-variant-emoji", "status": "No" }
         ]
       },
-      { "name": "font-variation-settings", "status": "Yes" }
+      { "name": "font-variation-settings", "status": "Yes" },
+      { "name": "font-optical-sizing", "status": "No" },
+      {
+        "name": "font-synthesis",
+        "status": "No",
+        "notes": "Synthetic italics are always applied when a font has no italic face; the property itself is ignored.",
+        "properties": ["font-synthesis", "font-synthesis-weight", "font-synthesis-style", "font-synthesis-small-caps"]
+      },
+      { "name": "font-kerning", "status": "No" },
+      { "name": "font-size-adjust", "status": "No" }
     ]
   },
   {
@@ -166,7 +175,9 @@
     "entries": [
       { "name": "direction", "status": "Partial", "notes": "Supported for block-level but not inline-level boxes. Auto-detection of RTL text is support for inline content." },
       { "name": "unicode-bidi", "status": "No" },
-      { "name": "writing-mode", "status": "No" }
+      { "name": "writing-mode", "status": "No" },
+      { "name": "text-orientation", "status": "No" },
+      { "name": "text-combine-upright", "status": "No" }
     ]
   },
   {
@@ -207,7 +218,19 @@
       { "name": "quotes", "status": "No" },
       { "name": "text-underline-position", "status": "Yes" },
       { "name": "line-break", "status": "Yes" },
-      { "name": "text-decoration-inset", "status": "Yes" }
+      { "name": "text-decoration-inset", "status": "Yes" },
+      { "name": "box-decoration-break", "status": "No" },
+      { "name": "text-align-last", "status": "Yes" },
+      { "name": "text-justify", "status": "No" },
+      { "name": "text-spacing-trim", "status": "No" },
+      { "name": "text-box", "status": "No", "properties": ["text-box", "text-box-trim", "text-box-edge"] },
+      { "name": "ruby-align", "status": "No" },
+      { "name": "text-autospace", "status": "No" },
+      { "name": "hyphenate-character", "status": "No" },
+      { "name": "text-emphasis", "status": "No", "properties": ["text-emphasis", "text-emphasis-style", "text-emphasis-color", "text-emphasis-position"] },
+      { "name": "initial-letter", "status": "No" },
+      { "name": "ruby-position", "status": "No" },
+      { "name": "hanging-punctuation", "status": "No" }
     ]
   },
   {
