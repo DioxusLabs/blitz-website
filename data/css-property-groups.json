@@ -37,6 +37,7 @@
           { "value": "overflow:auto", "status": "No" }
         ]
       },
+      { "name": "overflow-clip-margin", "status": "No" },
       { "name": "z-index", "status": "Yes" },
       { "name": "box-sizing", "status": "Yes" },
       {
@@ -80,7 +81,8 @@
         ]
       },
       { "name": "isolation", "status": "Yes" },
-      { "name": "content-visibility", "status": "No" }
+      { "name": "content-visibility", "status": "No" },
+      { "name": "contain-intrinsic-size", "status": "No", "properties": ["contain-intrinsic-size", "contain-intrinsic-width", "contain-intrinsic-height", "contain-intrinsic-inline-size", "contain-intrinsic-block-size"] }
     ]
   },
     {
@@ -95,7 +97,8 @@
       { "name": "mask-composite", "status": "Yes" },
       { "name": "mask-mode", "status": "No" },
       { "name": "mask-origin", "status": "Yes" },
-      { "name": "mask-clip", "status": "Yes" }
+      { "name": "mask-clip", "status": "Yes" },
+      { "name": "mask-type", "status": "No" }
     ]
   },
   {
@@ -220,7 +223,9 @@
       { "name": "text-decoration-inset", "status": "Yes" },
       { "name": "box-decoration-break", "status": "No" },
       { "name": "text-align-last", "status": "Yes" },
-      { "name": "text-justify", "status": "No" }
+      { "name": "text-justify", "status": "No" },
+      { "name": "webkit-text-stroke", "status": "No", "properties": ["webkit-text-stroke", "webkit-text-stroke-width", "webkit-text-stroke-color"] },
+      { "name": "paint-order", "status": "No" }
     ]
   },
   {
@@ -315,6 +320,7 @@
           { "name": "backface-visibility", "status": "No", "properties": ["backface-visibility"] },
           { "name": "transform-style", "status": "No", "properties": ["transform-style"] },
           { "name": "perspective", "status": "No", "properties": ["perspective"] },
+          { "name": "perspective-origin", "status": "No", "properties": ["perspective-origin"] },
           { "name": "transform-box", "status": "No", "properties": ["transform-box"] }
         ]
   },
@@ -345,6 +351,7 @@
     "entries": [
       { "name": "list-style-type", "status": "Yes" },
       { "name": "list-style-position", "status": "Yes" },
+      { "name": "list-style-image", "status": "No" },
       { "name": "counter-increment", "status": "No" },
       { "name": "counter-reset", "status": "No" }
     ]
@@ -356,7 +363,8 @@
       { "name": "border-collapse", "status": "Partial", "notes": "It is currently assumed that borders in tables with collapsed borders are uniform (have the same width/style/color). The border styles from the first cell are used." },
       { "name": "border-spacing", "status": "Yes" },
       { "name": "table-layout", "status": "Yes" },
-      { "name": "caption-side", "status": "No" }
+      { "name": "caption-side", "status": "No" },
+      { "name": "empty-cells", "status": "No" }
     ]
   },
   {
@@ -371,8 +379,10 @@
       { "name": "stroke-dasharray", "status": "No" },
       { "name": "fill-opacity", "status": "No" },
       { "name": "stroke-linecap", "status": "No" },
+      { "name": "stroke-linejoin", "status": "No" },
       { "name": "stroke-miterlimit", "status": "No" },
-      { "name": "stroke-opacity", "status": "No" }
+      { "name": "stroke-opacity", "status": "No" },
+      { "name": "fill-rule", "status": "No" }
     ]
   },
   {
@@ -391,6 +401,7 @@
       },
       { "name": "touch-action", "status": "Yes" },
       { "name": "caret-color", "status": "Yes" },
+      { "name": "accent-color", "status": "No", "notes": "Checkboxes and radio buttons use the text color instead." },
       { "name": "webkit-user-drag", "status": "No" },
       { "name": "webkit-tap-highlight-color", "status": "No", "properties": ["webkit-tap-highlight-color-0"] }
     ]
@@ -413,6 +424,8 @@
       { "name": "scroll-snap-type", "status": "No" },
       { "name": "scroll-snap-align", "status": "No" },
       { "name": "scroll-padding", "status": "No" },
+      { "name": "scroll-margin", "status": "No", "properties": ["scroll-margin", "scroll-margin-top", "scroll-margin-bottom", "scroll-margin-left", "scroll-margin-right"] },
+      { "name": "scroll-snap-stop", "status": "No" },
       { "name": "scroll-boundary-behavior", "status": "No" },
       { "name": "scroll-boundary-behavior-y", "status": "No" }
     ]
@@ -450,7 +463,9 @@
     "entries": [
       { "name": "column-count", "status": "No" },
       { "name": "column-width", "status": "No" },
-      { "name": "column-span", "status": "No" }
+      { "name": "column-span", "status": "No" },
+      { "name": "column-rule", "status": "No", "properties": ["column-rule", "column-rule-color", "column-rule-style", "column-rule-width"] },
+      { "name": "column-fill", "status": "No" }
     ]
   },
   {
