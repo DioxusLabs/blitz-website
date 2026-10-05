@@ -116,6 +116,7 @@ pub fn WptComparePage(
                             th { text_align: "center", {product_label(&run.product)} }
                         }
                     }
+                    {compare_area_row("Total".to_string(), None, &tests_total(&tests, runs.len()))}
                     for test in &tests {
                         CompareTestRow { test: test.clone() }
                     }
@@ -325,6 +326,31 @@ pub(super) fn compare_area_row(
             }
         }
     )
+}
+
+/// Per-run aggregate score over `tests`, mirroring how `area_scores` are
+/// computed (subtest passes capped at the union denominator, per-test
+/// interop in per-mille).
+fn tests_total(tests: &[TestRow], run_count: usize) -> Vec<Option<AreaScore>> {
+    (0..run_count)
+        .map(|run_idx| {
+            let mut score = AreaScore::default();
+            let mut any = false;
+            for test in tests {
+                if let Some(result) = test.results[run_idx] {
+                    any = true;
+                    let denom = test.denom.max(1);
+                    let pass = result.subtest_pass.min(denom);
+                    score.tests_total += 1;
+                    score.tests_pass += (pass == denom) as u32;
+                    score.subtests_pass += pass;
+                    score.subtests_total += denom;
+                    score.interop_score_sum += (pass as u64 * 1000) / denom as u64;
+                }
+            }
+            any.then_some(score)
+        })
+        .collect()
 }
 
 #[component]
