@@ -628,8 +628,10 @@ pub fn recompute_area_scores(conn: &mut Connection) -> rusqlite::Result<()> {
 }
 
 /// Delete all non-latest runs and their per-run data, keeping only the
-/// latest run of each product. Interned names (`areas`/`tests`/`subtests`)
-/// are append-only and left in place. Freed pages stay on SQLite's freelist
+/// latest run of each product, along with subtest names no remaining run
+/// reports (e.g. after a runner renames its subtests), which would otherwise
+/// show up as empty rows on test pages. Interned `areas`/`tests` names are
+/// left in place. Freed pages stay on SQLite's freelist
 /// for reuse by subsequent ingests, so the file size plateaus rather than
 /// growing with history.
 pub fn prune_old_runs(conn: &mut Connection) -> rusqlite::Result<()> {
@@ -642,6 +644,14 @@ pub fn prune_old_runs(conn: &mut Connection) -> rusqlite::Result<()> {
         )?;
     }
     let pruned = tx.execute(&format!("DELETE FROM runs WHERE id IN ({OLD_RUNS})"), [])?;
+    if pruned > 0 {
+        tx.execute(
+            "DELETE FROM subtests WHERE NOT EXISTS (
+                 SELECT 1 FROM subtest_results sr WHERE sr.subtest_id = subtests.id
+             )",
+            [],
+        )?;
+    }
     tx.commit()?;
     if pruned > 0 {
         println!("Pruned {pruned} old WPT run(s)");
@@ -995,6 +1005,51 @@ pub fn test_detail(conn: &Connection, run_ids: &[i64], test_name: &str) -> Optio
             .iter()
             .map(|id| by_run.get(id).and_then(|(_, message)| message.clone()))
             .collect(),
-        subtests: subtests.into_iter().map(|(_, row)| row).collect(),
+        subtests: subtests
+            .into_iter()
+            .map(|(_, row)| row)
+            .filter(|row| row.statuses.iter().any(Option::is_some))
+            .collect(),
     })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn ingest(conn: &mut Connection, version: &str, subtests: &[&str]) -> i64 {
+        let subtests: Vec<_> = subtests
+            .iter()
+            .map(|name| serde_json::json!({ "name": name, "status": "PASS" }))
+            .collect();
+        let report = serde_json::json!({
+            "results": [{ "test": "/css/a/test.html", "status": "OK", "subtests": subtests }]
+        });
+        let meta = RunMeta {
+            product: "blitz".into(),
+            browser_version: version.into(),
+            os: None,
+            wpt_revision: "rev".into(),
+            run_time: None,
+            source_run_id: None,
+        };
+        ingest_report(conn, &meta, report.to_string().as_bytes()).unwrap()
+    }
+
+    #[test]
+    fn renamed_subtests_are_not_shown_after_prune() {
+        let mut conn = Connection::open_in_memory().unwrap();
+        conn.execute_batch(SCHEMA).unwrap();
+        ingest(&mut conn, "1", &[".test 1", ".test 2"]);
+        let run_id = ingest(&mut conn, "2", &[".test 1: start", ".test 2: center"]);
+        prune_old_runs(&mut conn).unwrap();
+
+        let detail = test_detail(&conn, &[run_id], "/css/a/test.html").unwrap();
+        let names: Vec<_> = detail.subtests.iter().map(|s| s.name.as_str()).collect();
+        assert_eq!(names, [".test 1: start", ".test 2: center"]);
+        let interned: i64 = conn
+            .query_row("SELECT count(*) FROM subtests", [], |row| row.get(0))
+            .unwrap();
+        assert_eq!(interned, 2);
+    }
 }
