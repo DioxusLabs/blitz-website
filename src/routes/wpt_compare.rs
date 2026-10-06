@@ -337,16 +337,20 @@ fn tests_total(tests: &[TestRow], run_count: usize) -> Vec<Option<AreaScore>> {
             let mut score = AreaScore::default();
             let mut any = false;
             for test in tests {
-                if let Some(result) = test.results[run_idx] {
-                    any = true;
-                    let denom = test.denom.max(1);
-                    let pass = result.subtest_pass.min(denom);
-                    score.tests_total += 1;
-                    score.tests_pass += (pass == denom) as u32;
-                    score.subtests_pass += pass;
-                    score.subtests_total += denom;
-                    score.interop_score_sum += (pass as u64 * 1000) / denom as u64;
-                }
+                let denom = test.denom.max(1);
+                let pass = match test.results[run_idx] {
+                    Some(result) => {
+                        any = true;
+                        result.subtest_pass.min(denom)
+                    }
+                    // Missing results still count towards the denominator
+                    None => 0,
+                };
+                score.tests_total += 1;
+                score.tests_pass += (pass == denom) as u32;
+                score.subtests_pass += pass;
+                score.subtests_total += denom;
+                score.interop_score_sum += (pass as u64 * 1000) / denom as u64;
             }
             any.then_some(score)
         })
