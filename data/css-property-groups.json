@@ -197,7 +197,8 @@
         "values": [
           { "value": "uppercase", "status": "Yes" },
           { "value": "lowercase", "status": "Yes" },
-          { "value": "capitalize", "status": "No" }
+          { "value": "capitalize", "status": "Yes" },
+          { "value": "math-auto", "status": "Yes" }
         ]
       },
       { "name": "letter-spacing", "status": "Yes" },
