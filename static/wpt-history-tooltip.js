@@ -150,7 +150,7 @@ document.querySelectorAll("script[data-wpt-history-data]").forEach(function (dat
         }
         var pass = run.v[0], total = s.total;
         html += "<div><span style='color:" + s.color + "'>\u25CF</span> " +
-            esc(s.name) + ": " + (100 * pass / total).toFixed(1) + "% (" +
+            esc(s.name) + ": " + (Math.floor(1000 * pass / total) / 10).toFixed(1) + "% (" +
             pass.toLocaleString() + "/" + total.toLocaleString() + ")</div>";
 
         // Change relative to the previous run
