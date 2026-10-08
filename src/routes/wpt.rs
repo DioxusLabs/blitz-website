@@ -32,6 +32,14 @@ pub fn score_color(pass_fraction: f32) -> String {
     format!("rgb({},{},{})", color[0], color[1], color[2])
 }
 
+/// Format a fraction as a percentage, flooring at `decimals` digits so a
+/// score only shows 100% when every subtest passes
+pub fn percent_str(fraction: f64, decimals: usize) -> String {
+    let scale = 10f64.powi(decimals as i32);
+    let floored = (fraction * 100.0 * scale).floor() / scale;
+    format!("{floored:.decimals$}%")
+}
+
 const COLORS: Colors = Colors(&[
     [229, 115, 115],
     [255, 183, 77],
@@ -210,7 +218,7 @@ fn area_score_row(label: String, href: Option<String>, scores: AreaScore) -> Ele
             }
             td {
                 text_align: "right",
-                {format!("{:.2}%", scores.interop_fraction() * 100.0)}
+                {percent_str(scores.interop_fraction() as f64, 2)}
             }
             td {
                 text_align: "right",
@@ -218,7 +226,7 @@ fn area_score_row(label: String, href: Option<String>, scores: AreaScore) -> Ele
             }
             td {
                 text_align: "right",
-                {format!("{:.2}%", test_fraction * 100.0)}
+                {percent_str(test_fraction as f64, 2)}
             }
             td {
                 text_align: "right",
@@ -226,7 +234,7 @@ fn area_score_row(label: String, href: Option<String>, scores: AreaScore) -> Ele
             }
             td {
                 text_align: "right",
-                {format!("{:.2}%", scores.subtest_fraction() * 100.0)}
+                {percent_str(scores.subtest_fraction() as f64, 2)}
             }
         }
     )
@@ -259,7 +267,7 @@ fn TestScoreRow(test: TestRow) -> Element {
             }
             td {
                 text_align: "right",
-                {format!("{:.2}%", fraction * 100.0)}
+                {percent_str(fraction as f64, 2)}
             }
             td {
                 text_align: "right",

@@ -2,7 +2,7 @@ use dioxus::prelude::*;
 
 use crate::{
     components::Page,
-    routes::{score_color, test_page_href, ChartLine, ChartRange, ChartRangeSelector, HistoryLineChart},
+    routes::{percent_str, score_color, test_page_href, ChartLine, ChartRange, ChartRangeSelector, HistoryLineChart},
     wpt_db::{status_str, AreaScore, AreaSort, RunRow, TestRow, TestRunResult},
 };
 
@@ -303,12 +303,12 @@ pub(super) fn compare_area_row(
                         text_align: "right",
                         background_color: score_color(score.subtest_fraction()),
                         title: format!(
-                            "Tests fully passing: {}/{} | Interop score: {:.1}%",
+                            "Tests fully passing: {}/{} | Interop score: {}",
                             score.tests_pass,
                             score.tests_total,
-                            score.interop_fraction() * 100.0,
+                            percent_str(score.interop_fraction() as f64, 1),
                         ),
-                        {format!("{:.1}%", score.subtest_fraction() * 100.0)}
+                        {percent_str(score.subtest_fraction() as f64, 1)}
                         span {
                             display: "block",
                             font_size: "12px",

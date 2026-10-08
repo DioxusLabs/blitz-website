@@ -8,7 +8,7 @@ use dioxus::prelude::*;
 use fxhash::hash32;
 
 use crate::components::Page;
-use crate::routes::{StatusHeader, StatusTabs};
+use crate::routes::{percent_str, StatusHeader, StatusTabs};
 use crate::wpt_history::{HistoryRun, WptHistory};
 
 #[derive(Clone)]
@@ -631,7 +631,7 @@ pub fn WptHistorySparklines(history: ArcWptHistory, range: ChartRange) -> Elemen
                                 justify_content: "space-between",
                                 font_size: "13px",
                                 span { {area.clone()} }
-                                span { {format!("{latest:.1}%")} }
+                                span { {percent_str(latest / 100.0, 1)} }
                             }
                             svg {
                                 view_box: "0 0 {WIDTH} {HEIGHT}",
