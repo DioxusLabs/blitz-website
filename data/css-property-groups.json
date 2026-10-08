@@ -178,7 +178,7 @@
     "entries": [
       { "name": "direction", "status": "Partial", "notes": "Supported for block-level but not inline-level boxes. Auto-detection of RTL text is support for inline content." },
       { "name": "unicode-bidi", "status": "No" },
-      { "name": "writing-mode", "status": "No" },
+      { "name": "writing-mode", "status": "Partial", "notes": "Supported for block-level layout but not for inline/text layout." },
       { "name": "text-orientation", "status": "No" }
     ]
   },
