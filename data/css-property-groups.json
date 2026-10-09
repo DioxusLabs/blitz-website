@@ -193,16 +193,7 @@
       { "name": "vertical-align", "status": "Yes" },
       { "name": "white-space-collapse", "status": "Yes", "properties": ["white-space-collapse", "white-space"] },
       { "name": "text-wrap-mode", "status": "Yes", "properties": ["text-wrap-mode", "text-wrap", "white-space"] },
-      { "name": "text-transform",
-        "values": [
-          { "value": "uppercase", "status": "Yes" },
-          { "value": "lowercase", "status": "Yes" },
-          { "value": "capitalize", "status": "Yes" },
-          { "value": "math-auto", "status": "Yes" },
-          { "value": "full-width", "status": "Yes" },
-          { "value": "full-size-kana", "status": "Yes" }
-        ]
-      },
+      { "name": "text-transform", "status": "Yes" },
       { "name": "letter-spacing", "status": "Yes" },
       { "name": "text-overflow", "status": "InProgress", "issues": ["DioxusLabs/blitz#893"] },
       { "name": "word-break", "status": "Yes" },
