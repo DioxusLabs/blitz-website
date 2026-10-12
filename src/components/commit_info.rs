@@ -22,29 +22,25 @@ pub fn CommitInfoDisplay(commit_info: Option<CommitInfo>, label: Option<&'static
         .and_then(|message| message.lines().next());
 
     rsx! {
-        p {
+        <p>
             if let Some(label) = label {
-                span {
-                    font_size: "smaller",
-                    color: "#666",
+                <span font_size="smaller" color="#666">
                     "{label}"
-                    br {}
-                }
+                    <br />
+                </span>
             }
-            a {
-                href: "https://github.com/DioxusLabs/blitz/commit/{commit_info.sha}",
-                target: "_blank",
+            <a
+                href="https://github.com/DioxusLabs/blitz/commit/{commit_info.sha}"
+                target="_blank"
+            >
                 "{short_sha}"
-            }
+            </a>
             if let Some(message) = message {
                 " {message}"
             }
             if let Some(timestamp) = commit_info.timestamp.as_deref() {
-                span {
-                    color: "#666",
-                    " ({format_commit_date(timestamp)})"
-                }
+                <span color="#666">" ({format_commit_date(timestamp)})"</span>
             }
-        }
+        </p>
     }
 }

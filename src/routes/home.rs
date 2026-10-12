@@ -5,12 +5,13 @@ use crate::components::Page;
 #[component]
 pub fn HomePage() -> Element {
     rsx! {
-        Page {
-            title: "A radically modular web engine".into(),
-            noframe: true,
-            transparent_header: false,
-
-            div { style: "
+        <Page
+            title={"A radically modular web engine".into()}
+            noframe=true
+            transparent_header=false
+        >
+            <div
+                style="
                     display: flex;
                     flex-direction: column;
                     align-items: center;
@@ -18,9 +19,10 @@ pub fn HomePage() -> Element {
                     background-color: white;
                     max-width: 1600px;
                     margin: 0 auto;
-                ",
-
-                div { style: "
+                "
+            >
+                <div
+                    style="
                         font-size: 3em;
                         color: black;
                         // font-family: Futura;
@@ -30,11 +32,12 @@ pub fn HomePage() -> Element {
                         margin-bottom: 18px;
                         line-height: 1.5;
                         text-align: center;
-                    ",
+                    "
+                >
                     "A "
-                    em { "radically modular" }
+                    <em>"radically modular"</em>
                     " web engine"
-                }
+                </div>
 
                 // div {
                 //     display: "flex",
@@ -80,10 +83,10 @@ pub fn HomePage() -> Element {
                 //         ",
                 //     }
                 // }
+            </div>
 
-            }
-
-            div { style: "
+            <div
+                style="
                     // height: calc(100vh - 96px);
                     background-color: white;
                     background-color: #f4e8d2;
@@ -99,7 +102,8 @@ pub fn HomePage() -> Element {
                     padding: 40px 0;
                     max-width: 1600px;
                     margin: 0 auto;
-                ",
+                "
+            >
 
                 // div {
                 //     style: "
@@ -134,18 +138,18 @@ pub fn HomePage() -> Element {
                 //         " provides a local, github-styled, live-reloading markdown preview with Blitz."
                 //     }
                 // }
-
-                img {
-                    src: "/static/screenshots/wikipedia.png",
-                    style: "
+                <img
+                    src="/static/screenshots/wikipedia.png"
+                    style="
                     width: 80%;
                     background-color: transparent;
                     margin: 0 auto;
-                    ",
-                }
-            }
+                    "
+                />
+            </div>
 
-            div { style: "
+            <div
+                style="
                     display: flex;
                     flex-direction: column;
                     align-items: center;
@@ -154,9 +158,10 @@ pub fn HomePage() -> Element {
                     max-width: 1600px;
                     margin: 0 auto;
 
-                ",
-
-                div { style: "
+                "
+            >
+                <div
+                    style="
                         font-size: 3em;
                         color: black;
                         // font-family: Futura;
@@ -164,34 +169,39 @@ pub fn HomePage() -> Element {
                         font-weight: 500;
                         margin-top: 28px;
                         line-height: 1.5;
-                    ",
+                    "
+                >
                     "Write once, run everywhere with Dioxus Native"
-                }
+                </div>
 
-                p { font_size: "1.4em", max_width: "800px",
-                    a { href: "https://github.com/DioxusLabs/dioxus/tree/main/packages/native",
+                <p font_size="1.4em" max_width="800px">
+                    <a
+                        href="https://github.com/DioxusLabs/dioxus/tree/main/packages/native"
+                    >
                         "Dioxus Native"
-                    }
+                    </a>
                     " wraps Blitz and provides a write-once, run everywhere app development experience across all major platforms
                     including web."
-                }
+                </p>
 
-                img {
-                    src: "/static/counter-example.png",
-                    style: "
+                <img
+                    src="/static/counter-example.png"
+                    style="
                     width: 70%;
                     background-color: #f4e8d2;
                     margin: 0 auto;
-                ",
-                }
-            }
-        }
-        div { style: "
+                "
+                />
+            </div>
+        </Page>
+        <div
+            style="
                 height: 48px;
                 background: #f4e8d2;
                 max-width: 1600px;
                 margin: 0 auto;
 
-            " }
+            "
+        />
     }
 }

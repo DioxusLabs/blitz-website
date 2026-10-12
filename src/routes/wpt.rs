@@ -71,24 +71,24 @@ pub fn WptResultsPage(
 ) -> Element {
     let area = results.area.clone();
     rsx! {
-        Page { title: "Status: WPT".into(),
-            StatusHeader {}
-            StatusTabs { current_tab: "wpt" }
-            p {
-                dangerous_inner_html: r#"
+        <Page title={"Status: WPT".into()}>
+            <StatusHeader />
+            <StatusTabs current_tab="wpt" />
+            <p
+                dangerous_inner_html=r#"
                 This page documents Blitz's scores on the "css" subsuite of the <a href="https://github.com/web-platform-tests/wpt" target="_blank">Web Platform Tests</a>."#
-            }
-            hr {}
-            WptBreadcrumb { area: area.clone() }
-            FolderHistoryChart {
-                folder: area.clone(),
-                history,
-                range,
-                base_path: "/status/wpt/{area}",
-            }
-            CommitInfoDisplay { commit_info, label: "Data from commit:" }
-            WptAreaResults { results }
-        }
+            />
+            <hr />
+            <WptBreadcrumb area={area.clone()} />
+            <FolderHistoryChart
+                folder={area.clone()}
+                history
+                range
+                base_path="/status/wpt/{area}"
+            />
+            <CommitInfoDisplay commit_info label="Data from commit:" />
+            <WptAreaResults results />
+        </Page>
     }
 }
 
@@ -102,7 +102,9 @@ fn FolderHistoryChart(
     base_path: String,
 ) -> Element {
     let Some(history) = history else {
-        return rsx!( p { "No history data available" } );
+        return rsx!(
+            <p>"No history data available"</p>
+        );
     };
 
     let series_spec = vec![ChartSeries {
@@ -116,12 +118,16 @@ fn FolderHistoryChart(
     }];
 
     rsx! {
-        details {
-            class: "wpt-history-chart",
-            summary { "Score history" }
-            ChartRangeSelector { current_range: range, base_path }
-            WptHistoryChart { history, series_spec, range, height: 240.0 }
-        }
+        <details class="wpt-history-chart">
+            <summary>"Score history"</summary>
+            <ChartRangeSelector current_range={range} base_path />
+            <WptHistoryChart
+                history
+                series_spec
+                range
+                height=240.0
+            />
+        </details>
     }
 }
 
@@ -140,13 +146,13 @@ pub fn WptBreadcrumb(area: String) -> Element {
         .collect();
 
     rsx!(
-        p {
-            a { href: "/status/wpt", "wpt" }
+        <p>
+            <a href="/status/wpt">"wpt"</a>
             for (segment, href) in segments {
                 " / "
-                a { href, {segment} }
+                <a href>{segment}</a>
             }
-        }
+        </p>
     )
 }
 
@@ -161,39 +167,38 @@ pub fn WptAreaResults(results: BlitzAreaResults) -> Element {
     let child_prefix = format!("{area}/");
 
     rsx!(
-        table {
-            width: "100%",
-            tr {
-                th { width: "min-content", "Area",  }
-                th { "Interop Score", }
-                th { "Tests", }
-                th { "Test %", }
-                th { "Subtests" }
-                th { "Subtest %" }
-            }
+        <table width="100%">
+            <tr>
+                <th width="min-content">"Area"</th>
+                <th>"Interop Score"</th>
+                <th>"Tests"</th>
+                <th>"Test %"</th>
+                <th>"Subtests"</th>
+                <th>"Subtest %"</th>
+            </tr>
             {area_score_row("Total".to_string(), None, score.unwrap_or_default())}
             for (key, scores) in child_areas {
-                {area_score_row(
-                    key[child_prefix.len()..].to_string(),
-                    Some(format!("/status/wpt/{key}")),
-                    scores.unwrap_or_default(),
-                )}
+                {
+                    area_score_row(
+                        key[child_prefix.len()..].to_string(),
+                        Some(format!("/status/wpt/{key}")),
+                        scores.unwrap_or_default(),
+                    )
+                }
             }
-        }
+        </table>
         if !tests.is_empty() {
-            table {
-                width: "100%",
-                margin_top: "24px",
-                tr {
-                    th { width: "min-content", "Test",  }
-                    th { "Subtests" }
-                    th { "Subtest %" }
-                    th { "Status", }
-                }
+            <table width="100%" margin_top="24px">
+                <tr>
+                    <th width="min-content">"Test"</th>
+                    <th>"Subtests"</th>
+                    <th>"Subtest %"</th>
+                    <th>"Status"</th>
+                </tr>
                 for test in tests {
-                    TestScoreRow { test }
+                    <TestScoreRow test />
                 }
-            }
+            </table>
         }
     )
 }
@@ -206,37 +211,24 @@ fn area_score_row(label: String, href: Option<String>, scores: AreaScore) -> Ele
     };
 
     rsx!(
-        tr {
-            background_color: score_color(scores.subtest_fraction()),
-            td {
-                background_color: "white",
+        <tr background_color={score_color(scores.subtest_fraction())}>
+            <td background_color="white">
                 if let Some(href) = href {
-                    a { href, {label} }
+                    <a href>{label}</a>
                 } else {
                     {label}
                 }
-            }
-            td {
-                text_align: "right",
-                {percent_str(scores.interop_fraction() as f64, 2)}
-            }
-            td {
-                text_align: "right",
+            </td>
+            <td text_align="right">{percent_str(scores.interop_fraction() as f64, 2)}</td>
+            <td text_align="right">
                 {format!("({}/{})", scores.tests_pass, scores.tests_total)}
-            }
-            td {
-                text_align: "right",
-                {percent_str(test_fraction as f64, 2)}
-            }
-            td {
-                text_align: "right",
+            </td>
+            <td text_align="right">{percent_str(test_fraction as f64, 2)}</td>
+            <td text_align="right">
                 {format!("({}/{})", scores.subtests_pass, scores.subtests_total)}
-            }
-            td {
-                text_align: "right",
-                {percent_str(scores.subtest_fraction() as f64, 2)}
-            }
-        }
+            </td>
+            <td text_align="right">{percent_str(scores.subtest_fraction() as f64, 2)}</td>
+        </tr>
     )
 }
 
@@ -252,28 +244,14 @@ fn TestScoreRow(test: TestRow) -> Element {
     let status = result.map(|result| status_str(result.status)).unwrap_or("MISSING");
 
     rsx!(
-        tr {
-            background_color: score_color(fraction),
-            td {
-                background_color: "white",
-                a {
-                    href: test_page_href(&test),
-                    {file_name.to_string()}
-                }
-            }
-            td {
-                text_align: "right",
-                {format!("({pass}/{denom})")}
-            }
-            td {
-                text_align: "right",
-                {percent_str(fraction as f64, 2)}
-            }
-            td {
-                text_align: "right",
-                {status}
-            }
-        }
+        <tr background_color={score_color(fraction)}>
+            <td background_color="white">
+                <a href={test_page_href(&test)}>{file_name.to_string()}</a>
+            </td>
+            <td text_align="right">{format!("({pass}/{denom})")}</td>
+            <td text_align="right">{percent_str(fraction as f64, 2)}</td>
+            <td text_align="right">{status}</td>
+        </tr>
     )
 }
 

@@ -70,84 +70,89 @@ pub fn WptCompareTestPage(
     let first_ref = refs.first().cloned();
 
     rsx! {
-        BarePage { title: format!("WPT: {file_name}").into(),
-            div {
-                class: "wpt-test-page",
-                div {
-                    class: "wpt-test-page__breadcrumbs",
-                    WptCompareBreadcrumb { area: name.clone() }
-                }
-                div {
-                    class: "wpt-test-page__header",
-                    p {
-                        a {
-                            href: format!("https://wpt.live/{name}"),
-                            target: "_blank",
+        <BarePage title={format!("WPT: {file_name}").into()}>
+            <div class="wpt-test-page">
+                <div class="wpt-test-page__breadcrumbs">
+                    <WptCompareBreadcrumb area={name.clone()} />
+                </div>
+                <div class="wpt-test-page__header">
+                    <p>
+                        <a
+                            href={format!("https://wpt.live/{name}")}
+                            target="_blank"
+                        >
                             "Open test on wpt.live"
-                        }
+                        </a>
                         if let Some(ref_link) = &first_ref {
                             " | "
-                            a {
-                                href: format!("https://wpt.live{}", ref_link.href),
-                                target: "_blank",
+                            <a
+                                href={format!("https://wpt.live{}", ref_link.href)}
+                                target="_blank"
+                            >
                                 "Open ref on wpt.live"
-                            }
+                            </a>
                         }
                         " | "
-                        a {
-                            href: format!("https://wpt.fyi/results/{name}"),
-                            target: "_blank",
+                        <a
+                            href={format!("https://wpt.fyi/results/{name}")}
+                            target="_blank"
+                        >
                             "wpt.fyi"
-                        }
-                    }
-                    TestPageTabs {
-                        name: name.clone(),
-                        current_tab: tab,
-                        ref_link: first_ref.clone(),
-                    }
-                }
-                div {
-                    class: "wpt-test-page__content",
-                    TabPanel { tab: TestPageTab::Results, current_tab: tab,
-                        RunInfoDisplay { runs: runs.clone() }
-                        TestResults { runs: runs.clone(), detail: detail.clone() }
-                    }
-                    TabPanel { tab: TestPageTab::Test, current_tab: tab,
+                        </a>
+                    </p>
+                    <TestPageTabs
+                        name={name.clone()}
+                        current_tab={tab}
+                        ref_link={first_ref.clone()}
+                    />
+                </div>
+                <div class="wpt-test-page__content">
+                    <TabPanel tab={TestPageTab::Results} current_tab={tab}>
+                        <RunInfoDisplay runs={runs.clone()} />
+                        <TestResults runs={runs.clone()} detail={detail.clone()} />
+                    </TabPanel>
+                    <TabPanel tab={TestPageTab::Test} current_tab={tab}>
                         if first_ref.is_none() {
-                            p {
-                                class: "wpt-js-toggle",
-                                label {
-                                    input {
-                                        r#type: "checkbox",
-                                        id: "enable-js-toggle",
-                                    }
+                            <p class="wpt-js-toggle">
+                                <label>
+                                    <input
+                                        r#type="checkbox"
+                                        id="enable-js-toggle"
+                                    />
                                     " Enable JavaScript in test iframe"
-                                }
-                            }
+                                </label>
+                            </p>
                         }
-                        TestIframe {
-                            path: format!("/{name}"),
-                            fixed_size: first_ref.is_some(),
-                            sandboxed: first_ref.is_none(),
-                        }
-                    }
-                    TabPanel { tab: TestPageTab::TestSource, current_tab: tab,
-                        SourceView { path: source_path.clone(), source: source.clone() }
-                    }
+                        <TestIframe
+                            path={format!("/{name}")}
+                            fixed_size={first_ref.is_some()}
+                            sandboxed={first_ref.is_none()}
+                        />
+                    </TabPanel>
+                    <TabPanel tab={TestPageTab::TestSource} current_tab={tab}>
+                        <SourceView path={source_path.clone()} source={source.clone()} />
+                    </TabPanel>
                     if let Some(ref_link) = &first_ref {
-                        TabPanel { tab: TestPageTab::Ref, current_tab: tab,
-                            TestIframe { path: ref_link.href.clone(), fixed_size: true, sandboxed: false }
-                        }
-                        TabPanel { tab: TestPageTab::RefSource, current_tab: tab,
+                        <TabPanel tab={TestPageTab::Ref} current_tab={tab}>
+                            <TestIframe
+                                path={ref_link.href.clone()}
+                                fixed_size=true
+                                sandboxed=false
+                            />
+                        </TabPanel>
+                        <TabPanel tab={TestPageTab::RefSource} current_tab={tab}>
                             if let Some(ref_source) = &ref_source {
-                                SourceView { path: ref_link.href.clone(), source: ref_source.clone() }
+                                <SourceView
+                                    path={ref_link.href.clone()}
+                                    source={ref_source.clone()}
+                                />
                             }
-                        }
+                        </TabPanel>
                     }
-                }
-                script { dangerous_inner_html: TAB_SCRIPT }
-            }
-        }
+                </div>
+                <script dangerous_inner_html={TAB_SCRIPT} />
+            </div>
+        </BarePage>
     }
 }
 
@@ -193,11 +198,16 @@ if (jsToggle) {
 #[component]
 fn TabPanel(tab: TestPageTab, current_tab: TestPageTab, children: Element) -> Element {
     rsx! {
-        div {
-            class: if tab == current_tab { "wpt-tab-panel wpt-tab-panel--active" } else { "wpt-tab-panel" },
-            "data-tab": tab.query_value(),
+        <div
+            class={if tab == current_tab {
+                "wpt-tab-panel wpt-tab-panel--active"
+            } else {
+                "wpt-tab-panel"
+            }}
+            data-tab={tab.query_value()}
+        >
             {children}
-        }
+        </div>
     }
 }
 
@@ -221,17 +231,17 @@ fn TestPageTabs(name: String, current_tab: TestPageTab, ref_link: Option<RefLink
     }
 
     rsx! {
-        div {
-            class: "tab-container",
+        <div class="tab-container">
             for (tab, label) in tabs {
-                a {
-                    class: if tab == current_tab { "tab tab--selected" } else { "tab" },
-                    href: format!("{base}?tab={}", tab.query_value()),
-                    "data-tab": tab.query_value(),
+                <a
+                    class={if tab == current_tab { "tab tab--selected" } else { "tab" }}
+                    href={format!("{base}?tab={}", tab.query_value())}
+                    data-tab={tab.query_value()}
+                >
                     {label}
-                }
+                </a>
             }
-        }
+        </div>
     }
 }
 
@@ -266,51 +276,56 @@ fn TestResults(runs: Vec<RunRow>, detail: TestDetail) -> Element {
     let message_header = format!("{} error message", message_products.join(" / "));
 
     rsx! {
-        table {
-            width: "100%",
-            tr {
-                th { width: "min-content", "" }
+        <table width="100%">
+            <tr>
+                <th width="min-content">""</th>
                 for run in &runs {
-                    th { text_align: "center", {product_label(&run.product)} }
+                    <th text_align="center">{product_label(&run.product)}</th>
                 }
-            }
-            tr {
-                td { background_color: "white", b { "Total" } }
+            </tr>
+            <tr>
+                <td background_color="white">
+                    <b>"Total"</b>
+                </td>
                 for (result, message) in detail.results.iter().zip(&detail.messages) {
                     if let Some(result) = result {
-                        td {
-                            text_align: "right",
-                            background_color: score_color(result.subtest_pass as f32 / denom as f32),
-                            title: message.clone(),
+                        <td
+                            text_align="right"
+                            background_color={score_color(result.subtest_pass as f32 / denom as f32)}
+                            title={message.clone()}
+                        >
                             {format!("{}/{}", result.subtest_pass, denom)}
-                        }
+                        </td>
                     } else {
-                        td {
-                            text_align: "right",
-                            background_color: score_color(0.0),
+                        <td
+                            text_align="right"
+                            background_color={score_color(0.0)}
+                        >
                             "NOT RUN"
-                        }
+                        </td>
                     }
                 }
-            }
-        }
+            </tr>
+        </table>
         if !detail.subtests.is_empty() {
-            table {
-                width: "100%",
-                margin_top: "24px",
-                tr {
-                    th { "Subtest" }
+            <table width="100%" margin_top="24px">
+                <tr>
+                    <th>"Subtest"</th>
                     for run in &runs {
-                        th { text_align: "center", {product_label(&run.product)} }
+                        <th text_align="center">{product_label(&run.product)}</th>
                     }
                     if has_messages {
-                        th { {message_header.clone()} }
+                        <th>{message_header.clone()}</th>
                     }
-                }
+                </tr>
                 for subtest in &detail.subtests {
-                    SubtestResultsRow { runs: runs.clone(), subtest: subtest.clone(), has_messages }
+                    <SubtestResultsRow
+                        runs={runs.clone()}
+                        subtest={subtest.clone()}
+                        has_messages
+                    />
                 }
-            }
+            </table>
         }
     }
 }
@@ -326,38 +341,34 @@ fn SubtestResultsRow(runs: Vec<RunRow>, subtest: SubtestRow, has_messages: bool)
         .collect();
 
     rsx!(
-        tr {
-            td { background_color: "white", {subtest.name.clone()} }
+        <tr>
+            <td background_color="white">{subtest.name.clone()}</td>
             for (status, message) in subtest.statuses.iter().zip(&subtest.messages) {
                 if let Some(status) = status {
-                    td {
-                        text_align: "right",
-                        background_color: score_color((*status == 0) as u32 as f32),
-                        title: message.clone(),
+                    <td
+                        text_align="right"
+                        background_color={score_color((*status == 0) as u32 as f32)}
+                        title={message.clone()}
+                    >
                         {status_str(*status)}
-                    }
+                    </td>
                 } else {
-                    td {
-                        text_align: "right",
-                        background_color: "#eee",
-                        "—"
-                    }
+                    <td text_align="right" background_color="#eee">"—"</td>
                 }
             }
             if has_messages {
-                td {
-                    font_size: "smaller",
+                <td font_size="smaller">
                     for (product, message) in &messages {
-                        div {
+                        <div>
                             if messages.len() > 1 {
-                                b { "{product}: " }
+                                <b>"{product}: "</b>
                             }
-                            FormattedMessage { message: message.clone() }
-                        }
+                            <FormattedMessage message={message.clone()} />
+                        </div>
                     }
-                }
+                </td>
             }
-        }
+        </tr>
     )
 }
 
@@ -484,38 +495,38 @@ fn FormattedMessage(message: String) -> Element {
     let lines = parse_message(&message);
     rsx! {
         for parts in lines {
-            div {
-                class: "wpt-message",
+            <div class="wpt-message">
                 for part in parts {
                     match part {
                         MessagePart::Assertion(name) => rsx! {
-                            span { class: "wpt-message__assertion", {name} }
+                            <span class="wpt-message__assertion">{name}</span>
                             " "
                         },
                         MessagePart::Text(text) => rsx! {
-                            span { {text} }
+                            <span>{text}</span>
                             " "
                         },
                         MessagePart::Expected(value) => rsx! {
-                            span { class: "wpt-message__label", "expected " }
-                            code { class: "wpt-message__expected", {value} }
+                            <span class="wpt-message__label">"expected "</span>
+                            <code class="wpt-message__expected">{value}</code>
                             " "
                         },
                         MessagePart::Actual(value) => rsx! {
-                            span { class: "wpt-message__label", "got " }
-                            code { class: "wpt-message__actual", {value} }
+                            <span class="wpt-message__label">"got "</span>
+                            <code class="wpt-message__actual">{value}</code>
                             " "
                         },
                         MessagePart::Html(html) => rsx! {
-                            details {
-                                class: "wpt-message__html wpt-source",
-                                summary { "element markup" }
-                                div { dangerous_inner_html: highlight_source(&indent_html(&html), "dump.html") }
-                            }
+                            <details class="wpt-message__html wpt-source">
+                                <summary>"element markup"</summary>
+                                <div
+                                    dangerous_inner_html={highlight_source(&indent_html(&html), "dump.html")}
+                                />
+                            </details>
                         },
                     }
                 }
-            }
+            </div>
         }
     }
 }
@@ -677,33 +688,33 @@ mod tests {
 #[component]
 fn TestIframe(path: String, fixed_size: bool, sandboxed: bool) -> Element {
     rsx! {
-        iframe {
-            class: if fixed_size { "wpt-test-iframe wpt-test-iframe--fixed" } else { "wpt-test-iframe" },
-            src: format!("https://wpt.live{path}"),
-            "sandbox": if sandboxed { "allow-same-origin" },
-        }
+        <iframe
+            class={if fixed_size {
+                "wpt-test-iframe wpt-test-iframe--fixed"
+            } else {
+                "wpt-test-iframe"
+            }}
+            src={format!("https://wpt.live{path}")}
+            "sandbox"={if sandboxed { "allow-same-origin" }}
+        />
     }
 }
 
 #[component]
 fn SourceView(path: String, source: SourceResult) -> Element {
     rsx! {
-        p {
-            a {
-                href: format!("https://wpt.live{path}"),
-                target: "_blank",
-                {path.clone()}
-            }
-        }
+        <p>
+            <a href={format!("https://wpt.live{path}")} target="_blank">{path.clone()}</a>
+        </p>
         match &source {
             Ok(source) => rsx! {
-                div {
-                    class: "wpt-source",
-                    dangerous_inner_html: highlight_source(source, &path),
-                }
+                <div
+                    class="wpt-source"
+                    dangerous_inner_html={highlight_source(source, &path)}
+                />
             },
             Err(err) => rsx! {
-                p { color: "#8c3037", "Failed to load source: {err}" }
+                <p color="#8c3037">"Failed to load source: {err}"</p>
             },
         }
     }

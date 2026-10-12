@@ -44,33 +44,35 @@ pub fn GettingStartedPage() -> Element {
     ];
 
     rsx! {
-        Page { title: "Getting Started Guide".into(),
-            h1 { "Getting Started Guide" }
-            p {
-                class: "introduction",
-                dangerous_inner_html: r#"
+        <Page title={"Getting Started Guide".into()}>
+            <h1>"Getting Started Guide"</h1>
+            <p
+                class="introduction"
+                dangerous_inner_html=r#"
                     The standard library in Rust is not "batteries included", excluding functionality like HTTP(S),
                     JSON, timezones, random numbers, and async IO. The recommended crate directory is a hand-curated guide to the
                     crates.io ecosystem, helping you choose which crates to use.
-                "#,
-            }
-            p {
-                class: "introduction",
-                dangerous_inner_html: r#"
+                "#
+            />
+            <p
+                class="introduction"
+                dangerous_inner_html=r#"
                     See also: <a href="https://crates.io" target="_blank">crates.io</a> (the official crates directory) and 
                     <a href="https://lib.rs" target="_blank">lib.rs</a> (a semi-curated directory).
-                "#,
-            }
-            MainContent { toc_sections: Some(toc_sections),
-                Section {
-                    section_key: String::from("installation"),
-                    heading: "Installation",
-                    Section {
-                        section_key: String::from("installation"),
-                        subsection_key: String::from("cargo-rustc"),
-                        heading: "Rust Compiler",
-                        div {
-                            dangerous_inner_html: r#"
+                "#
+            />
+            <MainContent toc_sections={Some(toc_sections)}>
+                <Section
+                    section_key={String::from("installation")}
+                    heading="Installation"
+                >
+                    <Section
+                        section_key={String::from("installation")}
+                        subsection_key={String::from("cargo-rustc")}
+                        heading="Rust Compiler"
+                    >
+                        <div
+                            dangerous_inner_html=r#"
                                 <p>
                                   The recommended way to install Rust is using <a href="https://rustup.rs/" target="_blank">rustup</a>.
                                 </p>
@@ -92,18 +94,19 @@ pub fn GettingStartedPage() -> Element {
                                 <p style="font-size: 0.8em;">
                                   It is <strong>not</strong> recommended to install Rust through your distribution package manager. These packages are intended to compile programs packaged by the distribution, not for Rust development, and they are often so outdated that the latest versions of libraries won't compile.
                                 </p>
-                            "#,
-                        }
-                    }
+                            "#
+                        />
+                    </Section>
 
-                    Section {
-                        section_key: String::from("installation"),
-                        subsection_key: String::from("editor-setup"),
-                        heading: "Editor Setup",
-                        div { dangerous_inner_html: r#""# }
-                    }
-                }
-            }
-        }
+                    <Section
+                        section_key={String::from("installation")}
+                        subsection_key={String::from("editor-setup")}
+                        heading="Editor Setup"
+                    >
+                        <div dangerous_inner_html=r#""# />
+                    </Section>
+                </Section>
+            </MainContent>
+        </Page>
     }
 }

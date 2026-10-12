@@ -56,34 +56,36 @@ pub fn WptFocusAreasPage(
     scores: Vec<(String, Vec<Option<AreaScore>>)>,
 ) -> Element {
     rsx! {
-        Page { title: format!("WPT: {label} focus areas").into(),
-            h1 { "WPT" }
-            p {
-                class: "introduction",
-                dangerous_inner_html: intro,
-            }
-            hr {}
-            p {
-                a { href: "/wpt", "wpt" }
+        <Page title={format!("WPT: {label} focus areas").into()}>
+            <h1>"WPT"</h1>
+            <p class="introduction" dangerous_inner_html={intro} />
+            <hr />
+            <p>
+                <a href="/wpt">"wpt"</a>
                 " / focus areas / {label}"
-            }
-            RunInfoDisplay { runs: runs.clone() }
-            table {
-                width: "100%",
-                tr {
-                    th { width: "min-content", "Focus area" }
+            </p>
+            <RunInfoDisplay runs={runs.clone()} />
+            <table width="100%">
+                <tr>
+                    <th width="min-content">"Focus area"</th>
                     for run in &runs {
-                        th { text_align: "center", {product_label(&run.product)} }
+                        <th text_align="center">{product_label(&run.product)}</th>
                     }
-                }
+                </tr>
                 for (area, area_scores) in &scores {
                     if area.is_empty() {
-                        {compare_area_row("All WPT tests".to_string(), Some("/wpt".to_string()), area_scores)}
+                        {
+                            compare_area_row(
+                                "All WPT tests".to_string(),
+                                Some("/wpt".to_string()),
+                                area_scores,
+                            )
+                        }
                     } else {
                         {compare_area_row(format!("/{area}/"), Some(format!("/wpt/{area}")), area_scores)}
                     }
                 }
-            }
-        }
+            </table>
+        </Page>
     }
 }

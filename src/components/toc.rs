@@ -16,35 +16,39 @@ pub struct TocSection {
 #[component]
 pub fn TableOfContents(sections: Vec<TocSection>) -> Element {
     rsx! {
-        div { class: "toc",
-            h3 { "Sections" }
-            ul {
+        <div class="toc">
+            <h3>"Sections"</h3>
+            <ul>
                 for section in sections.into_iter() {
-                    TocSectionRender { section }
+                    <TocSectionRender section />
                 }
-            }
-            script { dangerous_inner_html: TOC_SCRIPT }
-        }
+            </ul>
+            <script dangerous_inner_html={TOC_SCRIPT} />
+        </div>
     }
 }
 
 #[component]
 fn TocSectionRender(section: TocSection) -> Element {
     rsx! {
-        li { "data-toc-link": "section-{ section.slug }",
-            a { href: "#section-{ section.slug }", "{ section.name }" }
+        <li data-toc-link="section-{ section.slug }">
+            <a href="#section-{ section.slug }">"{ section.name }"</a>
             if !section.subsections.is_empty() {
-                ul { class: "subtoc",
+                <ul class="subtoc">
                     for subsection in section.subsections.iter() {
-                        li { "data-toc-link": "section-{ section.slug }-subsection-{ subsection.slug }",
-                            a { href: "#section-{ section.slug }-subsection-{ subsection.slug }",
+                        <li
+                            data-toc-link="section-{ section.slug }-subsection-{ subsection.slug }"
+                        >
+                            <a
+                                href="#section-{ section.slug }-subsection-{ subsection.slug }"
+                            >
                                 "{ subsection.name }"
-                            }
-                        }
+                            </a>
+                        </li>
                     }
-                }
+                </ul>
             }
-        }
+        </li>
     }
 }
 
