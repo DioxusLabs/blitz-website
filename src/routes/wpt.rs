@@ -102,7 +102,9 @@ fn FolderHistoryChart(
     base_path: String,
 ) -> Element {
     let Some(history) = history else {
-        return rsx!( <p>"No history data available"</p> );
+        return rsx!(
+            <p>"No history data available"</p>
+        );
     };
 
     let series_spec = vec![ChartSeries {
@@ -119,7 +121,12 @@ fn FolderHistoryChart(
         <details class="wpt-history-chart">
             <summary>"Score history"</summary>
             <ChartRangeSelector current_range={range} base_path />
-            <WptHistoryChart history series_spec range height=240.0 />
+            <WptHistoryChart
+                history
+                series_spec
+                range
+                height=240.0
+            />
         </details>
     }
 }
@@ -171,18 +178,17 @@ pub fn WptAreaResults(results: BlitzAreaResults) -> Element {
             </tr>
             {area_score_row("Total".to_string(), None, score.unwrap_or_default())}
             for (key, scores) in child_areas {
-                {area_score_row(
-                    key[child_prefix.len()..].to_string(),
-                    Some(format!("/status/wpt/{key}")),
-                    scores.unwrap_or_default(),
-                )}
+                {
+                    area_score_row(
+                        key[child_prefix.len()..].to_string(),
+                        Some(format!("/status/wpt/{key}")),
+                        scores.unwrap_or_default(),
+                    )
+                }
             }
         </table>
         if !tests.is_empty() {
-            <table
-                width="100%"
-                margin_top="24px"
-            >
+            <table width="100%" margin_top="24px">
                 <tr>
                     <th width="min-content">"Test"</th>
                     <th>"Subtests"</th>
@@ -213,21 +219,15 @@ fn area_score_row(label: String, href: Option<String>, scores: AreaScore) -> Ele
                     {label}
                 }
             </td>
-            <td text_align="right">
-                {percent_str(scores.interop_fraction() as f64, 2)}
-            </td>
+            <td text_align="right">{percent_str(scores.interop_fraction() as f64, 2)}</td>
             <td text_align="right">
                 {format!("({}/{})", scores.tests_pass, scores.tests_total)}
             </td>
-            <td text_align="right">
-                {percent_str(test_fraction as f64, 2)}
-            </td>
+            <td text_align="right">{percent_str(test_fraction as f64, 2)}</td>
             <td text_align="right">
                 {format!("({}/{})", scores.subtests_pass, scores.subtests_total)}
             </td>
-            <td text_align="right">
-                {percent_str(scores.subtest_fraction() as f64, 2)}
-            </td>
+            <td text_align="right">{percent_str(scores.subtest_fraction() as f64, 2)}</td>
         </tr>
     )
 }
@@ -246,19 +246,11 @@ fn TestScoreRow(test: TestRow) -> Element {
     rsx!(
         <tr background_color={score_color(fraction)}>
             <td background_color="white">
-                <a href={test_page_href(&test)}>
-                    {file_name.to_string()}
-                </a>
+                <a href={test_page_href(&test)}>{file_name.to_string()}</a>
             </td>
-            <td text_align="right">
-                {format!("({pass}/{denom})")}
-            </td>
-            <td text_align="right">
-                {percent_str(fraction as f64, 2)}
-            </td>
-            <td text_align="right">
-                {status}
-            </td>
+            <td text_align="right">{format!("({pass}/{denom})")}</td>
+            <td text_align="right">{percent_str(fraction as f64, 2)}</td>
+            <td text_align="right">{status}</td>
         </tr>
     )
 }

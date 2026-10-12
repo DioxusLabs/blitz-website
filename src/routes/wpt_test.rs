@@ -134,11 +134,18 @@ pub fn WptCompareTestPage(
                     </TabPanel>
                     if let Some(ref_link) = &first_ref {
                         <TabPanel tab={TestPageTab::Ref} current_tab={tab}>
-                            <TestIframe path={ref_link.href.clone()} fixed_size=true sandboxed=false />
+                            <TestIframe
+                                path={ref_link.href.clone()}
+                                fixed_size=true
+                                sandboxed=false
+                            />
                         </TabPanel>
                         <TabPanel tab={TestPageTab::RefSource} current_tab={tab}>
                             if let Some(ref_source) = &ref_source {
-                                <SourceView path={ref_link.href.clone()} source={ref_source.clone()} />
+                                <SourceView
+                                    path={ref_link.href.clone()}
+                                    source={ref_source.clone()}
+                                />
                             }
                         </TabPanel>
                     }
@@ -192,7 +199,11 @@ if (jsToggle) {
 fn TabPanel(tab: TestPageTab, current_tab: TestPageTab, children: Element) -> Element {
     rsx! {
         <div
-            class={if tab == current_tab { "wpt-tab-panel wpt-tab-panel--active" } else { "wpt-tab-panel" }}
+            class={if tab == current_tab {
+                "wpt-tab-panel wpt-tab-panel--active"
+            } else {
+                "wpt-tab-panel"
+            }}
             data-tab={tab.query_value()}
         >
             {children}
@@ -273,7 +284,9 @@ fn TestResults(runs: Vec<RunRow>, detail: TestDetail) -> Element {
                 }
             </tr>
             <tr>
-                <td background_color="white"><b>"Total"</b></td>
+                <td background_color="white">
+                    <b>"Total"</b>
+                </td>
                 for (result, message) in detail.results.iter().zip(&detail.messages) {
                     if let Some(result) = result {
                         <td
@@ -295,10 +308,7 @@ fn TestResults(runs: Vec<RunRow>, detail: TestDetail) -> Element {
             </tr>
         </table>
         if !detail.subtests.is_empty() {
-            <table
-                width="100%"
-                margin_top="24px"
-            >
+            <table width="100%" margin_top="24px">
                 <tr>
                     <th>"Subtest"</th>
                     for run in &runs {
@@ -309,7 +319,11 @@ fn TestResults(runs: Vec<RunRow>, detail: TestDetail) -> Element {
                     }
                 </tr>
                 for subtest in &detail.subtests {
-                    <SubtestResultsRow runs={runs.clone()} subtest={subtest.clone()} has_messages />
+                    <SubtestResultsRow
+                        runs={runs.clone()}
+                        subtest={subtest.clone()}
+                        has_messages
+                    />
                 }
             </table>
         }
@@ -339,12 +353,7 @@ fn SubtestResultsRow(runs: Vec<RunRow>, subtest: SubtestRow, has_messages: bool)
                         {status_str(*status)}
                     </td>
                 } else {
-                    <td
-                        text_align="right"
-                        background_color="#eee"
-                    >
-                        "—"
-                    </td>
+                    <td text_align="right" background_color="#eee">"—"</td>
                 }
             }
             if has_messages {
@@ -510,7 +519,9 @@ fn FormattedMessage(message: String) -> Element {
                         MessagePart::Html(html) => rsx! {
                             <details class="wpt-message__html wpt-source">
                                 <summary>"element markup"</summary>
-                                <div dangerous_inner_html={highlight_source(&indent_html(&html), "dump.html")} />
+                                <div
+                                    dangerous_inner_html={highlight_source(&indent_html(&html), "dump.html")}
+                                />
                             </details>
                         },
                     }
@@ -678,7 +689,11 @@ mod tests {
 fn TestIframe(path: String, fixed_size: bool, sandboxed: bool) -> Element {
     rsx! {
         <iframe
-            class={if fixed_size { "wpt-test-iframe wpt-test-iframe--fixed" } else { "wpt-test-iframe" }}
+            class={if fixed_size {
+                "wpt-test-iframe wpt-test-iframe--fixed"
+            } else {
+                "wpt-test-iframe"
+            }}
             src={format!("https://wpt.live{path}")}
             "sandbox"={if sandboxed { "allow-same-origin" }}
         />
@@ -689,12 +704,7 @@ fn TestIframe(path: String, fixed_size: bool, sandboxed: bool) -> Element {
 fn SourceView(path: String, source: SourceResult) -> Element {
     rsx! {
         <p>
-            <a
-                href={format!("https://wpt.live{path}")}
-                target="_blank"
-            >
-                {path.clone()}
-            </a>
+            <a href={format!("https://wpt.live{path}")} target="_blank">{path.clone()}</a>
         </p>
         match &source {
             Ok(source) => rsx! {

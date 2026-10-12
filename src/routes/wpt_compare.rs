@@ -86,7 +86,12 @@ pub fn WptComparePage(
             <WptCompareBreadcrumb area={area.clone()} />
             <SpecInfoDisplay area={area.clone()} />
             <RunInfoDisplay runs={runs.clone()} />
-            <CompareHistoryChart area={area.clone()} history range open={history_open} />
+            <CompareHistoryChart
+                area={area.clone()}
+                history
+                range
+                open={history_open}
+            />
             <SortToggle area={area.clone()} sort />
             <table width="100%">
                 <tr>
@@ -97,18 +102,17 @@ pub fn WptComparePage(
                 </tr>
                 {compare_area_row("Total".to_string(), None, &total)}
                 for (child, scores) in &child_areas {
-                    {compare_area_row(
-                        child[child_prefix.len().min(child.len())..].to_string(),
-                        Some(format!("/wpt/{child}")),
-                        scores,
-                    )}
+                    {
+                        compare_area_row(
+                            child[child_prefix.len().min(child.len())..].to_string(),
+                            Some(format!("/wpt/{child}")),
+                            scores,
+                        )
+                    }
                 }
             </table>
             if !tests.is_empty() {
-                <table
-                    width="100%"
-                    margin_top="24px"
-                >
+                <table width="100%" margin_top="24px">
                     <tr>
                         <th width="min-content">"Test"</th>
                         for run in &runs {
@@ -137,10 +141,7 @@ fn CompareHistoryChart(
         return rsx! {};
     }
     rsx! {
-        <details
-            class="wpt-history-chart"
-            open
-        >
+        <details class="wpt-history-chart" open>
             <summary>"Score history"</summary>
             <p font_size="smaller">
                 "Percentage of subtests passing over time, one master run per day. Every engine's
@@ -207,10 +208,7 @@ fn SpecInfoDisplay(area: String) -> Element {
     rsx! {
         <p font_size="smaller">
             <b>"Spec: "</b>
-            <a
-                href={meta.spec.clone()}
-                target="_blank"
-            >
+            <a href={meta.spec.clone()} target="_blank">
                 {meta.title.clone().unwrap_or_else(|| meta.spec.clone())}
                 " \u{2197}"
             </a>
@@ -369,9 +367,7 @@ fn CompareTestRow(test: TestRow) -> Element {
     rsx!(
         <tr>
             <td background_color="white">
-                <a href={test_page_href(&test)}>
-                    {file_name}
-                </a>
+                <a href={test_page_href(&test)}>{file_name}</a>
             </td>
             for result in &test.results {
                 if let Some(result) = result {

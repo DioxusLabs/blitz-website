@@ -107,7 +107,9 @@ pub fn WptRunsPage(
             <h2 margin_bottom="0.4em">"In progress"</h2>
             match active {
                 None => rsx! {
-                    <p padding="20px" color="#666">"In-progress runs aren't shown because this server has no GitHub token configured. They are read from the WPT repository's CI checks on GitHub."</p>
+                    <p padding="20px" color="#666">
+                        "In-progress runs aren't shown because this server has no GitHub token configured. They are read from the WPT repository's CI checks on GitHub."
+                    </p>
                 },
                 Some(Err(err)) => rsx! {
                     <p>"In-progress runs are unavailable right now ({err})."</p>
@@ -125,21 +127,24 @@ pub fn WptRunsPage(
                         </tr>
                         for run in active {
                             <tr>
-                                <td><BrowserName browser={run.browser.clone()} channel={run.channel.clone()} /></td>
-                                <td><CommitLink sha={run.revision.clone()} /></td>
+                                <td>
+                                    <BrowserName
+                                        browser={run.browser.clone()}
+                                        channel={run.channel.clone()}
+                                    />
+                                </td>
+                                <td>
+                                    <CommitLink sha={run.revision.clone()} />
+                                </td>
                                 <td>
                                     match run.started_at {
-                                        Some(started_at) => rsx! {
-                                            "{format_time(started_at)} ({format_ago(now, started_at)})"
-                                        },
+                                        Some(started_at) => rsx! { "{format_time(started_at)} ({format_ago(now, started_at)})" },
                                         None => rsx! { "Queued" },
                                     }
                                 </td>
                                 <td>
                                     match run.finished_at {
-                                        Some(finished_at) => rsx! {
-                                            "Tests finished {format_ago(now, finished_at)}, waiting for wpt.fyi"
-                                        },
+                                        Some(finished_at) => rsx! { "Tests finished {format_ago(now, finished_at)}, waiting for wpt.fyi" },
                                         None => rsx! {
                                             <progress
                                                 max="{run.chunks_total}"
@@ -185,20 +190,26 @@ pub fn WptRunsPage(
                                 href={format!("https://wpt.fyi/results/?run_id={}", run.id)}
                                 target="_blank"
                             >
-                                <BrowserName browser={run.browser.clone()} channel={run.channel.clone()} />
+                                <BrowserName
+                                    browser={run.browser.clone()}
+                                    channel={run.channel.clone()}
+                                />
                             </a>
-                            <div
-                                font_size="smaller"
-                                opacity="0.7"
-                            >
+                            <div font_size="smaller" opacity="0.7">
                                 {run.browser_version.clone()}
                             </div>
                         </td>
-                        <td><CommitLink sha={run.revision.clone()} /></td>
+                        <td>
+                            <CommitLink sha={run.revision.clone()} />
+                        </td>
                         <td>{format_time(run.time_start)}</td>
-                        <td>{format_duration(run.time_end.as_second() - run.time_start.as_second())}</td>
+                        <td>
+                            {format_duration(run.time_end.as_second() - run.time_start.as_second())}
+                        </td>
                         <td>"{format_time(run.created_at)} ({format_ago(now, run.created_at)})"</td>
-                        <td>{format_duration(run.created_at.as_second() - run.time_end.as_second())}</td>
+                        <td>
+                            {format_duration(run.created_at.as_second() - run.time_end.as_second())}
+                        </td>
                     </tr>
                 }
             </table>

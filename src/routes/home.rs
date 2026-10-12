@@ -10,8 +10,8 @@ pub fn HomePage() -> Element {
             noframe=true
             transparent_header=false
         >
-
-            <div style="
+            <div
+                style="
                     display: flex;
                     flex-direction: column;
                     align-items: center;
@@ -21,8 +21,8 @@ pub fn HomePage() -> Element {
                     margin: 0 auto;
                 "
             >
-
-                <div style="
+                <div
+                    style="
                         font-size: 3em;
                         color: black;
                         // font-family: Futura;
@@ -83,10 +83,10 @@ pub fn HomePage() -> Element {
                 //         ",
                 //     }
                 // }
-
             </div>
 
-            <div style="
+            <div
+                style="
                     // height: calc(100vh - 96px);
                     background-color: white;
                     background-color: #f4e8d2;
@@ -138,7 +138,6 @@ pub fn HomePage() -> Element {
                 //         " provides a local, github-styled, live-reloading markdown preview with Blitz."
                 //     }
                 // }
-
                 <img
                     src="/static/screenshots/wikipedia.png"
                     style="
@@ -149,7 +148,8 @@ pub fn HomePage() -> Element {
                 />
             </div>
 
-            <div style="
+            <div
+                style="
                     display: flex;
                     flex-direction: column;
                     align-items: center;
@@ -160,8 +160,8 @@ pub fn HomePage() -> Element {
 
                 "
             >
-
-                <div style="
+                <div
+                    style="
                         font-size: 3em;
                         color: black;
                         // font-family: Futura;
@@ -175,7 +175,9 @@ pub fn HomePage() -> Element {
                 </div>
 
                 <p font_size="1.4em" max_width="800px">
-                    <a href="https://github.com/DioxusLabs/dioxus/tree/main/packages/native">
+                    <a
+                        href="https://github.com/DioxusLabs/dioxus/tree/main/packages/native"
+                    >
                         "Dioxus Native"
                     </a>
                     " wraps Blitz and provides a write-once, run everywhere app development experience across all major platforms
@@ -192,12 +194,14 @@ pub fn HomePage() -> Element {
                 />
             </div>
         </Page>
-        <div style="
+        <div
+            style="
                 height: 48px;
                 background: #f4e8d2;
                 max-width: 1600px;
                 margin: 0 auto;
 
-            " />
+            "
+        />
     }
 }

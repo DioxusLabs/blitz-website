@@ -8,7 +8,6 @@ use crate::components::SectionLevel::*;
 pub fn NLNetInstructionsPage() -> Element {
     rsx! {
         <Page title={"NLNet Testing Instructions".into()}>
-
             <h1>"NLNet Testing Instructions"</h1>
 
             <p
@@ -18,16 +17,9 @@ pub fn NLNetInstructionsPage() -> Element {
                 "#
             />
 
-            <AnchorHeader
-                level={H2}
-                target="pre-requisites"
-            >
-                "Pre-requisites"
-            </AnchorHeader>
+            <AnchorHeader level={H2} target="pre-requisites">"Pre-requisites"</AnchorHeader>
 
-            <p>
-                "You will need the following to build and test Blitz:"
-            </p>
+            <p>"You will need the following to build and test Blitz:"</p>
 
             <ul>
                 <li
@@ -52,10 +44,7 @@ pub fn NLNetInstructionsPage() -> Element {
                 />
             </ul>
 
-            <AnchorHeader
-                level={H2}
-                target="baseline-build"
-            >
+            <AnchorHeader level={H2} target="baseline-build">
                 "Baseline build (for comparison)"
             </AnchorHeader>
 
@@ -97,21 +86,13 @@ pub fn NLNetInstructionsPage() -> Element {
                 />
             </ul>
 
-
-            <AnchorHeader
-                level={H2}
-                target="recent-builds"
-            >
+            <AnchorHeader level={H2} target="recent-builds">
                 "Building recent versions"
             </AnchorHeader>
 
-            <p>
-                "You can test with the latest version of the main branch: git checkout main"
-            </p>
+            <p>"You can test with the latest version of the main branch: git checkout main"</p>
 
-            <p>
-                "The following commands can be run from the repo root:"
-            </p>
+            <p>"The following commands can be run from the repo root:"</p>
 
             <ul>
                 <li
@@ -143,8 +124,6 @@ pub fn NLNetInstructionsPage() -> Element {
             <p>
                 "The browser UI built with these commands is *not* a standalone binary and will not work properly if moved. A standalone app bundle can be built using 'dx bundle -p browser' where 'dx' is the Dioxus CLI (cargo install -f dioxus-cli)."
             </p>
-
-
         </Page>
     }
 }

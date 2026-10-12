@@ -333,7 +333,6 @@ pub fn ChartRangeSelector(current_range: ChartRange, base_path: String) -> Eleme
             font_size="14px"
             margin_bottom="8px"
         >
-
             for range in ChartRange::ALL {
                 <a
                     href="{base_path}?range={range.query_value()}"
@@ -389,7 +388,9 @@ pub fn WptHistoryChart(
             series,
         })
         .collect();
-    rsx! { <HistoryLineChart lines range height /> }
+    rsx! {
+        <HistoryLineChart lines range height />
+    }
 }
 
 /// Per-run tooltip data for one line: the runs from just before the visible
@@ -467,7 +468,9 @@ pub fn HistoryLineChart(
         .fold(f64::NEG_INFINITY, f64::max);
 
     if !x_min.is_finite() || !x_max.is_finite() {
-        return rsx!( <p>"No history data available"</p> );
+        return rsx!(
+            <p>"No history data available"</p>
+        );
     }
 
     let ticks = month_ticks(x_min, x_max);
@@ -491,95 +494,94 @@ pub fn HistoryLineChart(
 
     rsx! {
         <div position="relative">
+            <svg
+                view_box="0 0 {WIDTH} {height}"
+                width="100%"
+                font_family="sans-serif"
+            >
 
-        <svg
-            view_box="0 0 {WIDTH} {height}"
-            width="100%"
-            font_family="sans-serif"
-        >
+                // Horizontal gridlines + y-axis labels (every 10%; label every
+                // 20% when the chart is short)
+                for i in 0..=10u32 {
+                    <line
+                        x1="{px}"
+                        x2="{px + pw}"
+                        y1="{py + ph * (1.0 - (i as f64) / 10.0)}"
+                        y2="{py + ph * (1.0 - (i as f64) / 10.0)}"
+                        stroke={if i % 5 == 0 { "#bbb" } else { "#e5e5e5" }}
+                        stroke_width="1"
+                    />
+                    if ph >= 300.0 || i % 2 == 0 {
+                        <text
+                            x="{px - 6.0}"
+                            y="{py + ph * (1.0 - (i as f64) / 10.0) + 4.0}"
+                            text_anchor="end"
+                            font_size="12"
+                            fill="#666"
+                        >
+                            "{i * 10}%"
+                        </text>
+                    }
+                }
 
-            // Horizontal gridlines + y-axis labels (every 10%; label every
-            // 20% when the chart is short)
-            for i in 0..=10u32 {
-                <line
-                    x1="{px}"
-                    x2="{px + pw}"
-                    y1="{py + ph * (1.0 - (i as f64) / 10.0)}"
-                    y2="{py + ph * (1.0 - (i as f64) / 10.0)}"
-                    stroke={if i % 5 == 0 { "#bbb" } else { "#e5e5e5" }}
-                    stroke_width="1"
-                />
-                if ph >= 300.0 || i % 2 == 0 {
+                // X-axis ticks and labels (month boundaries)
+                for (days, label) in ticks {
+                    <line
+                        x1="{px + (days - x_min) / x_range * pw}"
+                        x2="{px + (days - x_min) / x_range * pw}"
+                        y1="{py}"
+                        y2="{py + ph + 4.0}"
+                        stroke="#e5e5e5"
+                        stroke_width="1"
+                    />
                     <text
-                        x="{px - 6.0}"
-                        y="{py + ph * (1.0 - (i as f64) / 10.0) + 4.0}"
-                        text_anchor="end"
+                        x="{px + (days - x_min) / x_range * pw}"
+                        y="{py + ph + 18.0}"
+                        text_anchor="middle"
                         font_size="12"
                         fill="#666"
                     >
-                        "{i * 10}%"
+                        {label}
                     </text>
                 }
-            }
 
-            // X-axis ticks and labels (month boundaries)
-            for (days, label) in ticks {
-                <line
-                    x1="{px + (days - x_min) / x_range * pw}"
-                    x2="{px + (days - x_min) / x_range * pw}"
-                    y1="{py}"
-                    y2="{py + ph + 4.0}"
-                    stroke="#e5e5e5"
-                    stroke_width="1"
-                />
-                <text
-                    x="{px + (days - x_min) / x_range * pw}"
-                    y="{py + ph + 18.0}"
-                    text_anchor="middle"
-                    font_size="12"
-                    fill="#666"
-                >
-                    {label}
-                </text>
-            }
+                // Data series
+                for (i, s) in series.iter().enumerate() {
+                    <polyline
+                        points={polyline_points(&s.points, x_min, x_max, plot)}
+                        fill="none"
+                        stroke={s.color}
+                        stroke_width={if i == 0 { "2.5" } else { "1.5" }}
+                    />
+                }
 
-            // Data series
-            for (i, s) in series.iter().enumerate() {
-                <polyline
-                    points={polyline_points(&s.points, x_min, x_max, plot)}
-                    fill="none"
-                    stroke={s.color}
-                    stroke_width={if i == 0 { "2.5" } else { "1.5" }}
-                />
-            }
+                // Legend, spread across the plot width when there are many series
+                for (i, s) in series.iter().enumerate() {
+                    <line
+                        x1="{px + 10.0 + (i as f64) * legend_step}"
+                        x2="{px + 34.0 + (i as f64) * legend_step}"
+                        y1="{height - 10.0}"
+                        y2="{height - 10.0}"
+                        stroke={s.color}
+                        stroke_width="3"
+                    />
+                    <text
+                        x="{px + 40.0 + (i as f64) * legend_step}"
+                        y="{height - 6.0}"
+                        font_size="12"
+                        fill="#333"
+                    >
+                        {s.label.clone()}
+                    </text>
+                }
+            </svg>
 
-            // Legend, spread across the plot width when there are many series
-            for (i, s) in series.iter().enumerate() {
-                <line
-                    x1="{px + 10.0 + (i as f64) * legend_step}"
-                    x2="{px + 34.0 + (i as f64) * legend_step}"
-                    y1="{height - 10.0}"
-                    y2="{height - 10.0}"
-                    stroke={s.color}
-                    stroke_width="3"
-                />
-                <text
-                    x="{px + 40.0 + (i as f64) * legend_step}"
-                    y="{height - 6.0}"
-                    font_size="12"
-                    fill="#333"
-                >
-                    {s.label.clone()}
-                </text>
-            }
-        </svg>
-
-        <script
-            data-wpt-history-data="true"
-            r#type="application/json"
-            dangerous_inner_html={tooltip_data}
-        />
-        <script src="/static/wpt-history-tooltip.js?{*TOOLTIP_SCRIPT_HASH}" />
+            <script
+                data-wpt-history-data="true"
+                r#type="application/json"
+                dangerous_inner_html={tooltip_data}
+            />
+            <script src="/static/wpt-history-tooltip.js?{*TOOLTIP_SCRIPT_HASH}" />
         </div>
     }
 }
@@ -609,7 +611,6 @@ pub fn WptHistorySparklines(history: ArcWptHistory, range: ChartRange) -> Elemen
             grid_template_columns="repeat(auto-fill, minmax(280px, 1fr))"
             gap="16px"
         >
-
             for (area_idx, area) in history.focus_areas.iter().enumerate() {
                 {
                     let subtest_total = history.subtest_total(area_idx);

@@ -8,7 +8,6 @@ use crate::components::SectionLevel::*;
 pub fn AboutPage() -> Element {
     rsx! {
         <Page title={"About".into()}>
-
             <h1>"About"</h1>
 
             <p
@@ -25,12 +24,7 @@ pub fn AboutPage() -> Element {
                 "#
             />
 
-            <AnchorHeader
-                level={H2}
-                target="vision"
-            >
-                "Vision"
-            </AnchorHeader>
+            <AnchorHeader level={H2} target="vision">"Vision"</AnchorHeader>
 
             <p>
                 "By taking a modular approach to development with an emphasis on clean module boundaries and sharing code, Blitz aims to:"
@@ -106,7 +100,7 @@ pub fn AboutPage() -> Element {
                             things from scratch. Given how enormous the web specification is, this makes it difficult to bootstrap new independent engines.
                         "#
                     />
-                     <p
+                    <p
                         dangerous_inner_html=r#"
                             By building on existing general-purpose libraries (making our improvements available to all users) and making core parts of our
                             stack (style, layout, text, etc) available as libraries with supported public APIs, Blitz aims to make it easier to create new
@@ -116,12 +110,7 @@ pub fn AboutPage() -> Element {
                 </li>
             </ol>
 
-            <AnchorHeader
-                level={H2}
-                target="strategy"
-            >
-                "Strategy"
-            </AnchorHeader>
+            <AnchorHeader level={H2} target="strategy">"Strategy"</AnchorHeader>
 
             <p>
                 "Blitz is deliberately focussing on (1) and (2) from above and avoiding trying to build an \"entire web browser\" at once."
@@ -134,22 +123,13 @@ pub fn AboutPage() -> Element {
                 features it supports) much sooner. And we hope that "
             </p>
 
-
-            <AnchorHeader
-                level={H2}
-                target="comparison-to-other-projects"
-            >
+            <AnchorHeader level={H2} target="comparison-to-other-projects">
                 "Comparison with other projects"
             </AnchorHeader>
 
-            <p>
-                ""
-            </p>
+            <p>""</p>
 
-            <AnchorHeader
-                level={H4}
-                target="comparison-to-ui-toolkit"
-            >
+            <AnchorHeader level={H4} target="comparison-to-ui-toolkit">
                 "Compared to UI toolkits"
             </AnchorHeader>
 
@@ -176,10 +156,7 @@ pub fn AboutPage() -> Element {
                 />
             </ul>
 
-            <AnchorHeader
-                level={H4}
-                target="comparison-to-browsers"
-            >
+            <AnchorHeader level={H4} target="comparison-to-browsers">
                 "Compared to browser engines"
             </AnchorHeader>
 
@@ -205,7 +182,7 @@ pub fn AboutPage() -> Element {
                         </p>
                     "#
                 />
-                    <li
+                <li
                     dangerous_inner_html=r#"
                         <p>
                             <b><a href="https://www.ekioh.com/flow-browser/" target="_blank">Ekioh Flow</a></b>
@@ -222,16 +199,9 @@ pub fn AboutPage() -> Element {
                 />
             </ul>
 
-            <AnchorHeader
-                level={H2}
-                target="license"
-            >
-                "Licensing"
-            </AnchorHeader>
+            <AnchorHeader level={H2} target="license">"Licensing"</AnchorHeader>
 
-            <p>
-                "Blitz is licensed under a variety of permissive open source licenses:"
-            </p>
+            <p>"Blitz is licensed under a variety of permissive open source licenses:"</p>
 
             <ul>
                 <li style="margin-bottom: 6px">
@@ -253,9 +223,6 @@ pub fn AboutPage() -> Element {
             //     "Blitz's approach to modularity allows it to take full advantage of existing libraries where appropriate libraries are available which,
             //     (due to the flourishing Rust crates ecosystem and the legacy of the Servo project), turns out to be quite a lot of places."
             // }
-
-
-
         </Page>
     }
 }

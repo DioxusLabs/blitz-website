@@ -45,9 +45,7 @@ pub fn BarePage(title: Cow<'static, str>, head: Option<Element>, children: Eleme
     rsx! {
         <div lang="en">
             <PageHead title head />
-            <body>
-                {children}
-            </body>
+            <body>{children}</body>
         </div>
     }
 }
@@ -110,9 +108,7 @@ pub fn Page(
                                 <img src="/static/discord.svg" />
                             </a>
                         </nav>
-                        <div class="mobile">
-                            <HamburgerMenu />
-                        </div>
+                        <div class="mobile"><HamburgerMenu /></div>
                     </div>
                     <a
                         display="block"

@@ -27,9 +27,7 @@ impl Deref for ArcDownloadLinks {
 pub fn DownloadsPage(links: ArcDownloadLinks, commit_info: Option<CommitInfo>) -> Element {
     rsx! {
         <Page title={"Downloads".into()}>
-            <h1>
-                "Downloads"
-            </h1>
+            <h1>"Downloads"</h1>
             <p dangerous_inner_html=r#"Downloads for the Blitz Browser"# />
             <CommitInfoDisplay commit_info label="Builds for commit:" />
             <DownloadsTable links />
@@ -40,12 +38,8 @@ pub fn DownloadsPage(links: ArcDownloadLinks, commit_info: Option<CommitInfo>) -
 pub fn DownloadsUnavailablePage() -> Element {
     rsx! {
         <Page title={"Downloads".into()}>
-            <h1>
-                "Downloads"
-            </h1>
-            <p>
-                "Downloads are currently unavailable"
-            </p>
+            <h1>"Downloads"</h1>
+            <p>"Downloads are currently unavailable"</p>
         </Page>
     }
 }
@@ -61,29 +55,21 @@ pub fn DownloadsTable(links: ArcDownloadLinks) -> Element {
                 <th>"File size"</th>
             </tr>
             {
-                links.iter().map(|link| {
-
-                    let size_fmt = format_size(link.size_in_bytes, BINARY);
-
-                    rsx!(
-                        <tr>
-                            <td>
-                                "{link.platform}"
-                            </td>
-                            <td>
-                                "{link.arch}"
-                            </td>
-                            <td>
-                                <a href="{link.url}">
-                                    "{link.filename}"
-                                </a>
-                            </td>
-                            <td>
-                                "{size_fmt}"
-                            </td>
-                        </tr>
-                    )
-                })
+                links
+                    .iter()
+                    .map(|link| {
+                        let size_fmt = format_size(link.size_in_bytes, BINARY);
+                        rsx! {
+                            <tr>
+                                <td>"{link.platform}"</td>
+                                <td>"{link.arch}"</td>
+                                <td>
+                                    <a href="{link.url}">"{link.filename}"</a>
+                                </td>
+                                <td>"{size_fmt}"</td>
+                            </tr>
+                        }
+                    })
             }
         </table>
     )

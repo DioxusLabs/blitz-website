@@ -36,8 +36,12 @@ fn TocSectionRender(section: TocSection) -> Element {
             if !section.subsections.is_empty() {
                 <ul class="subtoc">
                     for subsection in section.subsections.iter() {
-                        <li data-toc-link="section-{ section.slug }-subsection-{ subsection.slug }">
-                            <a href="#section-{ section.slug }-subsection-{ subsection.slug }">
+                        <li
+                            data-toc-link="section-{ section.slug }-subsection-{ subsection.slug }"
+                        >
+                            <a
+                                href="#section-{ section.slug }-subsection-{ subsection.slug }"
+                            >
                                 "{ subsection.name }"
                             </a>
                         </li>

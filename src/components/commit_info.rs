@@ -24,10 +24,7 @@ pub fn CommitInfoDisplay(commit_info: Option<CommitInfo>, label: Option<&'static
     rsx! {
         <p>
             if let Some(label) = label {
-                <span
-                    font_size="smaller"
-                    color="#666"
-                >
+                <span font_size="smaller" color="#666">
                     "{label}"
                     <br />
                 </span>
@@ -42,9 +39,7 @@ pub fn CommitInfoDisplay(commit_info: Option<CommitInfo>, label: Option<&'static
                 " {message}"
             }
             if let Some(timestamp) = commit_info.timestamp.as_deref() {
-                <span color="#666">
-                    " ({format_commit_date(timestamp)})"
-                </span>
+                <span color="#666">" ({format_commit_date(timestamp)})"</span>
             }
         </p>
     }

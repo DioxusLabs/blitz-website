@@ -70,10 +70,7 @@ pub fn StatusTabs(current_tab: &'static str) -> Element {
     ];
 
     rsx!(
-        <div
-            style="margin-top: 48px"
-            class="tab-container"
-        >
+        <div style="margin-top: 48px" class="tab-container">
             for tab in TABS {
                 <a
                     class={if tab.href.ends_with(current_tab) {
@@ -273,7 +270,13 @@ pub fn SupportTable(entries: Vec<PropEntry>, use_column: bool) -> Element {
 #[component]
 fn SupportTableRow(entry: PropEntry, use_column: bool) -> Element {
     rsx! {
-        <tr class={if entry.values.is_none() { entry.status.map(|status| status.class()).unwrap_or("") } else { "css-prop--split-by-value" }}>
+        <tr
+            class={if entry.values.is_none() {
+                entry.status.map(|status| status.class()).unwrap_or("")
+            } else {
+                "css-prop--split-by-value"
+            }}
+        >
             if use_column {
                 <td style="vertical-align: top;color: #666;text-align: right">
                     {format!("{:.0}%", entry.percentage * 100.0)}
@@ -305,7 +308,9 @@ fn SupportTableRow(entry: PropEntry, use_column: bool) -> Element {
                 if let Some(notes) = entry.notes {
                     <p
                         style="margin: 0;color: #333;font-size: 0.8em;margin-top: 3px;"
-                        style={if entry.values.is_some() { "margin: 0;color: #333;font-size: 0.8em;margin-top: 6px;" }}
+                        style={if entry.values.is_some() {
+                            "margin: 0;color: #333;font-size: 0.8em;margin-top: 6px;"
+                        }}
                         dangerous_inner_html={notes}
                     />
                 }

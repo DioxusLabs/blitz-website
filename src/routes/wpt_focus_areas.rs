@@ -58,10 +58,7 @@ pub fn WptFocusAreasPage(
     rsx! {
         <Page title={format!("WPT: {label} focus areas").into()}>
             <h1>"WPT"</h1>
-            <p
-                class="introduction"
-                dangerous_inner_html={intro}
-            />
+            <p class="introduction" dangerous_inner_html={intro} />
             <hr />
             <p>
                 <a href="/wpt">"wpt"</a>
@@ -77,7 +74,13 @@ pub fn WptFocusAreasPage(
                 </tr>
                 for (area, area_scores) in &scores {
                     if area.is_empty() {
-                        {compare_area_row("All WPT tests".to_string(), Some("/wpt".to_string()), area_scores)}
+                        {
+                            compare_area_row(
+                                "All WPT tests".to_string(),
+                                Some("/wpt".to_string()),
+                                area_scores,
+                            )
+                        }
                     } else {
                         {compare_area_row(format!("/{area}/"), Some(format!("/wpt/{area}")), area_scores)}
                     }
