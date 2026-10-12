@@ -70,59 +70,62 @@ pub fn StatusTabs(current_tab: &'static str) -> Element {
     ];
 
     rsx!(
-        div {
-            style: "margin-top: 48px",
-            class: "tab-container",
+        <div
+            style="margin-top: 48px"
+            class="tab-container"
+        >
             for tab in TABS {
-                a {
-                    class: if tab.href.ends_with(current_tab) {
+                <a
+                    class={if tab.href.ends_with(current_tab) {
                         "tab tab--selected"
                     } else {
                         "tab"
-                    },
-                    href: tab.href,
+                    }}
+                    href={tab.href}
+                >
                     {tab.label}
-                }
+                </a>
             }
-        }
+        </div>
     )
 }
 
 #[component]
 pub fn StatusHeader() -> Element {
     rsx!(
-        h1 { "Status" }
-        p {
-            class: "introduction",
-            dangerous_inner_html: r#"
+        <h1>"Status"</h1>
+        <p
+            class="introduction"
+            dangerous_inner_html=r#"
                 This page documents the implementation status of various HTML and CSS features in Blitz.
-            "#,
-        }
+            "#
+        />
     )
 }
 
 #[component]
 pub fn CssSupportPage() -> Element {
     rsx! {
-        Page { title: "Status: CSS".into(),
-            StatusHeader {}
-            StatusTabs { current_tab: "css" }
-            p {
-                class: "introduction introduction--small",
-                dangerous_inner_html: r#"
+        <Page title={"Status: CSS".into()}>
+            <StatusHeader />
+            <StatusTabs current_tab="css" />
+            <p
+                class="introduction introduction--small"
+                dangerous_inner_html=r#"
                     CSS Properties are grouped into logical feature grouping, and  within each group they are roughly ordered by the percentage of web pages 
                     that use that property. You can generally assume that if the longhand versions of a property are supported then the shorthand version will also be supported and vice-versa.
-                "#,
-            }
+                "#
+            />
             for group in CSS_PROPERTIES() {
-                Section {
-                    section_key: group.id.clone(),
-                    heading: group.name,
-                    description: group.notes,
-                    SupportTable { entries: group.entries, use_column: true }
-                }
+                <Section
+                    section_key={group.id.clone()}
+                    heading={group.name}
+                    description={group.notes}
+                >
+                    <SupportTable entries={group.entries} use_column=true />
+                </Section>
             }
-        }
+        </Page>
     }
 }
 
@@ -135,18 +138,19 @@ static HTML_EVENTS: GlobalSignal<Vec<PropGroup>> = Signal::global(|| {
 #[component]
 pub fn EventSupportPage() -> Element {
     rsx! {
-        Page { title: "Status: Events".into(),
-            StatusHeader {}
-            StatusTabs { current_tab: "events" }
+        <Page title={"Status: Events".into()}>
+            <StatusHeader />
+            <StatusTabs current_tab="events" />
             for group in HTML_EVENTS() {
-                Section {
-                    section_key: group.id.clone(),
-                    heading: group.name,
-                    description: group.notes,
-                    SupportTable { entries: group.entries, use_column: false }
-                }
+                <Section
+                    section_key={group.id.clone()}
+                    heading={group.name}
+                    description={group.notes}
+                >
+                    <SupportTable entries={group.entries} use_column=false />
+                </Section>
             }
-        }
+        </Page>
     }
 }
 
@@ -159,18 +163,19 @@ static HTML_ELEMENTS: GlobalSignal<Vec<PropGroup>> = Signal::global(|| {
 #[component]
 pub fn ElementSupportPage() -> Element {
     rsx! {
-        Page { title: "Status: Elements".into(),
-            StatusHeader {}
-            StatusTabs { current_tab: "elements" }
+        <Page title={"Status: Elements".into()}>
+            <StatusHeader />
+            <StatusTabs current_tab="elements" />
             for group in HTML_ELEMENTS() {
-                Section {
-                    section_key: group.id.clone(),
-                    heading: group.name,
-                    description: group.notes,
-                    SupportTable { entries: group.entries, use_column: false }
-                }
+                <Section
+                    section_key={group.id.clone()}
+                    heading={group.name}
+                    description={group.notes}
+                >
+                    <SupportTable entries={group.entries} use_column=false />
+                </Section>
             }
-        }
+        </Page>
     }
 }
 
@@ -243,92 +248,93 @@ pub struct PropValue {
 #[component]
 pub fn SupportTable(entries: Vec<PropEntry>, use_column: bool) -> Element {
     rsx! {
-        table {
-            class: "full-width fixed-layout",
-            style: "background: transparent",
-            thead {
-                tr {
+        <table
+            class="full-width fixed-layout"
+            style="background: transparent"
+        >
+            <thead>
+                <tr>
                     if use_column {
-                        th { style: "color: #666;text-align: right;width: 60px", "% use" }
+                        <th style="color: #666;text-align: right;width: 60px">"% use"</th>
                     }
-                    th { style: "color: #666", class: "use-case-column", "Property" }
-                    th { style: "color: #666", "Status" }
-                }
-            }
-            tbody { style: "background: transparent",
+                    <th style="color: #666" class="use-case-column">"Property"</th>
+                    <th style="color: #666">"Status"</th>
+                </tr>
+            </thead>
+            <tbody style="background: transparent">
                 for entry in entries {
-                    SupportTableRow { entry, use_column }
+                    <SupportTableRow entry use_column />
                 }
-            }
-        }
+            </tbody>
+        </table>
     }
 }
 
 #[component]
 fn SupportTableRow(entry: PropEntry, use_column: bool) -> Element {
     rsx! {
-        tr { class: if entry.values.is_none() { entry.status.map(|status| status.class()).unwrap_or("") } else { "css-prop--split-by-value" },
+        <tr class={if entry.values.is_none() { entry.status.map(|status| status.class()).unwrap_or("") } else { "css-prop--split-by-value" }}>
             if use_column {
-                td { style: "vertical-align: top;color: #666;text-align: right",
+                <td style="vertical-align: top;color: #666;text-align: right">
                     {format!("{:.0}%", entry.percentage * 100.0)}
-                }
+                </td>
             }
-            td { style: "vertical-align: top;font-weight: bold;", {entry.name.clone()} }
-            td {
+            <td style="vertical-align: top;font-weight: bold;">{entry.name.clone()}</td>
+            <td>
                 if let Some(status) = entry.status {
                     {status.icon()}
                 }
                 for issue in entry.issues {
-                    span {
+                    <span>
                         " "
-                        IssueLink { issue }
-                    }
+                        <IssueLink issue />
+                    </span>
                 }
                 if let Some(values) = &entry.values {
-                    table { style: "border: 0;width: 100%;background: transparent",
-                        tbody { style: "background: transparent",
+                    <table style="border: 0;width: 100%;background: transparent">
+                        <tbody style="background: transparent">
                             for value in values {
-                                PropValueItem {
-                                    prop: entry.name.clone(),
-                                    value: value.clone(),
-                                }
+                                <PropValueItem
+                                    prop={entry.name.clone()}
+                                    value={value.clone()}
+                                />
                             }
-                        }
-                    }
+                        </tbody>
+                    </table>
                 }
                 if let Some(notes) = entry.notes {
-                    p {
-                        style: "margin: 0;color: #333;font-size: 0.8em;margin-top: 3px;",
-                        style: if entry.values.is_some() { "margin: 0;color: #333;font-size: 0.8em;margin-top: 6px;" },
-                        dangerous_inner_html: notes,
-                    }
+                    <p
+                        style="margin: 0;color: #333;font-size: 0.8em;margin-top: 3px;"
+                        style={if entry.values.is_some() { "margin: 0;color: #333;font-size: 0.8em;margin-top: 6px;" }}
+                        dangerous_inner_html={notes}
+                    />
                 }
-            }
-        }
+            </td>
+        </tr>
     }
 }
 
 #[component]
 fn PropValueItem(prop: String, value: PropValue) -> Element {
     rsx!(
-        tr { class: value.status.class(),
-            td { style: "vertical-align:top;border: 0;width: 40%", {value.value} }
-            td { style: "border: 0;",
+        <tr class={value.status.class()}>
+            <td style="vertical-align:top;border: 0;width: 40%">{value.value}</td>
+            <td style="border: 0;">
                 {value.status.icon()}
                 for issue in value.issues {
-                    span {
+                    <span>
                         " "
-                        IssueLink { issue }
-                    }
+                        <IssueLink issue />
+                    </span>
                 }
                 if let Some(notes) = value.notes {
-                    p {
-                        style: "margin: 2px 0;color: #333;font-size: 0.8em",
-                        dangerous_inner_html: notes,
-                    }
+                    <p
+                        style="margin: 2px 0;color: #333;font-size: 0.8em"
+                        dangerous_inner_html={notes}
+                    />
                 }
-            }
-        }
+            </td>
+        </tr>
     )
 }
 
@@ -337,10 +343,11 @@ fn IssueLink(issue: String) -> Element {
     let (repo, num) = issue.rsplit_once('#').unwrap();
     let (org, repo) = repo.rsplit_once('/').unwrap();
     rsx!(
-        a {
-            href: "https://github.com/{org}/{repo}/issues/{num}",
-            target: "_blank",
+        <a
+            href="https://github.com/{org}/{repo}/issues/{num}"
+            target="_blank"
+        >
             "{repo}#{num}"
-        }
+        </a>
     )
 }

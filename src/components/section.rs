@@ -54,13 +54,14 @@ pub fn Section(
     });
 
     rsx! {
-        section {
-            "data-toc-section": true,
-            id: match (section_key, subsection_key) {
+        <section
+            data-toc-section=true
+            id={match (section_key, subsection_key) {
                 (Some(_key), Some(_subkey)) => "section-{ _key }-subsection-{ _subkey }",
                 (Some(_key), None) => "section-{ _key }",
                 _ => "",
-            },
+            }}
+        >
             {
                 match level {
                     SectionLevel::H2 => html!(< h2 > "{heading}" </ h2 >),
@@ -71,12 +72,12 @@ pub fn Section(
                 }
             }
 
-            p { class: "group-description",
+            <p class="group-description">
                 if let Some(desc) = description {
                     {desc}
                 }
-            }
+            </p>
             {children}
-        }
+        </section>
     }
 }

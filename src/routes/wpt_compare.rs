@@ -61,42 +61,40 @@ pub fn WptComparePage(
     };
 
     rsx! {
-        Page { title: "WPT".into(),
-            h1 { "WPT" }
-            p {
-                class: "introduction",
-                dangerous_inner_html: r#"
+        <Page title={"WPT".into()}>
+            <h1>"WPT"</h1>
+            <p
+                class="introduction"
+                dangerous_inner_html=r#"
                 This page compares scores on the <a href="https://github.com/web-platform-tests/wpt" target="_blank">Web Platform Tests</a>
                 across web engines, using the latest master runs from <a href="https://wpt.fyi" target="_blank">wpt.fyi</a> and Blitz's own test runner."#
-            }
-            hr {}
+            />
+            <hr />
             if area.is_empty() {
-                p {
-                    font_size: "smaller",
-                    a { href: "/wpt/runs", "Latest runs" }
+                <p font_size="smaller">
+                    <a href="/wpt/runs">"Latest runs"</a>
                     " | "
-                    b { "Focus areas: " }
+                    <b>"Focus areas: "</b>
                     for (i, set) in FOCUS_AREA_SETS.iter().enumerate() {
                         if i > 0 {
                             " | "
                         }
-                        a { href: format!("/wpt/focus-areas/{}", set.slug), "{set.label}" }
+                        <a href={format!("/wpt/focus-areas/{}", set.slug)}>"{set.label}"</a>
                     }
-                }
+                </p>
             }
-            WptCompareBreadcrumb { area: area.clone() }
-            SpecInfoDisplay { area: area.clone() }
-            RunInfoDisplay { runs: runs.clone() }
-            CompareHistoryChart { area: area.clone(), history, range, open: history_open }
-            SortToggle { area: area.clone(), sort }
-            table {
-                width: "100%",
-                tr {
-                    th { width: "min-content", "Area" }
+            <WptCompareBreadcrumb area={area.clone()} />
+            <SpecInfoDisplay area={area.clone()} />
+            <RunInfoDisplay runs={runs.clone()} />
+            <CompareHistoryChart area={area.clone()} history range open={history_open} />
+            <SortToggle area={area.clone()} sort />
+            <table width="100%">
+                <tr>
+                    <th width="min-content">"Area"</th>
                     for run in &runs {
-                        th { text_align: "center", {product_label(&run.product)} }
+                        <th text_align="center">{product_label(&run.product)}</th>
                     }
-                }
+                </tr>
                 {compare_area_row("Total".to_string(), None, &total)}
                 for (child, scores) in &child_areas {
                     {compare_area_row(
@@ -105,24 +103,25 @@ pub fn WptComparePage(
                         scores,
                     )}
                 }
-            }
+            </table>
             if !tests.is_empty() {
-                table {
-                    width: "100%",
-                    margin_top: "24px",
-                    tr {
-                        th { width: "min-content", "Test" }
+                <table
+                    width="100%"
+                    margin_top="24px"
+                >
+                    <tr>
+                        <th width="min-content">"Test"</th>
                         for run in &runs {
-                            th { text_align: "center", {product_label(&run.product)} }
+                            <th text_align="center">{product_label(&run.product)}</th>
                         }
-                    }
+                    </tr>
                     {compare_area_row("Total".to_string(), None, &tests_total(&tests, runs.len()))}
                     for test in &tests {
-                        CompareTestRow { test: test.clone() }
+                        <CompareTestRow test={test.clone()} />
                     }
-                }
+                </table>
             }
-        }
+        </Page>
     }
 }
 
@@ -138,23 +137,23 @@ fn CompareHistoryChart(
         return rsx! {};
     }
     rsx! {
-        details {
-            class: "wpt-history-chart",
-            open,
-            summary { "Score history" }
-            p {
-                font_size: "smaller",
+        <details
+            class="wpt-history-chart"
+            open
+        >
+            <summary>"Score history"</summary>
+            <p font_size="smaller">
                 "Percentage of subtests passing over time, one master run per day. Every engine's
                 percentage is relative to the same denominator: the total number of subtests known
                 to any engine in the latest runs (so lines are not distorted by tests being added
                 to WPT, and an engine that skips tests is not flattered for it)."
-            }
-            ChartRangeSelector {
-                current_range: range,
-                base_path: if area.is_empty() { "/wpt".to_string() } else { format!("/wpt/{area}") },
-            }
-            HistoryLineChart { lines: history, range, height: 320.0 }
-        }
+            </p>
+            <ChartRangeSelector
+                current_range={range}
+                base_path={if area.is_empty() { "/wpt".to_string() } else { format!("/wpt/{area}") }}
+            />
+            <HistoryLineChart lines={history} range height=320.0 />
+        </details>
     }
 }
 
@@ -163,15 +162,15 @@ fn CompareHistoryChart(
 #[component]
 pub fn WptUnavailablePage(message: String) -> Element {
     rsx! {
-        Page { title: "WPT".into(),
-            h1 { "WPT" }
-            p { {message} }
-            p {
-                a { href: "javascript:location.reload()", "Try again" }
+        <Page title={"WPT".into()}>
+            <h1>"WPT"</h1>
+            <p>{message}</p>
+            <p>
+                <a href="javascript:location.reload()">"Try again"</a>
                 " | "
-                a { href: "/status/wpt/css", "View the Blitz WPT dashboard" }
-            }
-        }
+                <a href="/status/wpt/css">"View the Blitz WPT dashboard"</a>
+            </p>
+        </Page>
     }
 }
 
@@ -183,21 +182,20 @@ fn SortToggle(area: String, sort: AreaSort) -> Element {
         format!("/wpt/{area}")
     };
     rsx! {
-        p {
-            font_size: "smaller",
-            b { "Sort: " }
+        <p font_size="smaller">
+            <b>"Sort: "</b>
             if sort == AreaSort::Alpha {
                 "alphabetical"
             } else {
-                a { href: format!("{base}?sort=alpha"), "alphabetical" }
+                <a href={format!("{base}?sort=alpha")}>"alphabetical"</a>
             }
             " | "
             if sort == AreaSort::Subtests {
                 "by subtest count"
             } else {
-                a { href: format!("{base}?sort=subtests"), "by subtest count" }
+                <a href={format!("{base}?sort=subtests")}>"by subtest count"</a>
             }
-        }
+        </p>
     }
 }
 
@@ -207,16 +205,16 @@ fn SpecInfoDisplay(area: String) -> Element {
         return rsx! {};
     };
     rsx! {
-        p {
-            font_size: "smaller",
-            b { "Spec: " }
-            a {
-                href: meta.spec.clone(),
-                target: "_blank",
+        <p font_size="smaller">
+            <b>"Spec: "</b>
+            <a
+                href={meta.spec.clone()}
+                target="_blank"
+            >
                 {meta.title.clone().unwrap_or_else(|| meta.spec.clone())}
                 " \u{2197}"
-            }
-        }
+            </a>
+        </p>
     }
 }
 
@@ -240,9 +238,8 @@ fn run_details(run: &RunRow) -> String {
 #[component]
 pub(super) fn RunInfoDisplay(runs: Vec<RunRow>) -> Element {
     rsx! {
-        p {
-            font_size: "smaller",
-            b { "Runs: " }
+        <p font_size="smaller">
+            <b>"Runs: "</b>
             for (idx, run) in runs.iter().enumerate() {
                 if idx > 0 {
                     " | "
@@ -252,7 +249,7 @@ pub(super) fn RunInfoDisplay(runs: Vec<RunRow>) -> Element {
                 {short_version(&run.browser_version)}
                 {run_details(run)}
             }
-        }
+        </p>
     }
 }
 
@@ -272,13 +269,13 @@ pub fn WptCompareBreadcrumb(area: String) -> Element {
         .collect();
 
     rsx!(
-        p {
-            a { href: "/wpt", "wpt" }
+        <p>
+            <a href="/wpt">"wpt"</a>
             for (segment, href) in segments {
                 " / "
-                a { href, {segment} }
+                <a href>{segment}</a>
             }
-        }
+        </p>
     )
 }
 
@@ -288,43 +285,45 @@ pub(super) fn compare_area_row(
     scores: &[Option<AreaScore>],
 ) -> Element {
     rsx!(
-        tr {
-            td {
-                background_color: "white",
+        <tr>
+            <td background_color="white">
                 if let Some(href) = href {
-                    a { href, {label} }
+                    <a href>{label}</a>
                 } else {
                     {label}
                 }
-            }
+            </td>
             for score in scores {
                 if let Some(score) = score {
-                    td {
-                        text_align: "right",
-                        background_color: score_color(score.subtest_fraction()),
-                        title: format!(
+                    <td
+                        text_align="right"
+                        background_color={score_color(score.subtest_fraction())}
+                        title={format!(
                             "Tests fully passing: {}/{} | Interop score: {}",
                             score.tests_pass,
                             score.tests_total,
                             percent_str(score.interop_fraction() as f64, 1),
-                        ),
+                        )}
+                    >
                         {percent_str(score.subtest_fraction() as f64, 1)}
-                        span {
-                            display: "block",
-                            font_size: "12px",
-                            color: "rgba(0, 0, 0, 0.6)",
+                        <span
+                            display="block"
+                            font_size="12px"
+                            color="rgba(0, 0, 0, 0.6)"
+                        >
                             {format!("{}/{}", score.subtests_pass, score.subtests_total)}
-                        }
-                    }
+                        </span>
+                    </td>
                 } else {
-                    td {
-                        text_align: "right",
-                        background_color: score_color(0.0),
+                    <td
+                        text_align="right"
+                        background_color={score_color(0.0)}
+                    >
                         "NO DATA"
-                    }
+                    </td>
                 }
             }
-        }
+        </tr>
     )
 }
 
@@ -368,19 +367,18 @@ fn CompareTestRow(test: TestRow) -> Element {
     let denom = test.denom.max(1);
 
     rsx!(
-        tr {
-            td {
-                background_color: "white",
-                a {
-                    href: test_page_href(&test),
+        <tr>
+            <td background_color="white">
+                <a href={test_page_href(&test)}>
                     {file_name}
-                }
-            }
+                </a>
+            </td>
             for result in &test.results {
                 if let Some(result) = result {
-                    td {
-                        text_align: "right",
-                        background_color: score_color(result.subtest_pass as f32 / denom as f32),
+                    <td
+                        text_align="right"
+                        background_color={score_color(result.subtest_pass as f32 / denom as f32)}
+                    >
                         if denom > 1 {
                             {format!("{}/{}", result.subtest_pass, denom)}
                         } else if result.subtest_pass >= denom {
@@ -388,16 +386,17 @@ fn CompareTestRow(test: TestRow) -> Element {
                         } else {
                             {status_label(*result)}
                         }
-                    }
+                    </td>
                 } else {
-                    td {
-                        text_align: "right",
-                        background_color: score_color(0.0),
+                    <td
+                        text_align="right"
+                        background_color={score_color(0.0)}
+                    >
                         "NOT RUN"
-                    }
+                    </td>
                 }
             }
-        }
+        </tr>
     )
 }
 

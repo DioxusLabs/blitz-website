@@ -302,49 +302,51 @@ fn month_ticks(x_min: f64, x_max: f64) -> Vec<(f64, String)> {
 #[component]
 pub fn WptHistoryPage(history: ArcWptHistory, range: ChartRange) -> Element {
     rsx! {
-        Page { title: "Status: WPT History".into(),
-            StatusHeader {}
-            StatusTabs { current_tab: "history" }
-            p {
-                dangerous_inner_html: r#"
+        <Page title={"Status: WPT History".into()}>
+            <StatusHeader />
+            <StatusTabs current_tab="history" />
+            <p
+                dangerous_inner_html=r#"
                 This page charts Blitz's scores on the "css" subsuite of the <a href="https://github.com/web-platform-tests/wpt" target="_blank">Web Platform Tests</a> over time.
                 Scores are the percentage of subtests passing, out of the total number of subtests known to any engine in the latest runs. Data is recorded for every commit to the main branch."#
-            }
-            hr {}
-            ChartRangeSelector { current_range: range, base_path: "/status/wpt/history" }
-            WptHistoryChart {
-                history: history.clone(),
-                series_spec: highlight_series(),
-                range,
-            }
-            h2 { "Per-area history" }
-            WptHistorySparklines { history, range }
-        }
+            />
+            <hr />
+            <ChartRangeSelector current_range={range} base_path="/status/wpt/history" />
+            <WptHistoryChart
+                history={history.clone()}
+                series_spec={highlight_series()}
+                range
+            />
+            <h2>"Per-area history"</h2>
+            <WptHistorySparklines history range />
+        </Page>
     }
 }
 
 #[component]
 pub fn ChartRangeSelector(current_range: ChartRange, base_path: String) -> Element {
     rsx! {
-        div {
-            display: "flex",
-            gap: "8px",
-            justify_content: "flex-end",
-            font_size: "14px",
-            margin_bottom: "8px",
+        <div
+            display="flex"
+            gap="8px"
+            justify_content="flex-end"
+            font_size="14px"
+            margin_bottom="8px"
+        >
 
             for range in ChartRange::ALL {
-                a {
-                    href: "{base_path}?range={range.query_value()}",
-                    padding: "2px 10px",
-                    border_radius: "12px",
-                    text_decoration: "none",
-                    color: if range == current_range { "white" } else { "inherit" },
-                    background_color: if range == current_range { "#2b6e6c" } else { "#eee" },
+                <a
+                    href="{base_path}?range={range.query_value()}"
+                    padding="2px 10px"
+                    border_radius="12px"
+                    text_decoration="none"
+                    color={if range == current_range { "white" } else { "inherit" }}
+                    background_color={if range == current_range { "#2b6e6c" } else { "#eee" }}
+                >
                     {range.label()}
-                }
+                </a>
             }
-        }
+        </div>
     }
 }
 
@@ -387,7 +389,7 @@ pub fn WptHistoryChart(
             series,
         })
         .collect();
-    rsx! { HistoryLineChart { lines, range, height } }
+    rsx! { <HistoryLineChart lines range height /> }
 }
 
 /// Per-run tooltip data for one line: the runs from just before the visible
@@ -465,7 +467,7 @@ pub fn HistoryLineChart(
         .fold(f64::NEG_INFINITY, f64::max);
 
     if !x_min.is_finite() || !x_max.is_finite() {
-        return rsx!( p { "No history data available" } );
+        return rsx!( <p>"No history data available"</p> );
     }
 
     let ticks = month_ticks(x_min, x_max);
@@ -488,94 +490,97 @@ pub fn HistoryLineChart(
     .replace('<', "\\u003c");
 
     rsx! {
-        div {
-            position: "relative",
+        <div position="relative">
 
-        svg {
-            view_box: "0 0 {WIDTH} {height}",
-            width: "100%",
-            font_family: "sans-serif",
+        <svg
+            view_box="0 0 {WIDTH} {height}"
+            width="100%"
+            font_family="sans-serif"
+        >
 
             // Horizontal gridlines + y-axis labels (every 10%; label every
             // 20% when the chart is short)
             for i in 0..=10u32 {
-                line {
-                    x1: "{px}",
-                    x2: "{px + pw}",
-                    y1: "{py + ph * (1.0 - (i as f64) / 10.0)}",
-                    y2: "{py + ph * (1.0 - (i as f64) / 10.0)}",
-                    stroke: if i % 5 == 0 { "#bbb" } else { "#e5e5e5" },
-                    stroke_width: "1",
-                }
+                <line
+                    x1="{px}"
+                    x2="{px + pw}"
+                    y1="{py + ph * (1.0 - (i as f64) / 10.0)}"
+                    y2="{py + ph * (1.0 - (i as f64) / 10.0)}"
+                    stroke={if i % 5 == 0 { "#bbb" } else { "#e5e5e5" }}
+                    stroke_width="1"
+                />
                 if ph >= 300.0 || i % 2 == 0 {
-                    text {
-                        x: "{px - 6.0}",
-                        y: "{py + ph * (1.0 - (i as f64) / 10.0) + 4.0}",
-                        text_anchor: "end",
-                        font_size: "12",
-                        fill: "#666",
+                    <text
+                        x="{px - 6.0}"
+                        y="{py + ph * (1.0 - (i as f64) / 10.0) + 4.0}"
+                        text_anchor="end"
+                        font_size="12"
+                        fill="#666"
+                    >
                         "{i * 10}%"
-                    }
+                    </text>
                 }
             }
 
             // X-axis ticks and labels (month boundaries)
             for (days, label) in ticks {
-                line {
-                    x1: "{px + (days - x_min) / x_range * pw}",
-                    x2: "{px + (days - x_min) / x_range * pw}",
-                    y1: "{py}",
-                    y2: "{py + ph + 4.0}",
-                    stroke: "#e5e5e5",
-                    stroke_width: "1",
-                }
-                text {
-                    x: "{px + (days - x_min) / x_range * pw}",
-                    y: "{py + ph + 18.0}",
-                    text_anchor: "middle",
-                    font_size: "12",
-                    fill: "#666",
+                <line
+                    x1="{px + (days - x_min) / x_range * pw}"
+                    x2="{px + (days - x_min) / x_range * pw}"
+                    y1="{py}"
+                    y2="{py + ph + 4.0}"
+                    stroke="#e5e5e5"
+                    stroke_width="1"
+                />
+                <text
+                    x="{px + (days - x_min) / x_range * pw}"
+                    y="{py + ph + 18.0}"
+                    text_anchor="middle"
+                    font_size="12"
+                    fill="#666"
+                >
                     {label}
-                }
+                </text>
             }
 
             // Data series
             for (i, s) in series.iter().enumerate() {
-                polyline {
-                    points: polyline_points(&s.points, x_min, x_max, plot),
-                    fill: "none",
-                    stroke: s.color,
-                    stroke_width: if i == 0 { "2.5" } else { "1.5" },
-                }
+                <polyline
+                    points={polyline_points(&s.points, x_min, x_max, plot)}
+                    fill="none"
+                    stroke={s.color}
+                    stroke_width={if i == 0 { "2.5" } else { "1.5" }}
+                />
             }
 
             // Legend, spread across the plot width when there are many series
             for (i, s) in series.iter().enumerate() {
-                line {
-                    x1: "{px + 10.0 + (i as f64) * legend_step}",
-                    x2: "{px + 34.0 + (i as f64) * legend_step}",
-                    y1: "{height - 10.0}",
-                    y2: "{height - 10.0}",
-                    stroke: s.color,
-                    stroke_width: "3",
-                }
-                text {
-                    x: "{px + 40.0 + (i as f64) * legend_step}",
-                    y: "{height - 6.0}",
-                    font_size: "12",
-                    fill: "#333",
+                <line
+                    x1="{px + 10.0 + (i as f64) * legend_step}"
+                    x2="{px + 34.0 + (i as f64) * legend_step}"
+                    y1="{height - 10.0}"
+                    y2="{height - 10.0}"
+                    stroke={s.color}
+                    stroke_width="3"
+                />
+                <text
+                    x="{px + 40.0 + (i as f64) * legend_step}"
+                    y="{height - 6.0}"
+                    font_size="12"
+                    fill="#333"
+                >
                     {s.label.clone()}
-                }
+                </text>
             }
-        }
+        </svg>
 
-        script {
-            "data-wpt-history-data": "true",
-            r#type: "application/json",
-            dangerous_inner_html: tooltip_data,
-        }
-        script { src: "/static/wpt-history-tooltip.js?{*TOOLTIP_SCRIPT_HASH}" }
-        }
+        <script
+            data-wpt-history-data="true"
+            r#type="application/json"
+            dangerous_inner_html={tooltip_data}
+        />
+        <script src="/static/wpt-history-tooltip.js?{*TOOLTIP_SCRIPT_HASH}" />
+        </div>
     }
 }
 
@@ -599,10 +604,11 @@ pub fn WptHistorySparklines(history: ArcWptHistory, range: ChartRange) -> Elemen
         .unwrap_or(1.0);
 
     rsx! {
-        div {
-            display: "grid",
-            grid_template_columns: "repeat(auto-fill, minmax(280px, 1fr))",
-            gap: "16px",
+        <div
+            display="grid"
+            grid_template_columns="repeat(auto-fill, minmax(280px, 1fr))"
+            gap="16px"
+        >
 
             for (area_idx, area) in history.focus_areas.iter().enumerate() {
                 {
@@ -622,32 +628,35 @@ pub fn WptHistorySparklines(history: ArcWptHistory, range: ChartRange) -> Elemen
                     let latest = points.last().map(|p| p.1).unwrap_or(0.0);
 
                     rsx! {
-                        a {
-                            href: "/status/wpt/{area}",
-                            color: "inherit",
-                            text_decoration: "none",
-                            div {
-                                display: "flex",
-                                justify_content: "space-between",
-                                font_size: "13px",
-                                span { {area.clone()} }
-                                span { {percent_str(latest / 100.0, 1)} }
-                            }
-                            svg {
-                                view_box: "0 0 {WIDTH} {HEIGHT}",
-                                width: "100%",
-                                style: "border: 1px solid #ddd",
-                                polyline {
-                                    points: polyline_points(&points, x_min, x_max, PLOT),
-                                    fill: "none",
-                                    stroke: "#7986cb",
-                                    stroke_width: "1.5",
-                                }
-                            }
-                        }
+                        <a
+                            href="/status/wpt/{area}"
+                            color="inherit"
+                            text_decoration="none"
+                        >
+                            <div
+                                display="flex"
+                                justify_content="space-between"
+                                font_size="13px"
+                            >
+                                <span>{area.clone()}</span>
+                                <span>{percent_str(latest / 100.0, 1)}</span>
+                            </div>
+                            <svg
+                                view_box="0 0 {WIDTH} {HEIGHT}"
+                                width="100%"
+                                style="border: 1px solid #ddd"
+                            >
+                                <polyline
+                                    points={polyline_points(&points, x_min, x_max, PLOT)}
+                                    fill="none"
+                                    stroke="#7986cb"
+                                    stroke_width="1.5"
+                                />
+                            </svg>
+                        </a>
                     }
                 }
             }
-        }
+        </div>
     }
 }

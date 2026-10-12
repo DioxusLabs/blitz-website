@@ -19,23 +19,23 @@ fn PageHead(title: Cow<'static, str>, head: Option<Element>) -> Element {
     let index_css_hash = hash32(&index_css_contents);
 
     rsx! {
-        head {
-            Fragment {
-                meta { charset: "UTF-8" }
-                meta {
-                    name: "viewport",
-                    content: "width=device-width, initial-scale=1.0",
-                }
-                title { "Blitz - {title}" }
-                link { href: "/static/normalize.css", rel: "stylesheet" }
-                link {
-                    rel: "stylesheet",
-                    href: "/static/index.css?{index_css_hash}",
-                }
-                link { rel: "icon", href: "/static/blitz-logo.svg" }
+        <head>
+            <Fragment>
+                <meta charset="UTF-8" />
+                <meta
+                    name="viewport"
+                    content="width=device-width, initial-scale=1.0"
+                />
+                <title>"Blitz - {title}"</title>
+                <link href="/static/normalize.css" rel="stylesheet" />
+                <link
+                    rel="stylesheet"
+                    href="/static/index.css?{index_css_hash}"
+                />
+                <link rel="icon" href="/static/blitz-logo.svg" />
                 {head}
-            }
-        }
+            </Fragment>
+        </head>
     }
 }
 
@@ -43,12 +43,12 @@ fn PageHead(title: Cow<'static, str>, head: Option<Element>) -> Element {
 #[component]
 pub fn BarePage(title: Cow<'static, str>, head: Option<Element>, children: Element) -> Element {
     rsx! {
-        div { lang: "en",
-            PageHead { title, head }
-            body {
+        <div lang="en">
+            <PageHead title head />
+            <body>
                 {children}
-            }
-        }
+            </body>
+        </div>
     }
 }
 
@@ -62,19 +62,20 @@ pub fn Page(
     #[props(default)] noframe: bool,
 ) -> Element {
     rsx! {
-        div { lang: "en",
-            PageHead { title, head }
-            body {
-                Fragment {
-                    div {
-                        id: "header",
-                        class: if transparent_header { "transparent-bg" },
-                        a { href: "/", class: "logo-link",
-                            img {
-                                src: "/static/blitz-logo-with-text3.svg",
-                                class: "logo",
-                            }
-                        }
+        <div lang="en">
+            <PageHead title head />
+            <body>
+                <Fragment>
+                    <div
+                        id="header"
+                        class={if transparent_header { "transparent-bg" }}
+                    >
+                        <a href="/" class="logo-link">
+                            <img
+                                src="/static/blitz-logo-with-text3.svg"
+                                class="logo"
+                            />
+                        </a>
                         // Logo with HTML text
                         // div {
                         //     style: "display: flex;align-items: center; gap: 20px;",
@@ -86,60 +87,62 @@ pub fn Page(
                         //         h2 { class: "page-subheading", "A radically modular web engine" }
                         //     }
                         // }
-                        nav {
-                            class: "desktop",
+                        <nav class="desktop">
                             // a { href: "/about", "About" }
-                            a { href: "/status", "Status" }
-                            a { href: "/wpt", "WPT" }
-                            a { href: "/downloads", "Downloads" }
-                            a {
-                                class: "nav-icon",
-                                alt: "Github",
-                                title: "Github",
-                                href: "https://github.com/dioxuslabs/blitz",
-                                img { src: "/static/github.svg" }
-                            }
-                            a {
-                                class: "nav-icon",
-                                target: "_blank",
-                                alt: "Discord",
-                                title: "Discord chat",
-                                href: "https://discord.gg/AnNPqT95pu",
-                                img { src: "/static/discord.svg" }
-                            }
-                        }
-                        div {
-                            class: "mobile",
-                            HamburgerMenu {}
-                        }
-                    }
-                    a {
-                        display: "block",
-                        padding: "12px",
-                        text_align: "center",
-                        background_color: "#3e9593",
-                        color: "white",
-                        href: "/downloads",
+                            <a href="/status">"Status"</a>
+                            <a href="/wpt">"WPT"</a>
+                            <a href="/downloads">"Downloads"</a>
+                            <a
+                                class="nav-icon"
+                                alt="Github"
+                                title="Github"
+                                href="https://github.com/dioxuslabs/blitz"
+                            >
+                                <img src="/static/github.svg" />
+                            </a>
+                            <a
+                                class="nav-icon"
+                                target="_blank"
+                                alt="Discord"
+                                title="Discord chat"
+                                href="https://discord.gg/AnNPqT95pu"
+                            >
+                                <img src="/static/discord.svg" />
+                            </a>
+                        </nav>
+                        <div class="mobile">
+                            <HamburgerMenu />
+                        </div>
+                    </div>
+                    <a
+                        display="block"
+                        padding="12px"
+                        text_align="center"
+                        background_color="#3e9593"
+                        color="white"
+                        href="/downloads"
+                    >
                         "Click here to download the Blitz Browser!"
-                    }
-                    div {
-                        id: "main-container",
-                        class: if noframe { "main-container--noframe" },
+                    </a>
+                    <div
+                        id="main-container"
+                        class={if noframe { "main-container--noframe" }}
+                    >
                         {children}
-                    }
+                    </div>
                     {footer}
-                }
-            }
-        }
+                </Fragment>
+            </body>
+        </div>
     }
 }
 
 #[component]
 pub fn LeftSidebar(toc_sections: Vec<TocSection>) -> Element {
     rsx! {
-        div { id: "left-sidebar",
-            TableOfContents { sections: toc_sections }
-        }
+        <div id="left-sidebar">
+            <TableOfContents sections={toc_sections} />
+        </div>
     }
 }
 
@@ -150,94 +153,100 @@ pub fn MainContent(
     children: Element,
 ) -> Element {
     rsx! {
-        div { class: "hflex",
+        <div class="hflex">
             if let Some(toc_sections) = toc_sections {
-                LeftSidebar { toc_sections }
+                <LeftSidebar toc_sections />
             }
-            div {
-                id: "content",
-                style: if prose { "max-width: 800px;max-width: min(800px, 100%)" },
+            <div
+                id="content"
+                style={if prose { "max-width: 800px;max-width: min(800px, 100%)" }}
+            >
                 {children}
-            }
-        }
+            </div>
+        </div>
     }
 }
 
 #[component]
 pub fn HamburgerMenu() -> Element {
     rsx!(
-        div { class: "hamburger-menu",
+        <div class="hamburger-menu">
             // The checkbox holds the open/closed state so the menu works without JS.
             // Its sibling `.mobile-menu` is revealed via `:checked ~ .mobile-menu`.
-            input {
-                r#type: "checkbox",
-                id: "nav-toggle",
-                class: "hamburger-toggle",
-            }
-            label {
-                r#for: "nav-toggle",
-                class: "nav-icon hamburger-label",
-                title: "Menu",
-                HamburgerIcon {}
-            }
-            nav { class: "mobile-menu",
-                a { href: "/status", "Status" }
-                a { href: "/wpt", "WPT" }
-                a { href: "/downloads", "Downloads" }
-                a {
-                    class: "external-link",
-                    href: "https://github.com/dioxuslabs/blitz",
+            <input
+                r#type="checkbox"
+                id="nav-toggle"
+                class="hamburger-toggle"
+            />
+            <label
+                r#for="nav-toggle"
+                class="nav-icon hamburger-label"
+                title="Menu"
+            >
+                <HamburgerIcon />
+            </label>
+            <nav class="mobile-menu">
+                <a href="/status">"Status"</a>
+                <a href="/wpt">"WPT"</a>
+                <a href="/downloads">"Downloads"</a>
+                <a
+                    class="external-link"
+                    href="https://github.com/dioxuslabs/blitz"
+                >
                     "GitHub"
-                    ExternalLinkIcon {}
-                }
-                a {
-                    class: "external-link",
-                    target: "_blank",
-                    href: "https://discord.gg/AnNPqT95pu",
+                    <ExternalLinkIcon />
+                </a>
+                <a
+                    class="external-link"
+                    target="_blank"
+                    href="https://discord.gg/AnNPqT95pu"
+                >
                     "Discord"
-                    ExternalLinkIcon {}
-                }
-            }
-        }
+                    <ExternalLinkIcon />
+                </a>
+            </nav>
+        </div>
     )
 }
 
 #[component]
 fn HamburgerIcon() -> Element {
     rsx!(
-        svg {
-            width:"24",
-            height:"24",
-            view_box:"0 0 24 24",
-            fill:"none",
-            stroke:"currentColor",
-            stroke_width:"2",
-            stroke_linecap:"round",
-            stroke_linejoin:"round",
-            class:"lucide lucide-menu-icon lucide-menu",
-            path { d:"M4 5h16" }
-            path { d:"M4 12h16" }
-            path { d:"M4 19h16" }
-        }
+        <svg
+            width="24"
+            height="24"
+            view_box="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke_width="2"
+            stroke_linecap="round"
+            stroke_linejoin="round"
+            class="lucide lucide-menu-icon lucide-menu"
+        >
+            <path d="M4 5h16" />
+            <path d="M4 12h16" />
+            <path d="M4 19h16" />
+        </svg>
     )
 }
 
 #[component]
 fn ExternalLinkIcon() -> Element {
     rsx!(
-        svg {
-            width:"18",
-            height:"18",
-            view_box:"0 0 24 24",
-            fill:"none",
-            stroke:"currentColor",
-            stroke_width:"2",
-            stroke_linecap:"round",
-            stroke_linejoin:"round",
-            class:"lucide lucide-external-link-icon lucide-external-link",
-            path { d:"M15 3h6v6" }
-            path { d:"M10 14 21 3" }
-            path { d:"M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h6" }
-        }
+        <svg
+            width="18"
+            height="18"
+            view_box="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke_width="2"
+            stroke_linecap="round"
+            stroke_linejoin="round"
+            class="lucide lucide-external-link-icon lucide-external-link"
+        >
+            <path d="M15 3h6v6" />
+            <path d="M10 14 21 3" />
+            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h6" />
+        </svg>
     )
 }
