@@ -1,7 +1,6 @@
 use std::borrow::Cow;
 
 use dioxus::prelude::*;
-use dioxus_html_macro::html;
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 #[allow(dead_code)]
@@ -15,25 +14,47 @@ pub enum SectionLevel {
 
 #[component]
 pub fn AnchorHeader(level: SectionLevel, target: &'static str, children: Element) -> Element {
-    rsx!({
-        match level {
-            SectionLevel::H2 => {
-                html!(<h2><a style="color: inherit" href="#{target}" id="{target}">{children}</a></h2>)
-            }
-            SectionLevel::H3 => {
-                html!(<h3><a style="color: inherit" href="#{target}" id="{target}">{children}</a></h3>)
-            }
-            SectionLevel::H4 => {
-                html!(<h4><a style="color: inherit" href="#{target}" id="{target}">{children}</a></h4>)
-            }
-            SectionLevel::H5 => {
-                html!(<h5><a style="color: inherit" href="#{target}" id="{target}">{children}</a></h5>)
-            }
-            SectionLevel::H6 => {
-                html!(<h6><a style="color: inherit" href="#{target}" id="{target}">{children}</a></h6>)
+    rsx!(
+        {
+            match level {
+                SectionLevel::H2 => {
+                    rsx! {
+                        <h2>
+                            <a style="color: inherit" href="#{target}" id="{target}">{children}</a>
+                        </h2>
+                    }
+                }
+                SectionLevel::H3 => {
+                    rsx! {
+                        <h3>
+                            <a style="color: inherit" href="#{target}" id="{target}">{children}</a>
+                        </h3>
+                    }
+                }
+                SectionLevel::H4 => {
+                    rsx! {
+                        <h4>
+                            <a style="color: inherit" href="#{target}" id="{target}">{children}</a>
+                        </h4>
+                    }
+                }
+                SectionLevel::H5 => {
+                    rsx! {
+                        <h5>
+                            <a style="color: inherit" href="#{target}" id="{target}">{children}</a>
+                        </h5>
+                    }
+                }
+                SectionLevel::H6 => {
+                    rsx! {
+                        <h6>
+                            <a style="color: inherit" href="#{target}" id="{target}">{children}</a>
+                        </h6>
+                    }
+                }
             }
         }
-    })
+    )
 }
 
 #[component]
@@ -64,11 +85,21 @@ pub fn Section(
         >
             {
                 match level {
-                    SectionLevel::H2 => html!(< h2 > "{heading}" </ h2 >),
-                    SectionLevel::H3 => html!(< h3 > "{heading}" </ h3 >),
-                    SectionLevel::H4 => html!(< h4 > "{heading}" </ h4 >),
-                    SectionLevel::H5 => html!(< h5 > "{heading}" </ h5 >),
-                    SectionLevel::H6 => html!(< h6 > "{heading}" </ h6 >),
+                    SectionLevel::H2 => rsx! {
+                        <h2>"{heading}"</h2>
+                    },
+                    SectionLevel::H3 => rsx! {
+                        <h3>"{heading}"</h3>
+                    },
+                    SectionLevel::H4 => rsx! {
+                        <h4>"{heading}"</h4>
+                    },
+                    SectionLevel::H5 => rsx! {
+                        <h5>"{heading}"</h5>
+                    },
+                    SectionLevel::H6 => rsx! {
+                        <h6>"{heading}"</h6>
+                    },
                 }
             }
 

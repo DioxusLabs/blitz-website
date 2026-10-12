@@ -16,7 +16,6 @@ use tokio_util::io::ReaderStream;
 // };
 use dashmap::DashMap;
 use dioxus::{core::ComponentFunction, prelude::*};
-use dioxus_html_macro::html;
 use downloads::{load_downloads, DOWNLOAD_CACHE};
 use github::CommitInfo;
 use routes::{
@@ -90,11 +89,35 @@ async fn main() {
 
     // build our application with a route
     let app = Router::new()
-        .route("/", get(|| dx_route_cached(|| html!(<HomePage />))))
-        .route("/about", get(|| dx_route_cached(|| html!(<AboutPage />))))
+        .route(
+            "/",
+            get(|| {
+                dx_route_cached(|| {
+                    rsx! {
+                        <HomePage />
+                    }
+                })
+            }),
+        )
+        .route(
+            "/about",
+            get(|| {
+                dx_route_cached(|| {
+                    rsx! {
+                        <AboutPage />
+                    }
+                })
+            }),
+        )
         .route(
             "/nlnet-testing-instructions",
-            get(|| dx_route_cached(|| html!(<NLNetInstructionsPage />))),
+            get(|| {
+                dx_route_cached(|| {
+                    rsx! {
+                        <NLNetInstructionsPage />
+                    }
+                })
+            }),
         )
         .route(
             "/downloads/file",
@@ -329,19 +352,43 @@ async fn main() {
         .route("/status", get(|| async { Redirect::to("/status/css") }))
         .route(
             "/status/css",
-            get(|| dx_route_cached(|| html!(<CssSupportPage />))),
+            get(|| {
+                dx_route_cached(|| {
+                    rsx! {
+                        <CssSupportPage />
+                    }
+                })
+            }),
         )
         .route(
             "/status/elements",
-            get(|| dx_route_cached(|| html!(<ElementSupportPage />))),
+            get(|| {
+                dx_route_cached(|| {
+                    rsx! {
+                        <ElementSupportPage />
+                    }
+                })
+            }),
         )
         .route(
             "/status/events",
-            get(|| dx_route_cached(|| html!(<EventSupportPage />))),
+            get(|| {
+                dx_route_cached(|| {
+                    rsx! {
+                        <EventSupportPage />
+                    }
+                })
+            }),
         )
         .route(
             "/getting-started",
-            get(|| dx_route_cached(|| html!(<GettingStartedPage />))),
+            get(|| {
+                dx_route_cached(|| {
+                    rsx! {
+                        <GettingStartedPage />
+                    }
+                })
+            }),
         )
         .nest_service("/static", get_service(ServeDir::new("static")))
         .route_service("/robots.txt", ServeFile::new("static/robots.txt"))
