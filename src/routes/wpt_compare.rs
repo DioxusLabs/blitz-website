@@ -20,13 +20,13 @@ pub fn product_label(product: &str) -> String {
 /// The colour of a product's line on history charts
 pub fn product_color(product: &str) -> &'static str {
     match product {
-        "blitz" => "#000000",
-        "chrome" => "#e57373",
-        "firefox" => "#ffb74d",
-        "safari" => "#64b5f6",
-        "ladybird" => "#ba68c8",
-        "servo" => "#4db6ac",
-        "flow" => "#8d6e63",
+        "blitz" => "#3e9593",
+        "chrome" => "#fbbc04",
+        "firefox" => "#ff7139",
+        "safari" => "#1a8cff",
+        "ladybird" => "#7b6cf0",
+        "servo" => "#42be65",
+        "flow" => "#b95e06",
         _ => "#a1887f",
     }
 }
