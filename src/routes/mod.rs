@@ -5,6 +5,7 @@ mod home;               pub use home::*;
 mod downloads;          pub use downloads::*;
 mod about;              pub use about::*;
 mod nlnet_instructions; pub use nlnet_instructions::*;
+mod roadmap;            pub use roadmap::*;
 mod wpt;                pub use wpt::*;
 mod wpt_compare;        pub use wpt_compare::*;
 mod wpt_focus_areas;    pub use wpt_focus_areas::*;

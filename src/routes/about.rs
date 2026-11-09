@@ -22,7 +22,7 @@ pub fn AboutPage() -> Element {
             p {
                 dangerous_inner_html: r#"
                     For more details on the current status, see the dedicated <a href="/status">status page</a>.<br/ >
-                    For details on planned work, see the <a href="https://github.com/DioxusLabs/blitz/issues/119">roadmap issue</a>
+                    For details on planned work, see the <a href="/roadmap">roadmap</a>
                 "#
             }
 

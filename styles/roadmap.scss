@@ -1,0 +1,333 @@
+$roadmap-border: #e3d6bd;
+$roadmap-column-bg: #fbf7ef;
+// The columns break out of #main-container up to this width, keeping this
+// gutter from the edges of the viewport
+$roadmap-grid-max-width: 1280px;
+$roadmap-grid-gutter: 24px;
+
+.roadmap code {
+    font-size: 0.9em;
+    padding: 0 3px;
+    border-radius: 3px;
+    background-color: #f4e8d2;
+    white-space: nowrap;
+}
+
+.roadmap-hero {
+    text-align: center;
+    padding: 12px 0 36px;
+
+    h1 { margin: 0; }
+
+    p {
+        color: #494949;
+        font-size: 1.2em;
+        margin: 8px 0 20px;
+    }
+}
+
+.roadmap-hero__actions {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.roadmap-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    flex-shrink: 0;
+    padding: 6px 8px 6px 12px;
+    border: 1px solid #cab89b;
+    border-radius: 4px;
+    background-color: white;
+    font-size: 0.95em;
+
+    &, &:hover, &:visited, &:active { color: black; }
+
+    &:hover {
+        background-color: #f4e8d2;
+        text-decoration: none;
+    }
+}
+
+.roadmap-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    // Negative margins widen the grid symmetrically beyond its container
+    // (but never narrow it)
+    margin-inline: min(0px, calc(50% - min(#{$roadmap-grid-max-width / 2}, 50vw - #{$roadmap-grid-gutter})));
+    border: 1px solid $roadmap-border;
+    border-radius: 6px;
+    background-color: $roadmap-column-bg;
+    overflow: hidden;
+
+    > .roadmap-column + .roadmap-column { border-left: 1px solid $roadmap-border; }
+}
+
+.roadmap-column {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin: 0;
+    padding: 12px;
+    min-width: 0;
+    max-height: 95vh;
+}
+
+.roadmap-column__items {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    min-height: 0;
+    margin: -2px -12px -12px;
+    padding: 2px 12px 12px;
+    overflow-y: auto;
+
+    > * { flex-shrink: 0; }
+}
+
+.roadmap-column__header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0 2px;
+}
+
+.roadmap-column__title {
+    font-family: "Jost";
+    font-style: italic;
+    font-weight: 500;
+    font-size: 1.05em;
+}
+
+.roadmap-column__count {
+    margin-left: auto;
+    color: #777;
+    font-size: 0.85em;
+}
+
+p.roadmap-column__description {
+    margin: -6px 0 0;
+    padding: 0 2px;
+    color: #666;
+    font-size: 0.85em;
+}
+
+.roadmap-card {
+    padding: 10px 12px;
+    border: 1px solid $roadmap-border;
+    border-radius: 4px;
+    background-color: white;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.roadmap-card__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 12px;
+}
+
+.roadmap-card__title {
+    margin: 0;
+    font-family: Inter, Arial, Helvetica, sans-serif;
+    font-size: 1em;
+    font-weight: 500;
+    line-height: 1.35;
+}
+
+p.roadmap-card__description {
+    margin: 4px 0 0;
+    color: #494949;
+    font-size: 0.9em;
+}
+
+// Linked cards: the title link's ::after covers the whole card, making it
+// clickable, while the individual issue/PR tags sit above it
+.roadmap-card--linked {
+    position: relative;
+    transition: border-color 120ms ease, box-shadow 120ms ease;
+
+    // The 1px spread shadow thickens the border into an outline without
+    // shifting layout
+    &:hover {
+        border-color: #3298dc;
+        box-shadow: 0 0 0 1px #3298dc, 0 4px 12px rgba(0, 0, 0, 0.08);
+    }
+
+    // Only the tags themselves (not the gaps around them) sit above the
+    // stretched link
+    .roadmap-card__links {
+        position: relative;
+        z-index: 1;
+        pointer-events: none;
+
+        a { pointer-events: auto; }
+    }
+}
+
+a.roadmap-card__link {
+    &, &:hover, &:visited, &:active {
+        color: inherit;
+        text-decoration: none;
+    }
+
+    &::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        border-radius: 4px;
+    }
+
+    &:focus-visible {
+        outline: none;
+
+        &::after { outline: 2px solid #3e9593; }
+    }
+}
+
+.roadmap-card__links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-top: 8px;
+}
+
+.roadmap-tag {
+    display: inline-block;
+    padding: 1px 6px;
+    border: 1px solid $roadmap-border;
+    border-radius: 3px;
+    background-color: $roadmap-column-bg;
+    color: #555;
+    font-size: 0.75em;
+    line-height: 1.4;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+// Named fonts first: a lone generic `monospace` shrinks the text
+.roadmap-ref--commit {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+a.roadmap-tag {
+    &, &:visited, &:active { color: #555; }
+
+    &:hover {
+        border-color: #cab89b;
+        color: black;
+        text-decoration: none;
+    }
+}
+
+.roadmap-history {
+    margin-top: 48px;
+
+    h2 { margin-top: 0; }
+
+    p.group-description { margin-top: 8px; }
+}
+
+h3.roadmap-history__series {
+    margin: 28px 0 16px;
+    font-size: 1.4em;
+}
+
+.roadmap-timeline {
+    list-style: none;
+    margin: 0 0 0 6px;
+    padding: 0;
+    border-left: 2px solid $roadmap-border;
+}
+
+li.roadmap-release {
+    position: relative;
+    display: grid;
+    grid-template-columns: 170px minmax(0, 1fr);
+    gap: 16px;
+    margin: 0;
+    padding: 0 0 24px 24px;
+
+    &:last-child { padding-bottom: 4px; }
+
+    // Timeline marker
+    &::before {
+        content: "";
+        position: absolute;
+        left: -8px;
+        top: 5px;
+        width: 14px;
+        height: 14px;
+        box-sizing: border-box;
+        border: 2px solid #cab89b;
+        border-radius: 50%;
+        background-color: white;
+    }
+
+    &.roadmap-release--stable::before {
+        border-color: #3e9593;
+        background-color: #3e9593;
+    }
+}
+
+.roadmap-release__meta {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+}
+
+.roadmap-release__version {
+    font-family: "Jost";
+    font-weight: 500;
+    font-size: 1.2em;
+    line-height: 1.2;
+}
+
+.roadmap-release--stable .roadmap-release__version { color: #3e9593; }
+
+.roadmap-release__date {
+    color: #777;
+    font-size: 0.85em;
+}
+
+.roadmap-release__highlights {
+    margin: 0;
+    padding-left: 18px;
+
+    li {
+        margin-bottom: 4px;
+        color: #333;
+        font-size: 0.95em;
+    }
+}
+
+.roadmap-release__link.roadmap-ref--commit {
+    font-size: 0.9em;
+}
+
+@media screen and (max-width: 800px) {
+    .roadmap-grid {
+        grid-template-columns: minmax(0, 1fr);
+
+        > .roadmap-column + .roadmap-column {
+            border-left: none;
+            border-top: 1px solid $roadmap-border;
+        }
+    }
+
+    li.roadmap-release {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 8px;
+    }
+
+    .roadmap-release__meta {
+        flex-direction: row;
+        flex-wrap: wrap;
+        align-items: baseline;
+        gap: 8px;
+    }
+}
