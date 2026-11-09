@@ -132,7 +132,7 @@ pub async fn proxy_route(
     };
     let fetched = match fetched {
         Ok(fetched) => fetched,
-        Err(response) => return response,
+        Err((status, message)) => return error(status, message),
     };
 
     let mut response = Response::new(Body::from(fetched.body));
@@ -172,11 +172,11 @@ pub async fn proxy_frame_route(
 ) -> Response {
     let fetched = match authorize(&headers, &query.url, Route::Frame) {
         Ok(url) => fetch(peer, &headers, url).await,
-        Err((status, message)) => return error(status, message),
+        Err(err) => Err(err),
     };
     let fetched = match fetched {
         Ok(fetched) => fetched,
-        Err(response) => return response,
+        Err((status, message)) => return frame_error(status, message),
     };
     let is_html = fetched
         .content_type
@@ -188,7 +188,7 @@ pub async fn proxy_frame_route(
                 || mime.eq_ignore_ascii_case("application/xhtml+xml")
         });
     if !is_html {
-        return error(
+        return frame_error(
             StatusCode::UNSUPPORTED_MEDIA_TYPE,
             "The native view only shows HTML pages",
         );
@@ -280,25 +280,27 @@ struct Fetched {
 }
 
 /// Fetch `url` within the per-client and global budgets
-async fn fetch(peer: SocketAddr, headers: &HeaderMap, url: Url) -> Result<Fetched, Response> {
+async fn fetch(
+    peer: SocketAddr,
+    headers: &HeaderMap,
+    url: Url,
+) -> Result<Fetched, (StatusCode, &'static str)> {
     let client = budget_key(client_ip(headers, peer));
     let Some(_client_slot) = ClientSlot::acquire(client) else {
         return Err((
             StatusCode::TOO_MANY_REQUESTS,
-            [(header::RETRY_AFTER, "60")],
             "Too many proxy requests; try again in a minute",
-        )
-            .into_response());
+        ));
     };
     if !global_budget_available() {
-        return Err(error(
+        return Err((
             StatusCode::SERVICE_UNAVAILABLE,
             "The proxy has reached its hourly limit; try again later",
         ));
     }
     let Ok(Ok(_slot)) = tokio::time::timeout(Duration::from_secs(5), IN_FLIGHT.acquire()).await
     else {
-        return Err(error(
+        return Err((
             StatusCode::SERVICE_UNAVAILABLE,
             "The proxy is busy; try again in a moment",
         ));
@@ -312,13 +314,13 @@ async fn fetch(peer: SocketAddr, headers: &HeaderMap, url: Url) -> Result<Fetche
         Ok(upstream) => upstream,
         Err(err) => {
             tracing::info!("Proxy fetch failed: {err}");
-            return Err(error(StatusCode::BAD_GATEWAY, "Couldn't fetch the URL"));
+            return Err((StatusCode::BAD_GATEWAY, "Couldn't fetch the URL"));
         }
     };
 
     let content_type = upstream.headers().get(header::CONTENT_TYPE).cloned();
     if !is_allowed_content_type(content_type.as_ref().and_then(|ct| ct.to_str().ok())) {
-        return Err(error(
+        return Err((
             StatusCode::UNSUPPORTED_MEDIA_TYPE,
             "This content type can't be proxied",
         ));
@@ -327,10 +329,7 @@ async fn fetch(peer: SocketAddr, headers: &HeaderMap, url: Url) -> Result<Fetche
         .content_length()
         .is_some_and(|len| len > MAX_RESPONSE_BYTES as u64)
     {
-        return Err(error(
-            StatusCode::PAYLOAD_TOO_LARGE,
-            "The response is too large",
-        ));
+        return Err((StatusCode::PAYLOAD_TOO_LARGE, "The response is too large"));
     }
 
     let status = upstream.status();
@@ -341,10 +340,7 @@ async fn fetch(peer: SocketAddr, headers: &HeaderMap, url: Url) -> Result<Fetche
             Ok(Some(chunk)) => {
                 if body.len() + chunk.len() > MAX_RESPONSE_BYTES {
                     record_bytes(client, body.len());
-                    return Err(error(
-                        StatusCode::PAYLOAD_TOO_LARGE,
-                        "The response is too large",
-                    ));
+                    return Err((StatusCode::PAYLOAD_TOO_LARGE, "The response is too large"));
                 }
                 body.extend_from_slice(&chunk);
             }
@@ -352,7 +348,7 @@ async fn fetch(peer: SocketAddr, headers: &HeaderMap, url: Url) -> Result<Fetche
             Err(err) => {
                 tracing::info!("Proxy fetch failed: {err}");
                 record_bytes(client, body.len());
-                return Err(error(StatusCode::BAD_GATEWAY, "Couldn't fetch the URL"));
+                return Err((StatusCode::BAD_GATEWAY, "Couldn't fetch the URL"));
             }
         }
     }
@@ -367,7 +363,38 @@ async fn fetch(peer: SocketAddr, headers: &HeaderMap, url: Url) -> Result<Fetche
 }
 
 fn error(status: StatusCode, message: &'static str) -> Response {
-    (status, message).into_response()
+    let mut response = (status, message).into_response();
+    if status == StatusCode::TOO_MANY_REQUESTS {
+        response
+            .headers_mut()
+            .insert(header::RETRY_AFTER, HeaderValue::from_static("60"));
+    }
+    response
+}
+
+/// An error page for the native view that also reports the error to the
+/// demo page, which shows it in its status line
+fn frame_error(status: StatusCode, message: &'static str) -> Response {
+    let json = serde_json::to_string(message).unwrap();
+    let html = format!(
+        "<!doctype html><title>Error</title><p>{message}</p><script>\
+         parent.postMessage({{type: \"frame:error\", status: {}, message: {json}}}, \"*\")\
+         </script>",
+        status.as_u16()
+    );
+    let mut response = error(status, message);
+    *response.body_mut() = Body::from(html);
+    let headers = response.headers_mut();
+    headers.insert(
+        header::CONTENT_TYPE,
+        HeaderValue::from_static("text/html; charset=utf-8"),
+    );
+    headers.insert(
+        header::CONTENT_SECURITY_POLICY,
+        HeaderValue::from_static("sandbox allow-scripts; frame-ancestors 'self'"),
+    );
+    insert_common_headers(headers);
+    response
 }
 
 /// Only http(s) URLs on the default ports, without credentials, whose host

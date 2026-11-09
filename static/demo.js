@@ -6,7 +6,8 @@
 // and {type: "blitz:error", url, message}, and takes {type: "blitz:navigate", url}.
 //
 // Native view: /proxy/frame?url=, the same page rendered by this browser. It
-// posts {type: "frame:loaded", url, title} and {type: "frame:navigate", url}.
+// posts {type: "frame:loaded", url, title} and {type: "frame:navigate", url},
+// or {type: "frame:error", status, message} if the proxy couldn't serve it.
 (function () {
   const form = document.getElementById("demo-form");
   const urlInput = document.getElementById("demo-url");
@@ -279,6 +280,9 @@
     if (native.iframe && event.source === native.iframe.contentWindow) {
       if (data.type === "frame:loaded") {
         native.title = String(data.title || "");
+      } else if (data.type === "frame:error") {
+        native.error = "Couldn't load " + native.url + ": " +
+          describeError(data.status + " " + String(data.message || "unknown error"));
       } else if (data.type === "frame:navigate") {
         navigate(normalizeUrl(String(data.url)));
       }
@@ -286,8 +290,8 @@
     }
   });
 
-  // The native view's errors are plain text from the proxy, which doesn't
-  // post frame:loaded; show its URL once the frame has loaded anyway
+  // Pages whose script didn't run don't post frame:loaded; show their URL
+  // once the frame has loaded anyway
   frame.addEventListener("load", (event) => {
     const native = views.native;
     if (event.target === native.iframe && native.title === null) {
