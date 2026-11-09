@@ -62,6 +62,24 @@ impl GithubClient {
         .await
     }
 
+    /// Successful runs of one workflow (by file name), newest first
+    pub async fn list_successful_runs_of_workflow(
+        &self,
+        workflow_file: &str,
+        branch: &str,
+        event: &str,
+    ) -> ListWorkflowsResponse {
+        self.get_json::<ListWorkflowsResponse>(&format!(
+            "/repos/dioxuslabs/blitz/actions/workflows/{workflow_file}/runs?branch={branch}&event={event}&status=success&per_page=1"
+        ))
+        .await
+    }
+
+    pub async fn get_workflow_run(&self, run_id: u64) -> WorkflowRun {
+        self.get_json::<WorkflowRun>(&format!("/repos/dioxuslabs/blitz/actions/runs/{run_id}"))
+            .await
+    }
+
     pub async fn list_artifacts_for_workflow(&self, workflow_id: u64) -> ArtifactResponse {
         self.get_json::<ArtifactResponse>(&format!(
             "/repos/dioxuslabs/blitz/actions/runs/{workflow_id}/artifacts"

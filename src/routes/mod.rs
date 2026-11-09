@@ -3,6 +3,7 @@ mod support_matrix;     pub use support_matrix::*;
 mod getting_started;    pub use getting_started::*;
 mod home;               pub use home::*;
 mod downloads;          pub use downloads::*;
+mod demo;               pub use demo::*;
 mod about;              pub use about::*;
 mod nlnet_instructions; pub use nlnet_instructions::*;
 mod wpt;                pub use wpt::*;
