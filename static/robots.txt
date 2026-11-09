@@ -24,4 +24,5 @@ Disallow: /status/wpt/*.js$
 Disallow: /status/wpt/*.py$
 Disallow: /*?
 Disallow: /downloads/file
+Disallow: /proxy
 Crawl-delay: 10

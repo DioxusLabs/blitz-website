@@ -52,6 +52,7 @@ mod components;
 mod downloads;
 mod git_mirror;
 mod github;
+mod proxy;
 mod routes;
 mod wasm_demo;
 mod wpt_compare;
@@ -361,6 +362,7 @@ async fn main() {
                 }),
             ),
         )
+        .route("/proxy", get(proxy::proxy_route))
         .route("/status", get(|| async { Redirect::to("/status/css") }))
         .route(
             "/status/css",
@@ -452,9 +454,12 @@ async fn main() {
     let msg = format!("Serving blitz-website at http://{addr}").replace("[::]", "localhost");
     println!("{msg}");
 
-    axum::serve(listener, app.into_make_service())
-        .await
-        .unwrap();
+    axum::serve(
+        listener,
+        app.into_make_service_with_connect_info::<SocketAddr>(),
+    )
+    .await
+    .unwrap();
 }
 
 /// Get the score history for a set of `(product, area)` pairs from the local
