@@ -22,12 +22,42 @@ pub fn DemoPage(index_url: String, download_size: u64, commit_info: Option<Commi
         Page { title: "Demo".into(),
             h1 { "Demo" }
             p {
-                "The Blitz browser, compiled to WebAssembly and drawn onto a canvas with "
-                "WebGL2. Pages are fetched through this site and laid out and painted by "
-                "Blitz: your browser's own HTML and CSS engine isn't used."
+                "Web pages rendered by Blitz, compiled to WebAssembly and drawn onto a canvas "
+                "with WebGL2. Pages are fetched through this site and laid out and painted by "
+                "Blitz: your browser's own HTML and CSS engine isn't used. Switch to "
+                "\"Native\" to compare with your browser's rendering of the same page."
             }
             CommitInfoDisplay { commit_info, label: "Built from commit:" }
-            form { class: "demo-form", id: "demo-form", "data-demo-src": "{index_url}",
+            form { class: "demo-toolbar", id: "demo-form", "data-demo-src": "{index_url}",
+                div { class: "demo-nav",
+                    button {
+                        class: "demo-icon-button",
+                        id: "demo-back",
+                        r#type: "button",
+                        disabled: true,
+                        title: "Back",
+                        "aria-label": "Back",
+                        "←"
+                    }
+                    button {
+                        class: "demo-icon-button",
+                        id: "demo-forward",
+                        r#type: "button",
+                        disabled: true,
+                        title: "Forward",
+                        "aria-label": "Forward",
+                        "→"
+                    }
+                    button {
+                        class: "demo-icon-button",
+                        id: "demo-reload",
+                        r#type: "button",
+                        disabled: true,
+                        title: "Reload",
+                        "aria-label": "Reload",
+                        "↻"
+                    }
+                }
                 input {
                     class: "demo-url",
                     id: "demo-url",
@@ -35,20 +65,43 @@ pub fn DemoPage(index_url: String, download_size: u64, commit_info: Option<Commi
                     inputmode: "url",
                     spellcheck: "false",
                     required: true,
-                    "aria-label": "Start page",
+                    "aria-label": "Page URL",
                     value: DEFAULT_START_PAGE,
                 }
-                button { class: "demo-button", r#type: "submit",
-                    "Load Blitz ({format_size(download_size, DECIMAL)})"
+                button { class: "demo-button", r#type: "submit", "Go" }
+                div {
+                    class: "demo-views",
+                    role: "group",
+                    "aria-label": "Renderer",
+                    button {
+                        class: "demo-view",
+                        r#type: "button",
+                        "data-view": "blitz",
+                        "aria-pressed": "true",
+                        "Blitz"
+                    }
+                    button {
+                        class: "demo-view",
+                        r#type: "button",
+                        "data-view": "native",
+                        "aria-pressed": "false",
+                        "Native"
+                    }
                 }
             }
+            p { class: "demo-status-line", id: "demo-status-line", role: "status" }
             div { class: "demo-frame", id: "demo-frame",
-                p { class: "demo-status", id: "demo-status",
-                    "Enter a start page and load the browser to try it."
+                div { class: "demo-overlay", id: "demo-overlay",
+                    p { id: "demo-overlay-text",
+                        "Blitz is a {format_size(download_size, DECIMAL)} download, so it isn't loaded until you ask."
+                    }
+                    button {
+                        class: "demo-button",
+                        id: "demo-load",
+                        r#type: "button",
+                        "Load Blitz ({format_size(download_size, DECIMAL)})"
+                    }
                 }
-            }
-            p { class: "demo-links", id: "demo-links", hidden: true,
-                a { id: "demo-open-link", target: "_blank", "Open full page" }
             }
             script { src: "/static/demo.js?{*DEMO_SCRIPT_HASH}" }
         }
