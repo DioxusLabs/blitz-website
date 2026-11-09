@@ -21,24 +21,15 @@ pub const WASM_DEMO_URL_PREFIX: &str = "/demo/files";
 const WORKFLOW_FILE: &str = "publish-wasm.yml";
 const ARTIFACT_NAME: &str = "blitz-wasm-demo";
 
-/// The apps in the artifact (directory name, display name)
-const APPS: &[(&str, &str)] = &[("todomvc", "TodoMVC"), ("seven_guis", "7GUIs")];
-
 #[derive(Clone)]
 pub struct WasmDemoCacheEntry {
     /// The artifact digest prefix the build is stored and served under
     pub key: String,
-    pub apps: Arc<[WasmDemoApp]>,
-    pub commit_info: Option<CommitInfo>,
-}
-
-#[derive(Clone, PartialEq)]
-pub struct WasmDemoApp {
-    pub label: &'static str,
-    /// URL of the app's `index.html`
-    pub url: String,
+    /// URL of the Browser App's `index.html`
+    pub index_url: String,
     /// Bytes transferred to load the app (its gzipped wasm and JS)
     pub download_size: u64,
+    pub commit_info: Option<CommitInfo>,
 }
 
 pub fn wasm_demo_dir() -> PathBuf {
@@ -119,17 +110,8 @@ pub async fn load_wasm_demo(
         }
     }
 
-    let apps: Vec<WasmDemoApp> = APPS
-        .iter()
-        .filter(|(dir, _)| build_dir.join(dir).join("index.html").exists())
-        .map(|(dir, label)| WasmDemoApp {
-            label,
-            url: format!("{WASM_DEMO_URL_PREFIX}/{key}/{dir}/index.html"),
-            download_size: gzipped_size(&build_dir.join(dir)),
-        })
-        .collect();
-    if apps.is_empty() {
-        println!("The wasm demo artifact contains none of the expected apps");
+    if !build_dir.join("index.html").exists() {
+        println!("The wasm demo artifact has no index.html");
         return RefreshOutcome::Failed;
     }
 
@@ -149,8 +131,9 @@ pub async fn load_wasm_demo(
     println!("Wasm demo build {key} cached.");
 
     RefreshOutcome::Updated(WasmDemoCacheEntry {
+        index_url: format!("{WASM_DEMO_URL_PREFIX}/{key}/index.html"),
+        download_size: gzipped_size(&build_dir.join("assets")),
         key,
-        apps: Arc::from(apps),
         commit_info,
     })
 }
@@ -184,7 +167,7 @@ fn unpack(zip: &[u8], dir: &Path) -> std::io::Result<()> {
         let compress = path
             .extension()
             .and_then(|ext| ext.to_str())
-            .is_some_and(|ext| matches!(ext, "wasm" | "js" | "html"));
+            .is_some_and(|ext| matches!(ext, "wasm" | "js" | "html" | "css" | "svg"));
         if compress {
             let mut encoder = GzEncoder::new(Vec::new(), Compression::best());
             encoder.write_all(&contents)?;
@@ -196,9 +179,9 @@ fn unpack(zip: &[u8], dir: &Path) -> std::io::Result<()> {
     std::fs::rename(&tmp_dir, dir)
 }
 
-/// Total size of the gzipped `.wasm` and `.js` files in an app directory
-fn gzipped_size(app_dir: &Path) -> u64 {
-    let Ok(entries) = std::fs::read_dir(app_dir) else {
+/// Total size of the gzipped `.wasm` and `.js` files in a directory
+fn gzipped_size(dir: &Path) -> u64 {
+    let Ok(entries) = std::fs::read_dir(dir) else {
         return 0;
     };
     entries

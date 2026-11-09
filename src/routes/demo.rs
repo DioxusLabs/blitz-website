@@ -1,4 +1,4 @@
-use std::sync::{Arc, LazyLock};
+use std::sync::LazyLock;
 
 use dioxus::prelude::*;
 use fxhash::hash32;
@@ -7,7 +7,6 @@ use humansize::{format_size, DECIMAL};
 use crate::{
     components::{CommitInfoDisplay, Page},
     github::CommitInfo,
-    wasm_demo::WasmDemoApp,
 };
 
 /// Content hash of the demo script, appended to its URL so browsers don't
@@ -15,36 +14,37 @@ use crate::{
 static DEMO_SCRIPT_HASH: LazyLock<u32> =
     LazyLock::new(|| hash32(include_str!("../../static/demo.js")));
 
-#[derive(Clone)]
-pub struct ArcWasmDemoApps(pub Arc<[WasmDemoApp]>);
-impl PartialEq for ArcWasmDemoApps {
-    fn eq(&self, other: &Self) -> bool {
-        Arc::ptr_eq(&self.0, &other.0)
-    }
-}
+const DEFAULT_START_PAGE: &str = "https://en.wikipedia.org/wiki/Web_browser_engine";
 
 #[component]
-pub fn DemoPage(apps: ArcWasmDemoApps, commit_info: Option<CommitInfo>) -> Element {
+pub fn DemoPage(index_url: String, download_size: u64, commit_info: Option<CommitInfo>) -> Element {
     rsx! {
         Page { title: "Demo".into(),
             h1 { "Demo" }
             p {
-                "Dioxus Native apps rendered by Blitz, compiled to WebAssembly and drawn onto a "
-                "canvas with WebGL2. Your browser's own HTML and CSS engine isn't used."
+                "The Blitz browser, compiled to WebAssembly and drawn onto a canvas with "
+                "WebGL2. Pages are fetched through this site and laid out and painted by "
+                "Blitz: your browser's own HTML and CSS engine isn't used."
             }
             CommitInfoDisplay { commit_info, label: "Built from commit:" }
-            div { class: "demo-buttons",
-                for app in apps.0.iter() {
-                    button {
-                        class: "demo-button",
-                        "data-demo-src": "{app.url}",
-                        "Load {app.label} ({format_size(app.download_size, DECIMAL)})"
-                    }
+            form { class: "demo-form", id: "demo-form", "data-demo-src": "{index_url}",
+                input {
+                    class: "demo-url",
+                    id: "demo-url",
+                    r#type: "text",
+                    inputmode: "url",
+                    spellcheck: "false",
+                    required: true,
+                    "aria-label": "Start page",
+                    value: DEFAULT_START_PAGE,
+                }
+                button { class: "demo-button", r#type: "submit",
+                    "Load Blitz ({format_size(download_size, DECIMAL)})"
                 }
             }
             div { class: "demo-frame", id: "demo-frame",
                 p { class: "demo-status", id: "demo-status",
-                    "Pick an app to download and run it."
+                    "Enter a start page and load the browser to try it."
                 }
             }
             p { class: "demo-links", id: "demo-links", hidden: true,

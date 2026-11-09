@@ -20,14 +20,13 @@ use dioxus_html_macro::html;
 use downloads::{load_downloads, DOWNLOAD_CACHE};
 use github::CommitInfo;
 use routes::{
-    encode_test_path, product_color, product_label, AboutPage, ArcDownloadLinks, ArcWasmDemoApps,
-    ArcWptHistory, BlitzAreaResults, ChartLine, ChartRange, ChartSeries, CssSupportPage, DemoPage,
-    DemoPageProps, DemoUnavailablePage, DownloadsPage, DownloadsPageProps,
-    DownloadsUnavailablePage, ElementSupportPage, EventSupportPage, GettingStartedPage, HomePage,
-    NLNetInstructionsPage, TestPageTab, WptComparePage, WptComparePageProps, WptCompareTestPage,
-    WptCompareTestPageProps, WptFocusAreasPage, WptFocusAreasPageProps, WptHistoryPage,
-    WptHistoryPageProps, WptResultsPage, WptResultsPageProps, WptUnavailablePage,
-    WptUnavailablePageProps,
+    encode_test_path, product_color, product_label, AboutPage, ArcDownloadLinks, ArcWptHistory,
+    BlitzAreaResults, ChartLine, ChartRange, ChartSeries, CssSupportPage, DemoPage, DemoPageProps,
+    DemoUnavailablePage, DownloadsPage, DownloadsPageProps, DownloadsUnavailablePage,
+    ElementSupportPage, EventSupportPage, GettingStartedPage, HomePage, NLNetInstructionsPage,
+    TestPageTab, WptComparePage, WptComparePageProps, WptCompareTestPage, WptCompareTestPageProps,
+    WptFocusAreasPage, WptFocusAreasPageProps, WptHistoryPage, WptHistoryPageProps, WptResultsPage,
+    WptResultsPageProps, WptUnavailablePage, WptUnavailablePageProps,
 };
 use serde::Deserialize;
 use std::{
@@ -341,7 +340,8 @@ async fn main() {
                     return (StatusCode::SERVICE_UNAVAILABLE, html);
                 };
                 let props = DemoPageProps {
-                    apps: ArcWasmDemoApps(entry.apps.clone()),
+                    index_url: entry.index_url.clone(),
+                    download_size: entry.download_size,
                     commit_info: entry.commit_info.clone(),
                 };
                 dx_route_with_props(DemoPage, props).await

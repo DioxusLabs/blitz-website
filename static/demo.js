@@ -1,11 +1,15 @@
-// Click-to-load for the wasm demo page: the apps are multi-megabyte
-// downloads, so nothing is fetched until a button is pressed.
+// Click-to-load for the wasm demo page: the browser is a multi-megabyte
+// download, so nothing is fetched until the form is submitted.
 (function () {
+  const form = document.getElementById("demo-form");
+  const urlInput = document.getElementById("demo-url");
   const frame = document.getElementById("demo-frame");
   const status = document.getElementById("demo-status");
   const links = document.getElementById("demo-links");
   const openLink = document.getElementById("demo-open-link");
-  const buttons = document.querySelectorAll("[data-demo-src]");
+
+  // The app fetches pages and subresources as this prefix + the URL-encoded target
+  const PROXY_PREFIX = "/proxy?url=";
 
   function hasWebGl2() {
     try {
@@ -17,9 +21,16 @@
 
   let poll = null;
 
-  function load(button) {
-    const src = button.dataset.demoSrc;
-    buttons.forEach((b) => b.classList.toggle("demo-button--active", b === button));
+  function load() {
+    let startPage = urlInput.value.trim();
+    if (!/^https?:\/\//i.test(startPage)) {
+      startPage = "https://" + startPage;
+    }
+    const src =
+      form.dataset.demoSrc +
+      "?proxy=" + encodeURIComponent(PROXY_PREFIX) +
+      "&url=" + encodeURIComponent(startPage);
+
     clearInterval(poll);
     frame.querySelector("iframe")?.remove();
 
@@ -37,15 +48,15 @@
 
     const iframe = document.createElement("iframe");
     iframe.src = src;
-    iframe.title = button.textContent;
+    iframe.title = "Blitz browser";
     iframe.className = "demo-iframe demo-iframe--loading";
     frame.appendChild(iframe);
 
-    // Trunk's loader sets `window.wasmBindings` once the wasm has started
+    // The dioxus-cli loader sets `__dx_mainWasm` once the wasm has started
     poll = setInterval(() => {
       let started = false;
       try {
-        started = !!iframe.contentWindow.wasmBindings;
+        started = !!iframe.contentWindow.__dx_mainWasm;
       } catch (e) {}
       if (started) {
         clearInterval(poll);
@@ -56,5 +67,8 @@
     }, 100);
   }
 
-  buttons.forEach((button) => button.addEventListener("click", () => load(button)));
+  form.addEventListener("submit", (event) => {
+    event.preventDefault();
+    load();
+  });
 })();
