@@ -25,7 +25,7 @@ const ARTIFACT_NAME: &str = "blitz-wasm-demo";
 pub struct WasmDemoCacheEntry {
     /// The artifact digest prefix the build is stored and served under
     pub key: String,
-    /// URL of the Browser App's `index.html`
+    /// URL of the renderer's `index.html`
     pub index_url: String,
     /// Bytes transferred to load the app (its gzipped wasm and JS)
     pub download_size: u64,
@@ -132,7 +132,7 @@ pub async fn load_wasm_demo(
 
     RefreshOutcome::Updated(WasmDemoCacheEntry {
         index_url: format!("{WASM_DEMO_URL_PREFIX}/{key}/index.html"),
-        download_size: gzipped_size(&build_dir.join("assets")),
+        download_size: gzipped_size(&build_dir),
         key,
         commit_info,
     })
@@ -186,12 +186,17 @@ fn gzipped_size(dir: &Path) -> u64 {
     };
     entries
         .flatten()
-        .filter(|entry| {
+        .map(|entry| {
+            let path = entry.path();
             let name = entry.file_name();
             let name = name.to_string_lossy();
-            name.ends_with(".wasm.gz") || name.ends_with(".js.gz")
+            if path.is_dir() {
+                gzipped_size(&path)
+            } else if name.ends_with(".wasm.gz") || name.ends_with(".js.gz") {
+                entry.metadata().map_or(0, |metadata| metadata.len())
+            } else {
+                0
+            }
         })
-        .filter_map(|entry| entry.metadata().ok())
-        .map(|metadata| metadata.len())
         .sum()
 }

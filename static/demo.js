@@ -63,6 +63,9 @@
     if (/\b429\b|too many/i.test(message)) {
       return "Too many requests through the demo's proxy; try again in a minute.";
     }
+    // The renderer reports HTTP errors as `HttpStatus { status: 403, url: ... }`
+    const status = /HttpStatus\s*\{\s*status:\s*(\d+)/.exec(message);
+    if (status) return "the proxy returned HTTP " + status[1] + ".";
     return message;
   }
 
@@ -133,12 +136,12 @@
       "&url=" + encodeURIComponent(url);
     const iframe = createIframe("blitz", src, "Page rendered by Blitz");
     // Fallback start detection for renderers without blitz:ready: the
-    // dioxus-cli loader sets `__dx_mainWasm` once the wasm has started
+    // dioxus-cli and trunk loaders set these once the wasm has started
     const poll = setInterval(() => {
       if (views.blitz.iframe !== iframe) return clearInterval(poll);
       let started = false;
       try {
-        started = !!iframe.contentWindow.__dx_mainWasm;
+        started = !!(iframe.contentWindow.__dx_mainWasm || iframe.contentWindow.wasmBindings);
       } catch (e) {}
       if (started) {
         clearInterval(poll);
