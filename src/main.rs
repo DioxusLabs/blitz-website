@@ -363,6 +363,7 @@ async fn main() {
             ),
         )
         .route("/proxy", get(proxy::proxy_route))
+        .route("/proxy/frame", get(proxy::proxy_frame_route))
         .route("/status", get(|| async { Redirect::to("/status/css") }))
         .route(
             "/status/css",

@@ -73,51 +73,235 @@ pub struct ProxyQuery {
     url: String,
 }
 
-pub async fn proxy_route(
-    ConnectInfo(peer): ConnectInfo<SocketAddr>,
-    headers: HeaderMap,
-    Query(query): Query<ProxyQuery>,
-) -> Response {
+/// Which route a request came in on
+#[derive(Clone, Copy, PartialEq)]
+enum Route {
+    /// `/proxy`: the wasm renderer's fetches of pages and subresources
+    Fetch,
+    /// `/proxy/frame`: the document for the demo's native (iframe) view
+    Frame,
+}
+
+/// Whether a request may use the proxy at all. Both routes go through here,
+/// so this is the one place to add an allowlist or token check.
+fn authorize(
+    headers: &HeaderMap,
+    url: &str,
+    route: Route,
+) -> Result<Url, (StatusCode, &'static str)> {
     // Browsers always send Sec-Fetch-Site: anything but same-origin is
     // another site, or someone using the proxy from the address bar
     if headers
         .get("sec-fetch-site")
         .is_some_and(|site| site != "same-origin")
     {
-        return error(
+        return Err((
             StatusCode::FORBIDDEN,
             "The proxy only serves the Blitz demo on this site",
+        ));
+    }
+    // The native view's document is only ever loaded into the demo's iframe
+    if route == Route::Frame
+        && headers
+            .get("sec-fetch-dest")
+            .is_some_and(|dest| dest != "iframe")
+    {
+        return Err((
+            StatusCode::FORBIDDEN,
+            "The proxy only serves the Blitz demo on this site",
+        ));
+    }
+
+    let Ok(url) = Url::parse(url) else {
+        return Err((StatusCode::BAD_REQUEST, "Invalid URL"));
+    };
+    if let Err(err) = check_url(&url) {
+        return Err((StatusCode::FORBIDDEN, err));
+    }
+    Ok(url)
+}
+
+pub async fn proxy_route(
+    ConnectInfo(peer): ConnectInfo<SocketAddr>,
+    headers: HeaderMap,
+    Query(query): Query<ProxyQuery>,
+) -> Response {
+    let fetched = match authorize(&headers, &query.url, Route::Fetch) {
+        Ok(url) => fetch(peer, &headers, url).await,
+        Err((status, message)) => return error(status, message),
+    };
+    let fetched = match fetched {
+        Ok(fetched) => fetched,
+        Err(response) => return response,
+    };
+
+    let mut response = Response::new(Body::from(fetched.body));
+    *response.status_mut() = fetched.status;
+    let response_headers = response.headers_mut();
+    response_headers.insert(
+        header::CONTENT_TYPE,
+        fetched
+            .content_type
+            .unwrap_or(HeaderValue::from_static("application/octet-stream")),
+    );
+    response_headers.insert(
+        header::CONTENT_SECURITY_POLICY,
+        HeaderValue::from_static("sandbox; default-src 'none'"),
+    );
+    response_headers.insert(
+        "cross-origin-resource-policy",
+        HeaderValue::from_static("same-origin"),
+    );
+    insert_common_headers(response_headers);
+    // The URL after redirects, for resolving relative URLs in the document
+    if let Ok(final_url) = HeaderValue::from_str(fetched.final_url.as_str()) {
+        response_headers.insert("x-proxy-final-url", final_url);
+    }
+    response
+}
+
+/// `/proxy/frame?url=`: the page's document for the native view, with a
+/// `<base>` so its subresources load straight from the site, and a script
+/// that reports loads and hands link clicks to the demo page. It runs in a
+/// CSP sandbox without `allow-same-origin`, so it gets an opaque origin and
+/// can't read this site's storage or call the proxy.
+pub async fn proxy_frame_route(
+    ConnectInfo(peer): ConnectInfo<SocketAddr>,
+    headers: HeaderMap,
+    Query(query): Query<ProxyQuery>,
+) -> Response {
+    let fetched = match authorize(&headers, &query.url, Route::Frame) {
+        Ok(url) => fetch(peer, &headers, url).await,
+        Err((status, message)) => return error(status, message),
+    };
+    let fetched = match fetched {
+        Ok(fetched) => fetched,
+        Err(response) => return response,
+    };
+    let is_html = fetched
+        .content_type
+        .as_ref()
+        .and_then(|ct| ct.to_str().ok())
+        .is_some_and(|ct| {
+            let mime = ct.split(';').next().unwrap_or_default().trim();
+            mime.eq_ignore_ascii_case("text/html")
+                || mime.eq_ignore_ascii_case("application/xhtml+xml")
+        });
+    if !is_html {
+        return error(
+            StatusCode::UNSUPPORTED_MEDIA_TYPE,
+            "The native view only shows HTML pages",
         );
     }
 
-    let Ok(url) = Url::parse(&query.url) else {
-        return error(StatusCode::BAD_REQUEST, "Invalid URL");
-    };
-    if let Err(err) = check_url(&url) {
-        return error(StatusCode::FORBIDDEN, err);
-    }
+    let body = inject_frame_head(&fetched.body, &fetched.final_url);
+    let mut response = Response::new(Body::from(body));
+    *response.status_mut() = fetched.status;
+    let response_headers = response.headers_mut();
+    response_headers.insert(header::CONTENT_TYPE, fetched.content_type.unwrap());
+    response_headers.insert(
+        header::CONTENT_SECURITY_POLICY,
+        HeaderValue::from_static("sandbox allow-scripts; frame-ancestors 'self'"),
+    );
+    insert_common_headers(response_headers);
+    response
+}
 
-    let client = budget_key(client_ip(&headers, peer));
+fn insert_common_headers(headers: &mut HeaderMap) {
+    headers.insert(
+        header::X_CONTENT_TYPE_OPTIONS,
+        HeaderValue::from_static("nosniff"),
+    );
+    headers.insert(
+        header::REFERRER_POLICY,
+        HeaderValue::from_static("no-referrer"),
+    );
+    headers.insert(
+        header::CACHE_CONTROL,
+        HeaderValue::from_static("private, max-age=300"),
+    );
+}
+
+/// Reports loads to the demo page and hands it link clicks, so navigation
+/// stays in the demo's history and goes through the proxy
+const FRAME_SCRIPT: &str = r#"<script>
+addEventListener("load", () => parent.postMessage({type: "frame:loaded", url: document.baseURI, title: document.title}, "*"));
+addEventListener("click", (event) => {
+  const link = event.target.closest && event.target.closest("a[href]");
+  if (!link || event.defaultPrevented || event.button !== 0 || !/^https?:/.test(link.href)) return;
+  event.preventDefault();
+  parent.postMessage({type: "frame:navigate", url: link.href}, "*");
+});
+</script>"#;
+
+/// Insert a `<base>` for the page's real URL and [`FRAME_SCRIPT`] at the start
+/// of the document's `<head>` (or of the document, if it has no `<head>` tag)
+fn inject_frame_head(html: &[u8], url: &Url) -> Vec<u8> {
+    let href = url
+        .as_str()
+        .replace('&', "&amp;")
+        .replace('"', "&quot;")
+        .replace('<', "&lt;");
+    let injected = format!(r#"<base href="{href}">{FRAME_SCRIPT}"#);
+
+    let lower = html.to_ascii_lowercase();
+    let after_head = lower
+        .windows(5)
+        .position(|w| w == b"<head")
+        .filter(|&i| matches!(lower.get(i + 5), Some(b'>' | b' ' | b'\t' | b'\n' | b'\r')))
+        .and_then(|i| {
+            lower[i..]
+                .iter()
+                .position(|&b| b == b'>')
+                .map(|j| i + j + 1)
+        });
+
+    let mut out = Vec::with_capacity(html.len() + injected.len());
+    match after_head {
+        Some(i) => {
+            out.extend_from_slice(&html[..i]);
+            out.extend_from_slice(injected.as_bytes());
+            out.extend_from_slice(&html[i..]);
+        }
+        None => {
+            out.extend_from_slice(injected.as_bytes());
+            out.extend_from_slice(html);
+        }
+    }
+    out
+}
+
+struct Fetched {
+    status: StatusCode,
+    content_type: Option<HeaderValue>,
+    /// The URL after redirects
+    final_url: Url,
+    body: Vec<u8>,
+}
+
+/// Fetch `url` within the per-client and global budgets
+async fn fetch(peer: SocketAddr, headers: &HeaderMap, url: Url) -> Result<Fetched, Response> {
+    let client = budget_key(client_ip(headers, peer));
     let Some(_client_slot) = ClientSlot::acquire(client) else {
-        return (
+        return Err((
             StatusCode::TOO_MANY_REQUESTS,
             [(header::RETRY_AFTER, "60")],
             "Too many proxy requests; try again in a minute",
         )
-            .into_response();
+            .into_response());
     };
     if !global_budget_available() {
-        return error(
+        return Err(error(
             StatusCode::SERVICE_UNAVAILABLE,
             "The proxy has reached its hourly limit; try again later",
-        );
+        ));
     }
     let Ok(Ok(_slot)) = tokio::time::timeout(Duration::from_secs(5), IN_FLIGHT.acquire()).await
     else {
-        return error(
+        return Err(error(
             StatusCode::SERVICE_UNAVAILABLE,
             "The proxy is busy; try again in a moment",
-        );
+        ));
     };
 
     let accept = headers
@@ -128,33 +312,39 @@ pub async fn proxy_route(
         Ok(upstream) => upstream,
         Err(err) => {
             tracing::info!("Proxy fetch failed: {err}");
-            return error(StatusCode::BAD_GATEWAY, "Couldn't fetch the URL");
+            return Err(error(StatusCode::BAD_GATEWAY, "Couldn't fetch the URL"));
         }
     };
 
     let content_type = upstream.headers().get(header::CONTENT_TYPE).cloned();
     if !is_allowed_content_type(content_type.as_ref().and_then(|ct| ct.to_str().ok())) {
-        return error(
+        return Err(error(
             StatusCode::UNSUPPORTED_MEDIA_TYPE,
             "This content type can't be proxied",
-        );
+        ));
     }
     if upstream
         .content_length()
         .is_some_and(|len| len > MAX_RESPONSE_BYTES as u64)
     {
-        return error(StatusCode::PAYLOAD_TOO_LARGE, "The response is too large");
+        return Err(error(
+            StatusCode::PAYLOAD_TOO_LARGE,
+            "The response is too large",
+        ));
     }
 
     let status = upstream.status();
-    let final_url = HeaderValue::from_str(upstream.url().as_str()).ok();
+    let final_url = upstream.url().clone();
     let mut body = Vec::new();
     loop {
         match upstream.chunk().await {
             Ok(Some(chunk)) => {
                 if body.len() + chunk.len() > MAX_RESPONSE_BYTES {
                     record_bytes(client, body.len());
-                    return error(StatusCode::PAYLOAD_TOO_LARGE, "The response is too large");
+                    return Err(error(
+                        StatusCode::PAYLOAD_TOO_LARGE,
+                        "The response is too large",
+                    ));
                 }
                 body.extend_from_slice(&chunk);
             }
@@ -162,44 +352,18 @@ pub async fn proxy_route(
             Err(err) => {
                 tracing::info!("Proxy fetch failed: {err}");
                 record_bytes(client, body.len());
-                return error(StatusCode::BAD_GATEWAY, "Couldn't fetch the URL");
+                return Err(error(StatusCode::BAD_GATEWAY, "Couldn't fetch the URL"));
             }
         }
     }
     record_bytes(client, body.len());
 
-    let mut response = Response::new(Body::from(body));
-    *response.status_mut() = status;
-    let response_headers = response.headers_mut();
-    response_headers.insert(
-        header::CONTENT_TYPE,
-        content_type.unwrap_or(HeaderValue::from_static("application/octet-stream")),
-    );
-    response_headers.insert(
-        header::CONTENT_SECURITY_POLICY,
-        HeaderValue::from_static("sandbox; default-src 'none'"),
-    );
-    response_headers.insert(
-        header::X_CONTENT_TYPE_OPTIONS,
-        HeaderValue::from_static("nosniff"),
-    );
-    response_headers.insert(
-        "cross-origin-resource-policy",
-        HeaderValue::from_static("same-origin"),
-    );
-    response_headers.insert(
-        header::REFERRER_POLICY,
-        HeaderValue::from_static("no-referrer"),
-    );
-    response_headers.insert(
-        header::CACHE_CONTROL,
-        HeaderValue::from_static("private, max-age=300"),
-    );
-    // The URL after redirects, for resolving relative URLs in the document
-    if let Some(final_url) = final_url {
-        response_headers.insert("x-proxy-final-url", final_url);
-    }
-    response
+    Ok(Fetched {
+        status,
+        content_type,
+        final_url,
+        body,
+    })
 }
 
 fn error(status: StatusCode, message: &'static str) -> Response {
@@ -482,6 +646,17 @@ mod tests {
         ] {
             assert!(check(url).is_err(), "{url} should be rejected");
         }
+    }
+
+    #[test]
+    fn frame_head_injection() {
+        let url = Url::parse("https://example.com/a?b=1&c=\"").unwrap();
+        let out = |html: &str| String::from_utf8(inject_frame_head(html.as_bytes(), &url)).unwrap();
+        let base = r#"<base href="https://example.com/a?b=1&amp;c=%22">"#;
+        assert!(out("<html><HEAD lang=en><title>t</title>")
+            .starts_with(&format!("<html><HEAD lang=en>{base}")));
+        assert!(out("<header>x</header>").starts_with(base));
+        assert!(out("<p>no head</p>").ends_with("</script><p>no head</p>"));
     }
 
     #[test]
