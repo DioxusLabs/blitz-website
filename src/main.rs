@@ -21,11 +21,11 @@ use downloads::{load_downloads, DOWNLOAD_CACHE};
 use github::CommitInfo;
 use routes::{
     encode_test_path, product_color, product_label, AboutPage, ArcDownloadLinks, ArcWptHistory,
-    BlitzAreaResults, ChartLine, ChartRange, ChartSeries, CssSupportPage, DownloadsPage,
-    DownloadsPageProps, DownloadsUnavailablePage, ElementSupportPage, EventSupportPage,
-    GettingStartedPage, HomePage, NLNetInstructionsPage, TestPageTab, WptComparePage,
-    WptComparePageProps, WptCompareTestPage, WptCompareTestPageProps, WptFocusAreasPage,
-    WptFocusAreasPageProps, WptHistoryPage, WptHistoryPageProps, WptResultsPage,
+    BlitzAreaResults, ChartLine, ChartRange, ChartSeries, CssSupportPage, DemoPage, DemoPageProps,
+    DemoUnavailablePage, DownloadsPage, DownloadsPageProps, DownloadsUnavailablePage,
+    ElementSupportPage, EventSupportPage, GettingStartedPage, HomePage, NLNetInstructionsPage,
+    TestPageTab, WptComparePage, WptComparePageProps, WptCompareTestPage, WptCompareTestPageProps,
+    WptFocusAreasPage, WptFocusAreasPageProps, WptHistoryPage, WptHistoryPageProps, WptResultsPage,
     WptResultsPageProps, WptUnavailablePage, WptUnavailablePageProps,
 };
 use serde::Deserialize;
@@ -41,6 +41,7 @@ use tower_http::{
     trace::{DefaultOnResponse, TraceLayer},
 };
 use tracing::Level;
+use wasm_demo::{load_wasm_demo, wasm_demo_dir, WASM_DEMO_CACHE, WASM_DEMO_URL_PREFIX};
 use wpt_compare::{load_wpt_compare, WPT_COMPARE_CACHE};
 use wpt_db::{RunRow, WPT_COMPARE_DB};
 use wpt_summaries::{load_wpt_summaries, WPT_SUMMARY_CACHE};
@@ -50,7 +51,9 @@ mod components;
 mod downloads;
 mod git_mirror;
 mod github;
+mod proxy;
 mod routes;
+mod wasm_demo;
 mod wpt_compare;
 mod wpt_db;
 mod wpt_fyi;
@@ -326,6 +329,41 @@ async fn main() {
                 dx_route_with_props(DownloadsPage, props).await
             }),
         )
+        .route(
+            "/demo",
+            get(async || {
+                let Some(entry) = WASM_DEMO_CACHE
+                    .get_or_refresh(Duration::from_mins(5), Duration::MAX, load_wasm_demo)
+                    .await
+                else {
+                    let (_, html) = dx_route_with_props(DemoUnavailablePage, ()).await;
+                    return (StatusCode::SERVICE_UNAVAILABLE, html);
+                };
+                let props = DemoPageProps {
+                    index_url: entry.index_url.clone(),
+                    download_size: entry.download_size,
+                    commit_info: entry.commit_info.clone(),
+                };
+                dx_route_with_props(DemoPage, props).await
+            }),
+        )
+        // Builds are stored under their artifact digest, so never change
+        .nest_service(
+            WASM_DEMO_URL_PREFIX,
+            get_service(ServeDir::new(wasm_demo_dir()).precompressed_gzip()).layer(
+                axum::middleware::map_response(|mut response: Response| async move {
+                    if response.status().is_success() {
+                        response.headers_mut().insert(
+                            header::CACHE_CONTROL,
+                            header::HeaderValue::from_static("public, max-age=31536000, immutable"),
+                        );
+                    }
+                    response
+                }),
+            ),
+        )
+        .route("/proxy", get(proxy::proxy_route))
+        .route("/proxy/frame", get(proxy::proxy_frame_route))
         .route("/status", get(|| async { Redirect::to("/status/css") }))
         .route(
             "/status/css",
@@ -411,14 +449,18 @@ async fn main() {
 
     if std::env::var("PRECACHE_DOWNLOADS").is_ok() {
         tokio::spawn(DOWNLOAD_CACHE.refresh(load_downloads));
+        tokio::spawn(WASM_DEMO_CACHE.refresh(load_wasm_demo));
     }
 
     let msg = format!("Serving blitz-website at http://{addr}").replace("[::]", "localhost");
     println!("{msg}");
 
-    axum::serve(listener, app.into_make_service())
-        .await
-        .unwrap();
+    axum::serve(
+        listener,
+        app.into_make_service_with_connect_info::<SocketAddr>(),
+    )
+    .await
+    .unwrap();
 }
 
 /// Get the score history for a set of `(product, area)` pairs from the local

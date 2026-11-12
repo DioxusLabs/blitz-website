@@ -92,6 +92,7 @@ pub fn Page(
                             a { href: "/status", "Status" }
                             a { href: "/wpt", "WPT" }
                             a { href: "/downloads", "Downloads" }
+                            a { href: "/demo", "Demo" }
                             a {
                                 class: "nav-icon",
                                 alt: "Github",
@@ -184,6 +185,7 @@ pub fn HamburgerMenu() -> Element {
                 a { href: "/status", "Status" }
                 a { href: "/wpt", "WPT" }
                 a { href: "/downloads", "Downloads" }
+                a { href: "/demo", "Demo" }
                 a {
                     class: "external-link",
                     href: "https://github.com/dioxuslabs/blitz",
