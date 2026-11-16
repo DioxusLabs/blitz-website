@@ -1,0 +1,319 @@
+{
+  "next": [
+    {
+      "title": "Drag &amp; Drop",
+      "description": "Drag and drop events.",
+      "milestone": "0.3",
+      "links": [257]
+    },
+    {
+      "title": "Event handling refactor",
+      "description": "Events on the <code>&lt;body&gt;</code> and <code>&lt;html&gt;</code> events, synchronous event handling and more.",
+      "milestone": "0.3",
+      "links": [257]
+    },
+    {
+      "title": "Android app icons",
+      "description": "App icon support in the CLI. Android back button support has already landed.",
+      "milestone": "0.3",
+      "links": [119]
+    },
+    {
+      "title": "<code>text-overflow</code>",
+      "description": "Ellipsis truncation for text that overflows its container.",
+      "milestone": "0.3",
+      "in_progress": true,
+      "links": [1015]
+    },
+    {
+      "title": "DOM-based SVG",
+      "description": "Direct DOM support for inline SVG. Enabling fast, animatable, stylable, interactive SVGs",
+      "in_progress": true,
+      "links": [1541, 1542, 1546, 1548, 1551, 1552, 1554, 1556]
+    },
+    {
+      "title": "<code>&lt;select&gt;</code>",
+      "description": "Single-select drop-downs, including keyboard navigation and form submission.",
+      "milestone": "1.0",
+      "in_progress": true,
+      "links": [1321]
+    },
+    {
+      "title": "Improved font matching",
+      "description": "Weight, width and style ranges and support for <code>unicode-range</code> for <code>@font-face</code> rules.",
+      "milestone": "1.0",
+      "in_progress": true,
+      "links": [1583, {"repo": "linebender/parley", "number": 956}]
+    },
+    {
+      "title": "Winkin text backend",
+      "description": "Moving Parley behind a compile-time text backend boundary, and adding a <a href='https://github.com/dfrg/winkin' target=_blank>winkin</a> backend.",
+      "in_progress": true,
+      "links": [1146, 1153]
+    }
+  ],
+  "backlog": [
+    {
+      "title": "Layout",
+      "description": "<code>position: sticky</code>, table layout, the remaining <code>contain</code> values, and flow layout fixes.",
+      "milestone": "1.0",
+      "links": [256]
+    },
+    {
+      "title": "Text layout",
+      "description": "<code>line-clamp</code> and <code>text-wrap-style</code>.",
+      "milestone": "1.0",
+      "links": [256]
+    },
+    {
+      "title": "Fonts",
+      "description": "More reliable font fallback, and <code>font-display</code>.",
+      "milestone": "1.0",
+      "links": [256]
+    },
+    {
+      "title": "Rendering",
+      "description": "<code>transform-box</code> and better filter support on Vello backends.",
+      "milestone": "1.0",
+      "links": [238]
+    },
+    {
+      "title": "Shadow DOM &amp; Custom Elements",
+      "description": "Shadow DOM with style encapsulation and slots, declarative shadow DOM, and a custom element registry.",
+      "milestone": "1.0",
+      "links": [889, 923]
+    },
+    {
+      "title": "Built-in elements",
+      "description": "<code>&lt;select&gt;</code>, range, color and password inputs, <code>&lt;picture&gt;</code> and <code>srcset</code>, <code>&lt;base&gt;</code> and <code>&lt;meta&gt;</code> refresh.",
+      "milestone": "1.0",
+      "links": [258, 259]
+    },
+    {
+      "title": "Events",
+      "description": "Animation, clipboard and <code>beforeinput</code> events, and events triggered by programmatic DOM changes.",
+      "milestone": "1.0",
+      "links": [257, 863]
+    },
+    {
+      "title": "Custom Widgets",
+      "description": "Widgets that participate in layout and accessibility, pointer capture, and smarter paint invalidation.",
+      "milestone": "1.0",
+      "links": [233]
+    },
+    {
+      "title": "Accessibility",
+      "description": "Accessible text layout and input, and handling of accessibility events.",
+      "milestone": "1.0",
+      "links": [262]
+    },
+    {
+      "title": "Inline box model",
+      "description": "Margin, border and padding on non-atomic inline elements.",
+      "links": [1018]
+    },
+    {
+      "title": "Table layout",
+      "description": "Laying out CSS tables with Taffy's new table layout algorithm, instead of emulating them with CSS Grid.",
+      "milestone": "1.0",
+      "links": [1370]
+    },
+    {
+      "title": "Subgrid and Grid Lanes",
+      "description": "CSS <code>subgrid</code>, and <code>display: grid-lanes</code> (masonry) layout via Taffy.",
+      "links": [1056, 1132]
+    },
+    {
+      "title": "Web Animations",
+      "description": "A new <code>stylo_web_animations</code> crate that runs CSS animations, CSS transitions and script animations.",
+      "links": [1113, 1115, 1119, 1120, 1122]
+    },
+    {
+      "title": "Animation and transition events",
+      "description": "Dispatching CSS animation and transition events.",
+      "milestone": "1.0",
+      "links": [1277]
+    },
+    {
+      "title": "Sizing keywords for min/max sizes",
+      "description": "<code>min-content</code>, <code>max-content</code> and <code>fit-content</code> for <code>min-*</code> and <code>max-*</code> sizes.",
+      "milestone": "1.0",
+      "links": [1036]
+    },
+    {
+      "title": "<code>aspect-ratio</code>",
+      "description": "<code>aspect-ratio: auto &amp;&amp; &lt;ratio&gt;</code>, automatic minimum sizes, and transferring min/max sizes through the ratio.",
+      "milestone": "1.0",
+      "links": [1250, 1249]
+    },
+    {
+      "title": "IME composition",
+      "description": "Composition events from IME input, underlined compositions, IME delete-surrounding requests, and IME state for inputs focused before the window is created.",
+      "milestone": "1.0",
+      "links": [1086, 1513, 1590, 1084]
+    },
+    {
+      "title": "Richer accessibility tree",
+      "description": "Fuller support for accessible labels and descriptions, placeholders, tooltips from <code>title</code>, ARIA states and presentational roles, and incremental AccessKit tree updates.",
+      "milestone": "1.0",
+      "links": [1223, 1259, 1358, 1359, 1511, 1561, 1457]
+    },
+    {
+      "title": "Pointer capture and widget invalidation",
+      "description": "Pointer Events pointer capture, and a <code>WidgetCx</code> that lets custom widgets request a redraw or relayout.",
+      "milestone": "1.0",
+      "links": [1566, 1323]
+    },
+    {
+      "title": "<code>:has()</code>",
+      "description": "Enabling the <code>:has()</code> selector, with invalidation after state, attribute and DOM changes.",
+      "links": [1331, 1332]
+    },
+    {
+      "title": "Form controls and selection",
+      "description": "<code>maxlength</code>, focusing a clicked label's control, sizing inputs and textareas from <code>size</code>, <code>cols</code> and <code>rows</code>, and <code>::selection</code> colors.",
+      "links": [1196, 1048, 1464, 1397, 1050]
+    },
+    {
+      "title": "Touch fling",
+      "description": "Android-style fling scrolling, with least-squares velocity tracking, spline physics and fling boosting.",
+      "links": [1272]
+    },
+    {
+      "title": "DevTools Network panel",
+      "description": "Recording page loads and network requests for the Chrome DevTools Network panel.",
+      "links": [1417, 1418, 1426]
+    },
+    {
+      "title": "Blitz on the web",
+      "description": "A wasm viewer for a single web page, and a wasm32 build of the Blitz Browser, for the website demo.",
+      "links": [1487, 1478]
+    },
+    {
+      "title": "Layout performance",
+      "description": "Parallel layout of sibling subtrees (prototype), plus caching of grid item placement and line breaking.",
+      "links": [1034, 1026, 1136]
+    },
+    {
+      "title": "JavaScript embedding hooks",
+      "description": "Hooks that let embedders extend Blitz's experimental Boa-based scripting.",
+      "links": [1210]
+    }
+  ],
+  "completed": [
+    {
+      "title": "Devtools",
+      "description": "Inspect and edit the element tree, styles (including stylesheet rules), computed styles and box model with Chrome DevTools. Blitz apps can open DevTools themselves, using an embedded frontend.",
+      "milestone": "0.3",
+      "links": [572, 1452, 1427, 1436, 1429]
+    },
+    {
+      "title": "<code>background-clip: text</code>",
+      "description": "Text-clipped backgrounds, and <code>-webkit-text-fill-color</code>.",
+      "milestone": "0.3",
+      "links": [1340, 1341]
+    },
+    {
+      "title": "<code>text-shadow</code>",
+      "description": "Painting text shadows.",
+      "milestone": "0.3",
+      "links": [984]
+    },
+    {
+      "title": "<code>mix-blend-mode</code>",
+      "description": "Initial <code>mix-blend-mode</code> and <code>isolation: isolate</code> support.",
+      "milestone": "0.3",
+      "links": [1316]
+    },
+    {
+      "title": "Masks and SVG",
+      "description": "CSS masks use AnyRender mask layers (fixing <code>mask-mode: luminance</code>). SVG presentation attributes now map to CSS, and SVG <code>&lt;image&gt;</code> and <code>&lt;feImage&gt;</code> load external images.",
+      "links": [1534, 1593, 1587]
+    },
+    {
+      "title": "Fonts",
+      "description": "<code>font-optical-sizing</code>, falling back to the default font when no listed family is available, the <code>@font-face</code> <code>font-stretch</code> descriptor, skipping unsupported <code>@font-face</code> formats, and font emboldening tuned to match Safari.",
+      "links": [1360, 1473, 1581, 1412, 1361]
+    },
+    {
+      "title": "Float layout fixes",
+      "description": "Shrink-to-fit widths include floats, and floats and lines that don't fit beside existing floats move down to the next slot.",
+      "links": [980, 1378, 1390, 1379]
+    },
+    {
+      "title": "Reversed scroll origins",
+      "description": "Negative overflow, such as in <code>flex-wrap: wrap-reverse</code> scroll containers, can be scrolled to.",
+      "links": [1294]
+    },
+    {
+      "title": "<code>&lt;details&gt;</code> <code>:open</code>",
+      "description": "The <code>:open</code> selector for open <code>&lt;details&gt;</code> elements.",
+      "links": [1007]
+    },
+    {
+      "title": "Presentational attributes",
+      "description": "Table <code>cellspacing</code>, <code>cellpadding</code> and <code>valign</code>, <code>&lt;font&gt;</code> <code>face</code> and <code>size</code>, and <code>&lt;hr&gt;</code> <code>color</code>, <code>noshade</code> and <code>size</code>.",
+      "links": [1366, 1459, 1467, 1398]
+    },
+    {
+      "title": "<code>:focus-within</code>",
+      "description": "Style elements that contain the focused element.",
+      "links": [1226]
+    },
+    {
+      "title": "<code>text-indent</code> keywords and <code>word-break: break-word</code>",
+      "description": "<code>text-indent: hanging</code> and <code>each-line</code>, and <code>word-break: break-word</code>, enabled by upgrading Stylo.",
+      "links": [1257, 1255]
+    },
+    {
+      "title": "<code>aspect-ratio</code> for replaced elements",
+      "description": "Replaced elements such as <code>&lt;canvas&gt;</code> derive their natural height from <code>aspect-ratio</code>.",
+      "links": [1246]
+    },
+    {
+      "title": "More robust page loading",
+      "description": "Stylesheets honour BOMs and <code>@charset</code>, non-UTF-8 pages decode lossily, and failed stylesheets no longer block rendering.",
+      "links": [1388, 1460, 1318]
+    },
+    {
+      "title": "Accessibility updates",
+      "description": "The AccessKit tree refreshes after DOM and focus changes, and images with an empty <code>alt</code> are treated as decorative.",
+      "links": [1456, 1514]
+    },
+    {
+      "title": "Parallel styling in apps",
+      "description": "Dioxus Native and the Blitz Browser now resolve styles on multiple threads.",
+      "links": [1243]
+    },
+    {
+      "title": "Faster style and layout",
+      "description": "Narrower restyle invalidation on DOM mutation, skipping animation lookups for elements that have never animated, cached class atoms, fast paths for simple inline layouts and empty flex containers, and mimalloc in the browser.",
+      "links": [1276, 1237, 1240, 1258, 1253, 1239]
+    },
+    {
+      "title": "Renderers",
+      "description": "The Blitz Browser now uses Skia by default, and wasm builds use the WebGL Vello Hybrid renderer.",
+      "links": [1472, 1471]
+    },
+    {
+      "title": "Stylo 0.24, Parley 0.13 and AnyRender 0.15",
+      "description": "Dependency upgrades, including Vello 0.12 and usvg 0.50.",
+      "links": ["2288d67d", "085114b3", 1608, 1527, 1528]
+    },
+    {
+      "title": "Winit 0.31 beta 4 and Wayland clipboard",
+      "description": "The clipboard now uses Winit's clipboard API, which adds native Wayland support.",
+      "links": [1271, 1273]
+    },
+    {
+      "title": "Dioxus 0.8 alpha",
+      "description": "Upgraded to Dioxus 0.8.0-alpha.3, with Dioxus Native synced from the Dioxus repository.",
+      "links": [1260]
+    },
+    {
+      "title": "Scripting APIs",
+      "description": "CSS properties as accessors on <code>CSSStyleDeclaration</code>, and <code>URLSearchParams</code>, in the experimental Boa-based scripting.",
+      "links": [1297, 1314]
+    }
+  ]
+}

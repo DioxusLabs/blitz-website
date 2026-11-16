@@ -23,7 +23,7 @@ use routes::{
     encode_test_path, product_color, product_label, AboutPage, ArcDownloadLinks, ArcWptHistory,
     BlitzAreaResults, ChartLine, ChartRange, ChartSeries, CssSupportPage, DownloadsPage,
     DownloadsPageProps, DownloadsUnavailablePage, ElementSupportPage, EventSupportPage,
-    GettingStartedPage, HomePage, NLNetInstructionsPage, TestPageTab, WptComparePage,
+    GettingStartedPage, HomePage, NLNetInstructionsPage, RoadmapPage, TestPageTab, WptComparePage,
     WptComparePageProps, WptCompareTestPage, WptCompareTestPageProps, WptFocusAreasPage,
     WptFocusAreasPageProps, WptHistoryPage, WptHistoryPageProps, WptResultsPage,
     WptResultsPageProps, WptUnavailablePage, WptUnavailablePageProps,
@@ -92,6 +92,10 @@ async fn main() {
     let app = Router::new()
         .route("/", get(|| dx_route_cached(|| html!(<HomePage />))))
         .route("/about", get(|| dx_route_cached(|| html!(<AboutPage />))))
+        .route(
+            "/roadmap",
+            get(|| dx_route_cached(|| html!(<RoadmapPage />))),
+        )
         .route(
             "/nlnet-testing-instructions",
             get(|| dx_route_cached(|| html!(<NLNetInstructionsPage />))),
