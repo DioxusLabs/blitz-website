@@ -609,12 +609,6 @@ table td {
   font-size: 1.05em;
 }
 
-.roadmap-column__count {
-  margin-left: auto;
-  color: #777;
-  font-size: 0.85em;
-}
-
 p.roadmap-column__description {
   margin: -6px 0 0;
   padding: 0 2px;

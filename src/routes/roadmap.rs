@@ -155,7 +155,6 @@ fn roadmap_column(heading: &str, description: &str, items: &[RoadmapItem]) -> El
         section { class: "roadmap-column",
             div { class: "roadmap-column__header",
                 span { class: "roadmap-column__title", "{heading}" }
-                span { class: "roadmap-column__count", "{items.len()}" }
             }
             p { class: "roadmap-column__description", "{description}" }
             div { class: "roadmap-column__items",
