@@ -698,6 +698,12 @@ a.roadmap-card__link:focus-visible::after {
   flex-shrink: 0;
 }
 
+.roadmap-tag--in-progress {
+  border-color: #3e9593;
+  background-color: white;
+  color: #3e9593;
+}
+
 .roadmap-ref--commit {
   font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   font-size: 0.9em;

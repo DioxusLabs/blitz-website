@@ -19,6 +19,41 @@
       "links": [119]
     },
     {
+      "title": "<code>text-overflow</code>",
+      "description": "Ellipsis truncation for text that overflows its container.",
+      "milestone": "0.3",
+      "in_progress": true,
+      "links": [1015]
+    },
+    {
+      "title": "DOM-based SVG",
+      "description": "Direct DOM support for inline SVG. Enabling fast, animatable, stylable, interactive SVGs",
+      "in_progress": true,
+      "links": [1541, 1542, 1546, 1548, 1551, 1552, 1554, 1556]
+    },
+    {
+      "title": "<code>&lt;select&gt;</code>",
+      "description": "Single-select drop-downs, including keyboard navigation and form submission.",
+      "milestone": "1.0",
+      "in_progress": true,
+      "links": [1321]
+    },
+    {
+      "title": "Improved font matching",
+      "description": "Weight, width and style ranges and support for <code>unicode-range</code> for <code>@font-face</code> rules.",
+      "milestone": "1.0",
+      "in_progress": true,
+      "links": [1583, {"repo": "linebender/parley", "number": 956}]
+    },
+    {
+      "title": "Pluggable text backends",
+      "description": "Moving Parley behind a compile-time text backend boundary, and adding a winkin backend.",
+      "in_progress": true,
+      "links": [1146, 1153]
+    }
+  ],
+  "backlog": [
+    {
       "title": "Layout",
       "description": "<code>position: sticky</code>, table layout, the remaining <code>contain</code> values, and flow layout fixes.",
       "milestone": "1.0",
@@ -32,7 +67,7 @@
     },
     {
       "title": "Fonts",
-      "description": "More reliable font fallback, <code>font-display</code>, and <code>@font-face</code> descriptors such as <code>unicode-range</code> and weight, width and style ranges.",
+      "description": "More reliable font fallback, and <code>font-display</code>.",
       "milestone": "1.0",
       "links": [256]
     },
@@ -71,14 +106,6 @@
       "description": "Accessible text layout and input, and handling of accessibility events.",
       "milestone": "1.0",
       "links": [262]
-    }
-  ],
-  "current": [
-    {
-      "title": "<code>text-overflow</code>",
-      "description": "Ellipsis truncation for text that overflows its container.",
-      "milestone": "0.3",
-      "links": [1015]
     },
     {
       "title": "Inline box model",
@@ -86,21 +113,10 @@
       "links": [1018]
     },
     {
-      "title": "Native SVG",
-      "description": "Rendering inline SVG from live, Stylo-styled DOM nodes instead of re-parsing it with usvg: shapes, gradients, text, clip paths, masks, images, filters and hit testing.",
-      "links": [1541, 1542, 1546, 1548, 1551, 1552, 1554, 1556]
-    },
-    {
       "title": "Table layout",
       "description": "Laying out CSS tables with Taffy's new table layout algorithm, instead of emulating them with CSS Grid.",
       "milestone": "1.0",
       "links": [1370]
-    },
-    {
-      "title": "<code>&lt;select&gt;</code>",
-      "description": "Single-select drop-downs, including keyboard navigation and form submission.",
-      "milestone": "1.0",
-      "links": [1321]
     },
     {
       "title": "Subgrid and Grid Lanes",
@@ -129,12 +145,6 @@
       "description": "<code>aspect-ratio: auto &amp;&amp; &lt;ratio&gt;</code>, automatic minimum sizes, and transferring min/max sizes through the ratio.",
       "milestone": "1.0",
       "links": [1250, 1249]
-    },
-    {
-      "title": "Font matching ranges",
-      "description": "Matching fonts against the weight, width and style ranges of <code>@font-face</code> rules and variable fonts.",
-      "milestone": "1.0",
-      "links": [1583]
     },
     {
       "title": "IME composition",
@@ -178,11 +188,6 @@
       "title": "Blitz on the web",
       "description": "A wasm viewer for a single web page, and a wasm32 build of the Blitz Browser, for the website demo.",
       "links": [1487, 1478]
-    },
-    {
-      "title": "Pluggable text backends",
-      "description": "Moving Parley behind a compile-time text backend boundary, and adding a winkin backend.",
-      "links": [1146, 1153]
     },
     {
       "title": "Layout performance",

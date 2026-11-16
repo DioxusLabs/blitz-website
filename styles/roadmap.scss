@@ -200,6 +200,12 @@ a.roadmap-card__link {
     flex-shrink: 0;
 }
 
+.roadmap-tag--in-progress {
+    border-color: #3e9593;
+    background-color: white;
+    color: #3e9593;
+}
+
 // Named fonts first: a lone generic `monospace` shrinks the text
 .roadmap-ref--commit {
     font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;

@@ -9,9 +9,9 @@ const REPO_URL: &str = "https://github.com/DioxusLabs/blitz";
 const ROADMAP_ISSUE_URL: &str = "https://github.com/DioxusLabs/blitz/issues/119";
 const CONTRIBUTING_URL: &str = "https://github.com/DioxusLabs/blitz/blob/main/CONTRIBUTING.MD";
 
-/// "Coming up next" is curated from the unchecked items of the roadmap issue
-/// (`ROADMAP_ISSUE_URL`), "currently working on" from open PRs, "recently
-/// completed" from PRs merged since the latest release, and the release
+/// "Coming next" and "backlog" are curated by hand from the unchecked items of
+/// the roadmap issue (`ROADMAP_ISSUE_URL`) and open PRs, "recently completed"
+/// from PRs merged since the latest release, and the release
 /// history from the commits between each version bump (versions follow
 /// `blitz-dom`, the only crate published at every version). Items link to
 /// their issues/PRs, or to commits for work that landed without a PR.
@@ -24,7 +24,7 @@ static ROADMAP: LazyLock<Roadmap> = LazyLock::new(|| {
 #[derive(Deserialize)]
 struct Roadmap {
     next: Vec<RoadmapItem>,
-    current: Vec<RoadmapItem>,
+    backlog: Vec<RoadmapItem>,
     /// Merged, but not yet in a release
     completed: Vec<RoadmapItem>,
     /// Newest first
@@ -37,6 +37,8 @@ struct RoadmapItem {
     description: String,
     /// The roadmap milestone the item belongs to (e.g. "1.0"), if any
     milestone: Option<String>,
+    #[serde(default)]
+    in_progress: bool,
     #[serde(default)]
     links: Vec<GitRef>,
 }
@@ -56,12 +58,14 @@ struct Highlight {
     links: Vec<GitRef>,
 }
 
-/// An issue or PR number, or a commit hash (for work that landed without one)
+/// An issue or PR number, or a commit hash (for work that landed without one),
+/// or an issue or PR in another repository (e.g. a Parley dependency)
 #[derive(Deserialize)]
 #[serde(untagged)]
 enum GitRef {
     Number(u32),
     Commit(String),
+    External { repo: String, number: u32 },
 }
 
 impl GitRef {
@@ -69,6 +73,10 @@ impl GitRef {
         match self {
             GitRef::Number(number) => format!("#{number}"),
             GitRef::Commit(hash) => hash.chars().take(7).collect(),
+            GitRef::External { repo, number } => {
+                let name = repo.rsplit('/').next().unwrap_or(repo);
+                format!("{name}#{number}")
+            }
         }
     }
 
@@ -77,6 +85,9 @@ impl GitRef {
         match self {
             GitRef::Number(number) => format!("{REPO_URL}/issues/{number}"),
             GitRef::Commit(hash) => format!("{REPO_URL}/commit/{hash}"),
+            GitRef::External { repo, number } => {
+                format!("https://github.com/{repo}/issues/{number}")
+            }
         }
     }
 }
@@ -139,9 +150,9 @@ pub fn RoadmapPage() -> Element {
                 }
 
                 div { class: "roadmap-grid",
-                    {roadmap_column("Coming Up Next", "Planned work from the roadmap issue.", &roadmap.next)}
-                    {roadmap_column("Currently Working On", "Open pull requests.", &roadmap.current)}
-                    {roadmap_column("Recently Completed", &completed_description, &roadmap.completed)}
+                    {roadmap_column("Backlog", "Other planned work.", &roadmap.backlog, true)}
+                    {roadmap_column("Coming Next", "What we plan to land next.", &roadmap.next, true)}
+                    {roadmap_column("Recently Completed", &completed_description, &roadmap.completed, false)}
                 }
 
                 {release_history(&roadmap.history)}
@@ -150,7 +161,16 @@ pub fn RoadmapPage() -> Element {
     }
 }
 
-fn roadmap_column(heading: &str, description: &str, items: &[RoadmapItem]) -> Element {
+fn roadmap_column(
+    heading: &str,
+    description: &str,
+    items: &[RoadmapItem],
+    show_milestones: bool,
+) -> Element {
+    let items = items
+        .iter()
+        .filter(|item| item.in_progress)
+        .chain(items.iter().filter(|item| !item.in_progress));
     rsx! {
         section { class: "roadmap-column",
             div { class: "roadmap-column__header",
@@ -178,7 +198,9 @@ fn roadmap_column(heading: &str, description: &str, items: &[RoadmapItem]) -> El
                             } else {
                                 h3 { class: "roadmap-card__title", dangerous_inner_html: "{item.title}" }
                             }
-                            if let Some(milestone) = &item.milestone {
+                            if item.in_progress {
+                                span { class: "roadmap-tag roadmap-tag--in-progress", "In progress" }
+                            } else if let Some(milestone) = item.milestone.as_ref().filter(|_| show_milestones) {
                                 span { class: "roadmap-tag", title: "Roadmap milestone", "{milestone}" }
                             }
                         }
