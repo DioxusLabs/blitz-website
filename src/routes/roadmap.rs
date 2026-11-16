@@ -96,18 +96,6 @@ impl Release {
         self.version.contains('-')
     }
 
-    fn stage(&self) -> &'static str {
-        if self.version.contains("-alpha") {
-            "Alpha"
-        } else if self.version.contains("-beta") {
-            "Beta"
-        } else if self.version.contains("-rc") {
-            "Release candidate"
-        } else {
-            "Release"
-        }
-    }
-
     fn display_date(&self) -> String {
         self.date
             .parse::<jiff::civil::Date>()
@@ -231,7 +219,6 @@ fn release_history(history: &[Release]) -> Element {
                             class: if !release.is_prerelease() { "roadmap-release--stable" },
                             div { class: "roadmap-release__meta",
                                 span { class: "roadmap-release__version", "{release.version}" }
-                                span { class: "roadmap-tag", "{release.stage()}" }
                                 time { class: "roadmap-release__date", datetime: "{release.date}",
                                     "{release.display_date()}"
                                 }
