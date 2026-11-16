@@ -2,13 +2,13 @@
   "next": [
     {
       "title": "Drag &amp; Drop",
-      "description": "Drag and drop events, no longer blocked on a Winit release.",
+      "description": "Drag and drop events.",
       "milestone": "0.3",
       "links": [257]
     },
     {
-      "title": "<code>&lt;body&gt;</code> and <code>&lt;html&gt;</code> events",
-      "description": "Event listeners on the document's root elements.",
+      "title": "Event handling refactor",
+      "description": "Events on the <code>&lt;body&gt;</code> and <code>&lt;html&gt;</code> events, synchronous event handling and more.",
       "milestone": "0.3",
       "links": [257]
     },
@@ -46,8 +46,8 @@
       "links": [1583, {"repo": "linebender/parley", "number": 956}]
     },
     {
-      "title": "Pluggable text backends",
-      "description": "Moving Parley behind a compile-time text backend boundary, and adding a winkin backend.",
+      "title": "Winkin text backend",
+      "description": "Moving Parley behind a compile-time text backend boundary, and adding a <a href='https://github.com/dfrg/winkin' target=_blank>winkin</a> backend.",
       "in_progress": true,
       "links": [1146, 1153]
     }

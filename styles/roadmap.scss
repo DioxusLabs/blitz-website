@@ -138,7 +138,7 @@ p.roadmap-card__description {
 }
 
 // Linked cards: the title link's ::after covers the whole card, making it
-// clickable, while the individual issue/PR tags sit above it
+// clickable, underneath the rest of the card content
 .roadmap-card--linked {
     position: relative;
     transition: border-color 120ms ease, box-shadow 120ms ease;
@@ -150,15 +150,16 @@ p.roadmap-card__description {
         box-shadow: 0 0 0 1px #3298dc, 0 4px 12px rgba(0, 0, 0, 0.08);
     }
 
-    // Only the tags themselves (not the gaps around them) sit above the
-    // stretched link
-    .roadmap-card__links {
+    // Content sits above the stretched link but passes clicks through to it,
+    // except on links. The header contains the title link, so it must stay
+    // unpositioned for the ::after to stretch over the whole card
+    > :not(.roadmap-card__header) {
         position: relative;
         z-index: 1;
         pointer-events: none;
-
-        a { pointer-events: auto; }
     }
+
+    a { pointer-events: auto; }
 }
 
 a.roadmap-card__link {

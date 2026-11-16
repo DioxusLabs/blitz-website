@@ -653,12 +653,12 @@ p.roadmap-card__description {
   border-color: #3298dc;
   box-shadow: 0 0 0 1px #3298dc, 0 4px 12px rgba(0, 0, 0, 0.08);
 }
-.roadmap-card--linked .roadmap-card__links {
+.roadmap-card--linked > :not(.roadmap-card__header) {
   position: relative;
   z-index: 1;
   pointer-events: none;
 }
-.roadmap-card--linked .roadmap-card__links a {
+.roadmap-card--linked a {
   pointer-events: auto;
 }
 
