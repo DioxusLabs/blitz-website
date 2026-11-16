@@ -21,14 +21,18 @@ static ROADMAP: LazyLock<Roadmap> = LazyLock::new(|| {
         .expect("invalid data/roadmap.json")
 });
 
+/// Newest first
+static RELEASE_HISTORY: LazyLock<Vec<Release>> = LazyLock::new(|| {
+    serde_json::from_str(include_str!("../../data/release-history.json"))
+        .expect("invalid data/release-history.json")
+});
+
 #[derive(Deserialize)]
 struct Roadmap {
     next: Vec<RoadmapItem>,
     backlog: Vec<RoadmapItem>,
     /// Merged, but not yet in a release
     completed: Vec<RoadmapItem>,
-    /// Newest first
-    history: Vec<Release>,
 }
 
 #[derive(Deserialize)]
@@ -117,7 +121,7 @@ impl Release {
 #[component]
 pub fn RoadmapPage() -> Element {
     let roadmap = &*ROADMAP;
-    let completed_description = match roadmap.history.first() {
+    let completed_description = match RELEASE_HISTORY.first() {
         Some(release) => format!("Merged since {}, not yet released.", release.version),
         None => "Merged, not yet released.".to_string(),
     };
@@ -155,7 +159,7 @@ pub fn RoadmapPage() -> Element {
                     {roadmap_column("Recently Completed", &completed_description, &roadmap.completed, false)}
                 }
 
-                {release_history(&roadmap.history)}
+                {release_history(&RELEASE_HISTORY)}
             }
         }
     }
