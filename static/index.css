@@ -687,10 +687,9 @@ a.roadmap-card__link:focus-visible::after {
 }
 
 .roadmap-card__links {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
-  margin-top: 8px;
+  margin-top: 6px;
+  color: #666;
+  font-size: 0.85em;
 }
 
 .roadmap-tag {
@@ -708,15 +707,7 @@ a.roadmap-card__link:focus-visible::after {
 
 .roadmap-ref--commit {
   font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-}
-
-a.roadmap-tag, a.roadmap-tag:visited, a.roadmap-tag:active {
-  color: #555;
-}
-a.roadmap-tag:hover {
-  border-color: #cab89b;
-  color: black;
-  text-decoration: none;
+  font-size: 0.9em;
 }
 
 .roadmap-history {
@@ -800,10 +791,6 @@ li.roadmap-release.roadmap-release--stable::before {
   margin-bottom: 4px;
   color: #333;
   font-size: 0.95em;
-}
-
-.roadmap-release__link.roadmap-ref--commit {
-  font-size: 0.9em;
 }
 
 @media screen and (max-width: 800px) {

@@ -261,11 +261,14 @@ fn release_history(history: &[Release]) -> Element {
     }
 }
 
-/// Issue/PR/commit links rendered as pills (on cards)
+/// Issue/PR/commit links as a comma-separated list (on cards)
 fn ref_links(links: &[GitRef]) -> Element {
     rsx! {
-        for link in links {
-            {ref_link(link, "roadmap-tag")}
+        for (i , link) in links.iter().enumerate() {
+            if i > 0 {
+                ", "
+            }
+            {ref_link(link, "roadmap-card__ref")}
         }
     }
 }
