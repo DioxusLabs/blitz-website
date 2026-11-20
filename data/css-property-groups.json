@@ -335,8 +335,8 @@
       { "name": "outline", "status": "Yes", "properties": ["outline-width", "outline-style", "outline-color", "outline-offset"] },
       { "name": "text-shadow", "status": "Yes" },
       { "name": "backdrop-filter", "status": "Partial", "notes": "Supported with the Skia backend." },
-      { "name": "mix-blend-mode", "status": "No" },
-      { "name": "background-blend-mode", "status": "No" }
+      { "name": "mix-blend-mode", "status": "Partial" },
+      { "name": "background-blend-mode", "status": "Partial" }
     ]
   },
   {
